@@ -9,7 +9,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
 use GuzzleHttp\Client;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class GenerateReportCommand extends Command
@@ -48,8 +49,7 @@ class GenerateReportCommand extends Command
         $people = $client->people();
         $timesheet = $client->timesheet($month);
 
-        $table = new Table($output);
-        $table->setHeaders([
+        $headers = [
             'Person',
             'Project',
             'Client',
@@ -58,9 +58,12 @@ class GenerateReportCommand extends Command
             'Tracked Hours',
             'Estimated Hours',
             'Billable',
-            'Billable',
+            'Non-Billable',
             'Client Rate',
-        ]);
+        ];
+
+        $table = new Table($output);
+        $table->setHeaders($headers);
         foreach ($people as $person) {
             $table->addRow([
                 "<info>{$person['name']}</info>",
@@ -80,15 +83,10 @@ class GenerateReportCommand extends Command
                     $project['hrs_tracked'],
                     $project['hrs_budget'],
                     "{$project['hrs_budget']} - ({$project['hrs_tracked']} - trackedHoursInMonth)",
+                    'tracked - billable',
                     $project['client_rate'],
                 ]);
             }
-        }
-        foreach ($projects as $project) {
-            $table->addRow([
-                $project['name'],
-                $project['client'],
-            ]);
         }
         $table->render();
 
@@ -98,7 +96,92 @@ class GenerateReportCommand extends Command
         $worksheet = $spreadsheet->getActiveSheet();
         $worksheet->setTitle($month->format('Y-m'));
 
+        $rowId = 1;
+        $addStyle = function (&$rowId, $backgroundColor = null) use ($worksheet) {
+            $styles = [
+                'borders' => [
+                    'allborders' => [
+                        'style' => Border::BORDER_THIN,
+                        'color' => [
+                            'rgb' => '000000'
+                        ],
+                    ],
+                ],
+            ];
+            if ($backgroundColor) {
+                $styles += [
+                    'font' => [
+                        'bold' => true,
+                    ],
+                    'fill' => [
+                        'type' => Fill::FILL_SOLID,
+                        'startcolor' => array(
+                            'rgb' => $backgroundColor
+                        ),
+                    ],
+                ];
+            }
+            $worksheet->getStyle("A{$rowId}:J{$rowId}")->applyFromArray($styles);
+            $rowId++;
+        };
+        
+        foreach ($headers as $index => $header) {
+            $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $header);
+        }
+        $addStyle($rowId, 'CCCCCC');
+
+        foreach ($people as $person) {
+            $firstProjectRow = $rowId + 1;
+            $lastProjectRow = $rowId + count($person['projects']);
+            $rowData = [
+                $person['name'],
+                '',
+                '',
+                $person['salary_hours'],
+                $person['salary_amount'],
+                "=SUM(F{$firstProjectRow}:F{$lastProjectRow})",
+                "=SUM(G{$firstProjectRow}:G{$lastProjectRow})",
+                "=SUM(H{$firstProjectRow}:H{$lastProjectRow})",
+                "=SUM(I{$firstProjectRow}:I{$lastProjectRow})",
+                '',
+            ];
+
+            foreach ($rowData as $index => $value) {
+                $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $value);
+            }
+            $addStyle($rowId, 'bdd7ee');
+
+            foreach ($person['projects'] as $idProject => $project) {
+                $hoursTrackedInMonth = $project['hrs_tracked']; // load from timesheet
+                $rowData = [
+                    $person['name'],
+                    $projects[$idProject]['name'],
+                    $projects[$idProject]['client'],
+                    '',
+                    '',
+                    $hoursTrackedInMonth,
+                    $project['hrs_budget'],
+                    "=MAX(0, G{$rowId}-({$project['hrs_tracked']}-F{$rowId}))",
+                    "=MAX(0, F{$rowId}-H{$rowId})",
+                    $project['client_rate'],
+                ];
+                foreach ($rowData as $index => $value) {
+                    $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $value);
+                };
+                $addStyle($rowId);
+            }
+        }
+
+        foreach ($worksheet->getColumnDimensions() as $column) {
+            $column->setAutoSize(true);
+        }
+
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save("var/reports/{$month->format('Y-m')}.xlsx");
+    }
+
+    private function indexToLetter($number)
+    {
+        return chr(substr("000" . ($number + 65), -3));
     }
 }
