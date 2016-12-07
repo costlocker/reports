@@ -10,6 +10,7 @@
         "mockery/mockery": "^0.9.6"
     },
     "require": {
-        "symfony/console": "^3.2"
+        "symfony/console": "^3.2",
+        "guzzlehttp/guzzle": "^6.2"
     }
 }

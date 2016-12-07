@@ -6,6 +6,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use GuzzleHttp\Client;
 
 class GenerateReportCommand extends Command
 {
@@ -23,6 +24,15 @@ class GenerateReportCommand extends Command
         $month = new \DateTime($input->getOption('date'));
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
         $email = $input->getOption('email');
+
+        $client = new CostlockerClient(new Client([
+            'base_uri' => $apiHost,
+            'http_errors' => false,
+            'headers' => [
+                'Api-Token' => $apiKey,
+            ],
+        ]));
+        $client->experiment();
 
         $output->writeln([
             "<comment>Report</comment>",
