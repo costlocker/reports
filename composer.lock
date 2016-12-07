@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "9dba5764aa3ce919dc1727c93199d993",
-    "content-hash": "91bfce2cca36eb7bc9b8d861a7c29df9",
+    "hash": "34a648dbbd836e1e64a5fb7de58e3b3c",
+    "content-hash": "662198e11be3a681387128d54893a3c3",
     "packages": [
         {
             "name": "guzzlehttp/guzzle",
@@ -177,6 +177,91 @@
                 "uri"
             ],
             "time": "2016-06-24 23:00:38"
+        },
+        {
+            "name": "phpoffice/phpspreadsheet",
+            "version": "dev-develop",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
+                "reference": "62345ef4da075f16c9dbe79d8962e26f2d0d8dd7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/62345ef4da075f16c9dbe79d8962e26f2d0d8dd7",
+                "reference": "62345ef4da075f16c9dbe79d8962e26f2d0d8dd7",
+                "shasum": ""
+            },
+            "require": {
+                "ext-iconv": "*",
+                "ext-mbstring": "*",
+                "ext-xml": "*",
+                "ext-xmlwriter": "*",
+                "php": "^5.5|^7.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^1.11",
+                "mikey179/vfsstream": "1.5.*",
+                "phpunit/phpunit": "4.6.*",
+                "squizlabs/php_codesniffer": "2.*"
+            },
+            "suggest": {
+                "dompdf/dompdf": "Option for rendering PDF with PDF Writer",
+                "ext-dom": "Option to read and write HTML files",
+                "ext-gd": "Required for exact column width autocalculation",
+                "ext-zip": "Required to handle .xlsx .ods or .gnumeric files",
+                "jpgraph/jpgraph": "Option for rendering charts, or including charts with PDF or HTML Writers",
+                "mpdf/mpdf": "Option for rendering PDF with PDF Writer",
+                "tecnick.com/tcpdf": "Option for rendering PDF with PDF Writer"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PhpOffice\\PhpSpreadsheet\\": "src/PhpSpreadsheet"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "PhpOffice\\PhpSpreadsheetTests\\": "tests/PhpSpreadsheetTests"
+                }
+            },
+            "license": [
+                "LGPL-2.1"
+            ],
+            "authors": [
+                {
+                    "name": "Maarten Balliauw",
+                    "homepage": "http://blog.maartenballiauw.be"
+                },
+                {
+                    "name": "Mark Baker",
+                    "homepage": "http://markbakeruk.net"
+                },
+                {
+                    "name": "Franck Lefevre",
+                    "homepage": "http://rootslabs.net"
+                },
+                {
+                    "name": "Erik Tilt"
+                }
+            ],
+            "description": "PHPSpreadsheet - Read, Create and Write Spreadsheet documents in PHP - Spreadsheet engine",
+            "homepage": "https://github.com/PHPOffice/PhpSpreadsheet",
+            "keywords": [
+                "Excel",
+                "OpenXML",
+                "PHP",
+                "gnumeric",
+                "ods",
+                "spreadsheet",
+                "xls",
+                "xlsx"
+            ],
+            "support": {
+                "source": "https://github.com/PHPOffice/PhpSpreadsheet/tree/develop",
+                "issues": "https://github.com/PHPOffice/PhpSpreadsheet/issues"
+            },
+            "time": "2016-12-04 10:04:10"
         },
         {
             "name": "psr/http-message",
@@ -1877,7 +1962,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "phpoffice/phpspreadsheet": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

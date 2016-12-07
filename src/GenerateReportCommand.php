@@ -8,6 +8,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
 use GuzzleHttp\Client;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class GenerateReportCommand extends Command
 {
@@ -90,5 +93,12 @@ class GenerateReportCommand extends Command
         $table->render();
 
         $output->writeln(json_encode($timesheet, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        $spreadsheet = new Spreadsheet();
+        $worksheet = $spreadsheet->getActiveSheet();
+        $worksheet->setTitle($month->format('Y-m'));
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save("var/reports/{$month->format('Y-m')}.xlsx");
     }
 }
