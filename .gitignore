@@ -1,3 +1,4 @@
 !.gitkeep
+/app/config.php
 /var/
 /vendor/

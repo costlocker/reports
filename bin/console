@@ -5,8 +5,10 @@ set_time_limit(0);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+$config = require __DIR__ . '/../app/config.php';
+
 $application = new Symfony\Component\Console\Application();
 $application->addCommands([
-    new \Costlocker\Reports\GenerateReportCommand(),
+    new \Costlocker\Reports\GenerateReportCommand(Swift_Mailer::newInstance($config['mailer'])),
 ]);
 $application->run();

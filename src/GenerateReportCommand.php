@@ -12,9 +12,20 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Swift_Mailer;
+use Swift_Message;
+use Swift_Attachment;
 
 class GenerateReportCommand extends Command
 {
+    private $mailer;
+
+    public function __construct(Swift_Mailer $mailer)
+    {
+        parent::__construct();
+        $this->mailer = $mailer;
+    }
+
     protected function configure()
     {
         $this
@@ -176,8 +187,25 @@ class GenerateReportCommand extends Command
             $column->setAutoSize(true);
         }
 
+        $xlsFile = "var/reports/{$month->format('Y-m')}.xlsx";
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
-        $writer->save("var/reports/{$month->format('Y-m')}.xlsx");
+        $writer->save($xlsFile);
+
+        if ($email) {
+            $sender = $this->mailer->getTransport() instanceof \Swift_SmtpTransport ?
+                $this->mailer->getTransport()->getUsername() : "report@costlocker.com";
+            $email = Swift_Message::newInstance()
+                ->addTo($email)
+                ->setFrom([$sender => 'Costlocker Reporting'])
+                ->setSubject("Report {$month->format('Y-m')}")
+                ->setBody("Report {$month->format('Y-m')}", 'text/plain')
+                ->attach(Swift_Attachment::fromPath($xlsFile));
+
+            $wasSent = $this->mailer->send($email);
+            if (!$wasSent) {
+                $output->writeln('<error>E-mail was not sent!</error>');
+            }
+        }
     }
 
     private function indexToLetter($number)
