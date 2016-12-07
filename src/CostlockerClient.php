@@ -79,6 +79,24 @@ class CostlockerClient
         return $people;
     }
 
+    public function timesheet(\DateTime $month)
+    {
+        $response = $this->client->get(
+            '/api-public/v1/',
+            [
+                'json' => [
+                    'Simple_Timesheet' => [
+                        'datef' => $month->format('Y-m-01'),
+                        'datet' => $month->format('Y-m-t'),
+                    ],
+                ],
+            ]
+        );
+        $rawData = json_decode($response->getBody(), true);
+
+        return $rawData;
+    }
+
     private function map(array $rawData, $id)
     {
         $indexedItems = [];

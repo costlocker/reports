@@ -43,6 +43,7 @@ class GenerateReportCommand extends Command
         ]));
         $projects = $client->projects();
         $people = $client->people();
+        $timesheet = $client->timesheet($month);
 
         $table = new Table($output);
         $table->setHeaders([
@@ -51,6 +52,7 @@ class GenerateReportCommand extends Command
             'Client',
             'Hours',
             'Salary',
+            'Tracked Hours',
             'Estimated Hours',
             'Billable',
             'Billable',
@@ -72,6 +74,7 @@ class GenerateReportCommand extends Command
                     $projects[$idProject]['client'],
                     '',
                     '',
+                    $project['hrs_tracked'],
                     $project['hrs_budget'],
                     "{$project['hrs_budget']} - ({$project['hrs_tracked']} - trackedHoursInMonth)",
                     $project['client_rate'],
@@ -85,5 +88,7 @@ class GenerateReportCommand extends Command
             ]);
         }
         $table->render();
+
+        $output->writeln(json_encode($timesheet, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
     }
 }
