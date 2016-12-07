@@ -42,9 +42,42 @@ class GenerateReportCommand extends Command
             ],
         ]));
         $projects = $client->projects();
+        $people = $client->people();
 
         $table = new Table($output);
-        $table->setHeaders(['Project', 'Client']);
+        $table->setHeaders([
+            'Person',
+            'Project',
+            'Client',
+            'Hours',
+            'Salary',
+            'Estimated Hours',
+            'Billable',
+            'Billable',
+            'Client Rate',
+        ]);
+        foreach ($people as $person) {
+            $table->addRow([
+                "<info>{$person['name']}</info>",
+                '',
+                '',
+                $person['salary_hours'],
+                $person['salary_amount'],
+                '',
+            ]);
+            foreach ($person['projects'] as $idProject => $project) {
+                $table->addRow([
+                    $person['name'],
+                    $projects[$idProject]['name'],
+                    $projects[$idProject]['client'],
+                    '',
+                    '',
+                    $project['hrs_budget'],
+                    "{$project['hrs_budget']} - ({$project['hrs_tracked']} - trackedHoursInMonth)",
+                    $project['client_rate'],
+                ]);
+            }
+        }
         foreach ($projects as $project) {
             $table->addRow([
                 $project['name'],

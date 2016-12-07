@@ -27,27 +27,78 @@ class CostlockerClient
         );
         $rawData = json_decode($response->getBody(), true);
 
-        $clients = $this->mapById($rawData['Simple_Clients']);
+        $clients = $this->map($rawData['Simple_Clients'], 'id');
         $projects = [];
 
         foreach ($rawData['Simple_Projects'] as $project) {
             $projects[$project['id']] = [
                 'name' => $project['name'],
-                'client' => $clients[$project['client_id']]['name'],
+                'client' => $clients[$project['client_id']][0]['name'],
             ];
         }
 
         return $projects;
     }
 
-    private function mapById(array $rawData)
+    public function people()
+    {
+        $response = $this->client->get(
+            '/api-public/v1/',
+            [
+                'json' => [
+                    'Simple_People' => new \stdClass(),
+                    'Simple_Projects_Ce' => new \stdClass(),
+                ],
+            ]
+        );
+        $rawData = json_decode($response->getBody(), true);
+
+        $people = [];
+        $personnelCosts = $this->map($rawData['Simple_Projects_Ce'], 'person_id');
+
+        foreach ($rawData['Simple_People'] as $person) {
+            $people[$person['id']] = [
+                'name' => "{$person['first_name']} {$person['last_name']}",
+                'salary_hours' => 8 * 20,
+                'salary_amount' => 20000,
+                'projects' => array_map(
+                    function (array $projects) {
+                        $project = reset($projects);
+
+                        return [
+                            'client_rate' => $project['client_rate'],
+                            'hrs_budget' => $this->sum($projects, 'hrs_budget'),
+                            'hrs_tracked' => $this->sum($projects, 'hrs_tracked'),
+                        ];
+                    },
+                    $this->map($personnelCosts[$person['id']], 'project_id')
+                ),
+            ];
+        }
+
+        return $people;
+    }
+
+    private function map(array $rawData, $id)
     {
         $indexedItems = [];
 
         foreach ($rawData as $item) {
-            $indexedItems[$item['id']] = $item;
+            $indexedItems[$item[$id]][] = $item;
         }
 
         return $indexedItems;
+    }
+
+    private function sum(array $rawData, $attribute)
+    {
+        return array_sum(
+            array_map(
+                function (array $project) use ($attribute) {
+                    return $project[$attribute];
+                },
+                $rawData
+            )
+        );
     }
 }
