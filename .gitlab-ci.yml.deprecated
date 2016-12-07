@@ -1,0 +1,13 @@
+image: php:7.0
+
+before_script:
+    - composer config cache-files-dir .composercache
+
+cache:
+    paths:
+        - .composercache
+
+test:app:
+    script:
+        - vendor/bin/phpunit
+        - bin/qa

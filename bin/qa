@@ -1,0 +1,15 @@
+#!/bin/sh
+
+phpqa=`which phpqa`
+if [ "$phpqa" = "" ]
+then
+    echo "phpqa must be installed globally"
+    echo "> https://github.com/EdgedesignCZ/phpqa#without-composer"
+    exit 1
+fi
+
+phpqa --report --verbose \
+    --tools phpcs:0,phpmd:0,phpcpd:0,phpmetrics,phploc,pdepend \
+    --buildDir var/QA \
+    --analyzedDir ./ \
+    --ignoredDirs vendor
