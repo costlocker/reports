@@ -79,6 +79,23 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testGroupTrackedHoursByPersonAndProjects()
+    {
+        $this->whenApiReturns('timesheet.json');
+        $this->assertEquals(
+            [
+                1 => [
+                    1 => 1800 / 3600,
+                    2 => (9823 + 2000) / 3600,
+                ],
+                2 => [
+                    2 => 1823 / 3600,
+                ],
+            ],
+            $this->costlocker->timesheet(new \DateTime('2015-02-01'))
+        );
+    }
+
     private function whenApiReturns($response)
     {
         $this->httpClient->shouldReceive('get')->andReturn(new Response(200, [], file_get_contents(__DIR__ . "/fixtures/{$response}")));

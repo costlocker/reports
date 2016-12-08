@@ -98,7 +98,19 @@ class CostlockerClient
         );
         $rawData = json_decode($response->getBody(), true);
 
-        return $rawData;
+        return array_map(
+            function (array $personSheet) {
+                return array_map(
+                    function ($projectSheet) {
+                        $trackedSeconds = $this->sum($projectSheet, 'interval');
+
+                        return $trackedSeconds / 3600;
+                    },
+                    $this->map($personSheet, 'project')
+                );
+            },
+            $this->map($rawData['Simple_Timesheet'], 'person')
+        );
     }
 
     private function map(array $rawData, $id)
