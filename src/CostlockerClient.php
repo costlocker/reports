@@ -57,10 +57,14 @@ class CostlockerClient
         $personnelCosts = $this->map($rawData['Simple_Projects_Ce'], 'person_id');
 
         foreach ($rawData['Simple_People'] as $person) {
-            $people[$person['id']] = [
-                'name' => "{$person['first_name']} {$person['last_name']}",
+            $person += [
                 'salary_hours' => 8 * 20,
                 'salary_amount' => 20000,
+            ];
+            $people[$person['id']] = [
+                'name' => "{$person['first_name']} {$person['last_name']}",
+                'salary_hours' => $person['salary_hours'],
+                'salary_amount' => $person['salary_amount'],
                 'projects' => array_map(
                     function (array $projects) {
                         $project = reset($projects);

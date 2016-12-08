@@ -59,8 +59,8 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                 ],
                 2 => [
                     'name' => 'Uncle Bob',
-                    'salary_hours' => 160,
-                    'salary_amount' => 20000,
+                    'salary_hours' => 80,
+                    'salary_amount' => 30000,
                     'projects' => [
                         33 => [
                             'client_rate' => 50,

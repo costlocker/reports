@@ -12,7 +12,10 @@
             "first_name": "Uncle",
             "last_name": "Bob",
             "mail": "zdenek.drahos@atoto.cz",
-            "deactivated": ""
+            "deactivated": "",
+            "type": "salary",
+            "salary_amount": 30000,
+            "salary_hours": 80
         }
     ],
     "Simple_Projects_Ce": [
