@@ -202,7 +202,9 @@ class GenerateReportCommand extends Command
                 ->attach(Swift_Attachment::fromPath($xlsFile));
 
             $wasSent = $this->mailer->send($email);
-            if (!$wasSent) {
+            if ($wasSent) {
+                unlink($xlsFile);
+            } else {
                 $output->writeln('<error>E-mail was not sent!</error>');
             }
         }
