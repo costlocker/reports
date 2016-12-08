@@ -13,9 +13,17 @@ class CostlockerReport
         return $this->people;
     }
 
-    public function getPersonProjects(array $person)
+    public function getPersonProjects($personId)
     {
-        return $person['projects'];
+        $projects = $this->people[$personId]['projects'] ?? [];
+        if ($this->timesheet) {
+            foreach (array_keys($projects) as $projectId) {
+                if (!isset($this->timesheet[$personId][$projectId])) {
+                    unset($projects[$projectId]);
+                }
+            }
+        }
+        return $projects;
     }
 
     public function getProjectName($idProject)

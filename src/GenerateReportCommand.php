@@ -74,7 +74,7 @@ class GenerateReportCommand extends Command
 
         $table = new Table($output);
         $table->setHeaders($headers);
-        foreach ($report->getPeople() as $person) {
+        foreach ($report->getPeople() as $personId => $person) {
             $table->addRow([
                 "<info>{$person['name']}</info>",
                 '',
@@ -83,7 +83,7 @@ class GenerateReportCommand extends Command
                 $person['salary_amount'],
                 '',
             ]);
-            foreach ($report->getPersonProjects($person) as $idProject => $project) {
+            foreach ($report->getPersonProjects($personId) as $idProject => $project) {
                 $table->addRow([
                     $person['name'],
                     $report->getProjectName($idProject),
@@ -138,9 +138,9 @@ class GenerateReportCommand extends Command
         }
         $addStyle($rowId, 'CCCCCC');
 
-        foreach ($report->getPeople() as $person) {
+        foreach ($report->getPeople() as $personId => $person) {
             $firstProjectRow = $rowId + 1;
-            $personProjects = $report->getPersonProjects($person);
+            $personProjects = $report->getPersonProjects($personId);
             $lastProjectRow = $rowId + count($personProjects);
             $rowData = [
                 $person['name'],
