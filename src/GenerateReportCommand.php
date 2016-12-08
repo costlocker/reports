@@ -189,11 +189,9 @@ class GenerateReportCommand extends Command
         $writer->save($xlsFile);
 
         if ($email) {
-            $sender = $this->mailer->getTransport() instanceof \Swift_SmtpTransport ?
-                $this->mailer->getTransport()->getUsername() : "report@costlocker.com";
             $email = Swift_Message::newInstance()
                 ->addTo($email)
-                ->setFrom([$sender => 'Costlocker Reporting'])
+                ->setFrom(['do-not-reply@costlocker.com' => 'Costlocker Reporter'])
                 ->setSubject("Report {$month->format('Y-m')}")
                 ->setBody("Report {$month->format('Y-m')}", 'text/plain')
                 ->attach(Swift_Attachment::fromPath($xlsFile));
