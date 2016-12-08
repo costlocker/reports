@@ -52,7 +52,7 @@ class GenerateReportCommand extends Command
 
         $client = new CostlockerClient(new Client([
             'base_uri' => $apiHost,
-            'http_errors' => false,
+            'http_errors' => true,
             'headers' => [
                 'Api-Token' => $apiKey,
             ],
