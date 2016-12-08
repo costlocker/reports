@@ -85,6 +85,8 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 
     private function whenApiReturns($response)
     {
-        $this->httpClient->shouldReceive('get')->andReturn(new Response(200, [], file_get_contents(__DIR__ . "/fixtures/{$response}")));
+        $this->httpClient->shouldReceive('get')->andReturn(
+            new Response(200, [], file_get_contents(__DIR__ . "/fixtures/{$response}"))
+        );
     }
 }

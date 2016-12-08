@@ -47,6 +47,7 @@ class GenerateReportCommand extends Command
             "<info>API Url:</info> {$apiHost}",
             "<info>API Key:</info> {$apiKey}",
             "<info>E-mail Recipients:</info> {$email}",
+            '',
         ]);
 
         $client = new CostlockerClient(new Client([
@@ -72,6 +73,15 @@ class GenerateReportCommand extends Command
             'Client Rate',
         ];
 
+        if ($email) {
+            $this->emailRenderer($headers, $report, $email, $output);
+        } else {
+            $this->consoleRenderer($headers, $report, $output);
+        }
+    }
+
+    protected function consoleRenderer(array $headers, CostlockerReport $report, OutputInterface $output)
+    {
         $table = new Table($output);
         $table->setHeaders($headers);
         foreach ($report->getPeople() as $personId => $person) {
@@ -99,10 +109,13 @@ class GenerateReportCommand extends Command
             }
         }
         $table->render();
+    }
 
+    protected function emailRenderer(array $headers, CostlockerReport $report, $recipient, OutputInterface $output)
+    {
         $spreadsheet = new Spreadsheet();
         $worksheet = $spreadsheet->getActiveSheet();
-        $worksheet->setTitle($month->format('Y-m'));
+        $worksheet->setTitle($report->selectedMonth->format('Y-m'));
 
         $rowId = 1;
         $addStyle = function (&$rowId, $backgroundColor = null) use ($worksheet) {
@@ -184,24 +197,23 @@ class GenerateReportCommand extends Command
             $column->setAutoSize(true);
         }
 
-        $xlsFile = "var/reports/{$month->format('Y-m')}.xlsx";
+        $xlsFile = "var/reports/{$report->selectedMonth->format('Y-m')}.xlsx";
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($xlsFile);
 
-        if ($email) {
-            $email = Swift_Message::newInstance()
-                ->addTo($email)
-                ->setFrom(['do-not-reply@costlocker.com' => 'Costlocker Reporter'])
-                ->setSubject("Report {$month->format('Y-m')}")
-                ->setBody("Report {$month->format('Y-m')}", 'text/plain')
-                ->attach(Swift_Attachment::fromPath($xlsFile));
+        $email = Swift_Message::newInstance()
+            ->addTo($recipient)
+            ->setFrom(['do-not-reply@costlocker.com' => 'Costlocker Reporter'])
+            ->setSubject("Report {$report->selectedMonth->format('Y-m')}")
+            ->setBody("Report {$report->selectedMonth->format('Y-m')}", 'text/plain')
+            ->attach(Swift_Attachment::fromPath($xlsFile));
 
-            $wasSent = $this->mailer->send($email);
-            if ($wasSent) {
-                unlink($xlsFile);
-            } else {
-                $output->writeln('<error>E-mail was not sent!</error>');
-            }
+        $wasSent = $this->mailer->send($email);
+        if ($wasSent) {
+            unlink($xlsFile);
+            $output->writeln('<comment>E-mail was sent!</comment>');
+        } else {
+            $output->writeln('<error>E-mail was not sent!</error>');
         }
     }
 

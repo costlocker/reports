@@ -4,6 +4,7 @@ namespace Costlocker\Reports;
 
 class CostlockerReport
 {
+    public $selectedMonth;
     public $projects;
     public $people;
     public $timesheet;

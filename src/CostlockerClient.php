@@ -16,6 +16,7 @@ class CostlockerClient
     public function __invoke(\DateTime $month)
     {
         $report = new CostlockerReport();
+        $report->selectedMonth = $month;
         $report->people = $this->people($month);
         $report->projects = $this->projects();
         return $report;
@@ -23,16 +24,10 @@ class CostlockerClient
 
     public function projects()
     {
-        $response = $this->client->get(
-            '/api-public/v1/',
-            [
-                'json' => [
-                    'Simple_Projects' => new \stdClass(),
-                    'Simple_Clients' => new \stdClass(),
-                ],
-            ]
-        );
-        $rawData = json_decode($response->getBody(), true);
+        $rawData = $this->request([
+            'Simple_Projects' => new \stdClass(),
+            'Simple_Clients' => new \stdClass(),
+        ]);
 
         $clients = $this->map($rawData['Simple_Clients'], 'id');
         $projects = [];
@@ -47,18 +42,16 @@ class CostlockerClient
         return $projects;
     }
 
-    public function people()
+    public function people(\DateTime $month)
     {
-        $response = $this->client->get(
-            '/api-public/v1/',
-            [
-                'json' => [
-                    'Simple_People' => new \stdClass(),
-                    'Simple_Projects_Ce' => new \stdClass(),
-                ],
-            ]
-        );
-        $rawData = json_decode($response->getBody(), true);
+        $rawData = $this->request([
+            'Simple_People' => new \stdClass(),
+            'Simple_Projects_Ce' => new \stdClass(),
+            'Simple_Timesheet' => [
+                'datef' => $month->format('Y-m-01'),
+                'datet' => $month->format('Y-m-t'),
+            ],
+        ]);
 
         $people = [];
         $personnelCosts = $this->map($rawData['Simple_Projects_Ce'], 'person_id');
@@ -94,10 +87,6 @@ class CostlockerClient
 
     private function groupTimesheetByPersonAndProject(array $rawData)
     {
-        if (!array_key_exists('Simple_Timesheet', $rawData)) {
-            return [];
-        }
-
         return array_map(
             function (array $personSheet) {
                 return array_map(
@@ -111,6 +100,17 @@ class CostlockerClient
             },
             $this->map($rawData['Simple_Timesheet'], 'person')
         );
+    }
+
+    private function request(array $request)
+    {
+        $response = $this->client->get(
+            '/api-public/v1/',
+            [
+                'json' => $request,
+            ]
+        );
+        return json_decode($response->getBody(), true);
     }
 
     private function map(array $rawData, $id)
