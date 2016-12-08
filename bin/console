@@ -5,6 +5,8 @@ set_time_limit(0);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+\Symfony\Component\Debug\ErrorHandler::register();
+
 $config = require __DIR__ . '/../app/config.php';
 
 $application = new Symfony\Component\Console\Application();
