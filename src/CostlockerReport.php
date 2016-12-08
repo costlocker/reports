@@ -28,11 +28,11 @@ class CostlockerReport
 
     public function getProjectName($idProject)
     {
-        return $this->projects[$idProject]['name'];
+        return $this->projects[$idProject]['name'] ?? "#{$idProject}";
     }
 
     public function getProjectClient($idProject)
     {
-        return $this->projects[$idProject]['client'];
+        return $this->projects[$idProject]['client'] ?? "#{$idProject} client";
     }
 }

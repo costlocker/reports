@@ -31,4 +31,11 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
         ];
         assertThat($report->getPersonProjects(1), arrayWithSize(2));
     }
+
+    public function testFallbackForUnknownProject()
+    {
+        $report = new CostlockerReport();
+        assertThat($report->getProjectName(1), is('#1'));
+        assertThat($report->getProjectClient(1), is('#1 client'));
+    }
 }
