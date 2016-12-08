@@ -49,13 +49,13 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                             'client_rate' => 20,
                             'hrs_budget' => 10 + 2,
                             'hrs_tracked_total' => 1.0858333333333401,
-                            'hrs_tracked_month' => 0,
+                            'hrs_tracked_month' => 1800 / 3600,
                         ],
                         1 => [
                             'client_rate' => 800,
                             'hrs_budget' => 70 + 1,
                             'hrs_tracked_total' => 2.611944444444422,
-                            'hrs_tracked_month' => 0,
+                            'hrs_tracked_month' => (9823 + 2000) / 3600,
                         ],
                     ],
                 ],
@@ -74,29 +74,12 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                             'client_rate' => 500,
                             'hrs_budget' => 100,
                             'hrs_tracked_total' => 71.95,
-                            'hrs_tracked_month' => 0,
+                            'hrs_tracked_month' => 1823 / 3600,
                         ],
                     ],
                 ],
             ],
-            $this->costlocker->people()
-        );
-    }
-
-    public function testGroupTrackedHoursByPersonAndProjects()
-    {
-        $this->whenApiReturns('timesheet.json');
-        $this->assertEquals(
-            [
-                1 => [
-                    1 => 1800 / 3600,
-                    2 => (9823 + 2000) / 3600,
-                ],
-                2 => [
-                    2 => 1823 / 3600,
-                ],
-            ],
-            $this->costlocker->timesheet(new \DateTime('2015-02-01'))
+            $this->costlocker->people(new \DateTime('2015-02-01'))
         );
     }
 

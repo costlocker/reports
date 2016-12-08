@@ -16,9 +16,8 @@ class CostlockerClient
     public function __invoke(\DateTime $month)
     {
         $report = new CostlockerReport();
-        $report->people = $this->people();
+        $report->people = $this->people($month);
         $report->projects = $this->projects();
-        $report->timesheet = $this->timesheet($month);
         return $report;
     }
 
@@ -63,6 +62,7 @@ class CostlockerClient
 
         $people = [];
         $personnelCosts = $this->map($rawData['Simple_Projects_Ce'], 'person_id');
+        $timesheet = $this->groupTimesheetByPersonAndProject($rawData);
 
         foreach ($rawData['Simple_People'] as $person) {
             $person += [
@@ -74,14 +74,14 @@ class CostlockerClient
                 'salary_hours' => $person['salary_hours'],
                 'salary_amount' => $person['salary_amount'],
                 'projects' => array_map(
-                    function (array $projects) {
+                    function (array $projects) use ($timesheet, $person) {
                         $project = reset($projects);
 
                         return [
                             'client_rate' => $project['client_rate'],
                             'hrs_budget' => $this->sum($projects, 'hrs_budget'),
                             'hrs_tracked_total' => $this->sum($projects, 'hrs_tracked'),
-                            'hrs_tracked_month' => 0,
+                            'hrs_tracked_month' => $timesheet[$person['id']][$project['project_id']] ?? 0,
                         ];
                     },
                     $this->map($personnelCosts[$person['id']], 'project_id')
@@ -92,21 +92,8 @@ class CostlockerClient
         return $people;
     }
 
-    public function timesheet(\DateTime $month)
+    private function groupTimesheetByPersonAndProject(array $rawData)
     {
-        $response = $this->client->get(
-            '/api-public/v1/',
-            [
-                'json' => [
-                    'Simple_Timesheet' => [
-                        'datef' => $month->format('Y-m-01'),
-                        'datet' => $month->format('Y-m-t'),
-                    ],
-                ],
-            ]
-        );
-        $rawData = json_decode($response->getBody(), true);
-
         if (!array_key_exists('Simple_Timesheet', $rawData)) {
             return [];
         }

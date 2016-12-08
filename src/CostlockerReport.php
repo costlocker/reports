@@ -16,14 +16,13 @@ class CostlockerReport
     public function getPersonProjects($personId)
     {
         $projects = $this->people[$personId]['projects'] ?? [];
-        if ($this->timesheet) {
-            foreach (array_keys($projects) as $projectId) {
-                if (!isset($this->timesheet[$personId][$projectId])) {
-                    unset($projects[$projectId]);
-                }
+        $projectsWithTrackedTime = array_filter(
+            $projects,
+            function (array $project) {
+                return $project['hrs_tracked_month'] > 0;
             }
-        }
-        return $projects;
+        );
+        return $projectsWithTrackedTime ?: $projects;
     }
 
     public function getProjectName($idProject)

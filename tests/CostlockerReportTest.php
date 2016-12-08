@@ -10,18 +10,12 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
         $report->people = [
             1 => [
                 'projects' => [
-                    1 => ['first project'],
-                    2 => ['second project'],
+                    1 => ['hrs_tracked_month' => 10],
+                    2 => ['hrs_tracked_month' => 0],
                 ]
             ]
         ];
-        $report->timesheet = [
-            1 => [
-                1 => 'irrelevant tracked hours',
-            ],
-        ];
         assertThat($report->getPersonProjects(1), arrayWithSize(1));
-        assertThat($report->getPersonProjects(2), emptyArray());
     }
 
     public function testReturnAllProjectsWhenTimesheetIsEmpty()
@@ -30,28 +24,11 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
         $report->people = [
             1 => [
                 'projects' => [
-                    1 => ['first project'],
-                    2 => ['second project'],
+                    1 => ['hrs_tracked_month' => 0],
+                    2 => ['hrs_tracked_month' => 0],
                 ]
             ]
         ];
         assertThat($report->getPersonProjects(1), arrayWithSize(2));
-    }
-
-    public function testReturnNoProjectsForUnknownPerson()
-    {
-        $report = new CostlockerReport();
-        $report->people = [
-            1 => [
-                'projects' => [
-                    1 => ['first project'],
-                ]
-            ]
-        ];
-        $report->timesheet = [
-            3 => [],
-        ];
-        assertThat($report->getPersonProjects(1), emptyArray());
-        assertThat($report->getPersonProjects(2), emptyArray());
     }
 }
