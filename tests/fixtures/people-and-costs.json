@@ -16,6 +16,13 @@
             "type": "salary",
             "salary_amount": 30000,
             "salary_hours": 80
+        },
+        {
+            "id": "3",
+            "first_name": "Lonely",
+            "last_name": "Wolf",
+            "mail": "karlos@f13.cz",
+            "deactivated": ""
         }
     ],
     "Simple_Projects_Ce": [

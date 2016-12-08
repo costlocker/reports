@@ -77,7 +77,7 @@ class CostlockerClient
                             'hrs_tracked_month' => $timesheet[$person['id']][$project['project_id']] ?? 0,
                         ];
                     },
-                    $this->map($personnelCosts[$person['id']], 'project_id')
+                    $this->map($personnelCosts[$person['id']] ?? [], 'project_id')
                 ),
             ];
         }

@@ -78,6 +78,12 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                         ],
                     ],
                 ],
+                3 => [
+                    'name' => 'Lonely Wolf',
+                    'salary_hours' => 160,
+                    'salary_amount' => 20000,
+                    'projects' => [],
+                ],
             ],
             $this->costlocker->people(new \DateTime('2015-02-01'))
         );
