@@ -92,7 +92,7 @@ class GenerateReportCommand extends Command
                     '',
                     $project['hrs_tracked_total'],
                     $project['hrs_budget'],
-                    "{$project['hrs_budget']} - ({$project['hrs_tracked_total']} - trackedHoursInMonth)",
+                    "{$project['hrs_budget']} - ({$project['hrs_tracked_total']} - {$project['hrs_tracked_month']})",
                     'tracked - billable',
                     $project['client_rate'],
                 ]);
@@ -161,14 +161,13 @@ class GenerateReportCommand extends Command
             $addStyle($rowId, 'bdd7ee');
 
             foreach ($personProjects as $idProject => $project) {
-                $hoursTrackedInMonth = $project['hrs_tracked_total']; // load from timesheet
                 $rowData = [
                     $person['name'],
                     $report->getProjectName($idProject),
                     $report->getProjectClient($idProject),
                     '',
                     '',
-                    $hoursTrackedInMonth,
+                    $project['hrs_tracked_month'],
                     $project['hrs_budget'],
                     "=MAX(0, G{$rowId}-({$project['hrs_tracked_total']}-F{$rowId}))",
                     "=MAX(0, F{$rowId}-H{$rowId})",
