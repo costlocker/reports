@@ -10,8 +10,16 @@ class CostlockerClient
 
     public function __construct(Client $c)
     {
-        
         $this->client = $c;
+    }
+
+    public function __invoke(\DateTime $month)
+    {
+        $report = new CostlockerReport();
+        $report->people = $this->people();
+        $report->projects = $this->projects();
+        $report->timesheet = $this->timesheet($month);
+        return $report;
     }
 
     public function projects()
@@ -97,6 +105,10 @@ class CostlockerClient
             ]
         );
         $rawData = json_decode($response->getBody(), true);
+
+        if (!array_key_exists('Simple_Timesheet', $rawData)) {
+            return [];
+        }
 
         return array_map(
             function (array $personSheet) {

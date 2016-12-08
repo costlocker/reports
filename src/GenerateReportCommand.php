@@ -56,9 +56,8 @@ class GenerateReportCommand extends Command
                 'Api-Token' => $apiKey,
             ],
         ]));
-        $projects = $client->projects();
-        $people = $client->people();
-        $timesheet = $client->timesheet($month);
+
+        $report = $client($month);
 
         $headers = [
             'Person',
@@ -75,7 +74,7 @@ class GenerateReportCommand extends Command
 
         $table = new Table($output);
         $table->setHeaders($headers);
-        foreach ($people as $person) {
+        foreach ($report->getPeople() as $person) {
             $table->addRow([
                 "<info>{$person['name']}</info>",
                 '',
@@ -84,11 +83,11 @@ class GenerateReportCommand extends Command
                 $person['salary_amount'],
                 '',
             ]);
-            foreach ($person['projects'] as $idProject => $project) {
+            foreach ($report->getPersonProjects($person) as $idProject => $project) {
                 $table->addRow([
                     $person['name'],
-                    $projects[$idProject]['name'],
-                    $projects[$idProject]['client'],
+                    $report->getProjectName($idProject),
+                    $report->getProjectClient($idProject),
                     '',
                     '',
                     $project['hrs_tracked'],
@@ -100,8 +99,6 @@ class GenerateReportCommand extends Command
             }
         }
         $table->render();
-
-        $output->writeln(json_encode($timesheet, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         $spreadsheet = new Spreadsheet();
         $worksheet = $spreadsheet->getActiveSheet();
@@ -141,9 +138,10 @@ class GenerateReportCommand extends Command
         }
         $addStyle($rowId, 'CCCCCC');
 
-        foreach ($people as $person) {
+        foreach ($report->getPeople() as $person) {
             $firstProjectRow = $rowId + 1;
-            $lastProjectRow = $rowId + count($person['projects']);
+            $personProjects = $report->getPersonProjects($person);
+            $lastProjectRow = $rowId + count($personProjects);
             $rowData = [
                 $person['name'],
                 '',
@@ -162,12 +160,12 @@ class GenerateReportCommand extends Command
             }
             $addStyle($rowId, 'bdd7ee');
 
-            foreach ($person['projects'] as $idProject => $project) {
+            foreach ($personProjects as $idProject => $project) {
                 $hoursTrackedInMonth = $project['hrs_tracked']; // load from timesheet
                 $rowData = [
                     $person['name'],
-                    $projects[$idProject]['name'],
-                    $projects[$idProject]['client'],
+                    $report->getProjectName($idProject),
+                    $report->getProjectClient($idProject),
                     '',
                     '',
                     $hoursTrackedInMonth,
