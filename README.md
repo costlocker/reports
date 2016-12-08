@@ -11,6 +11,7 @@
 
 ``` bash
 git clone ...
+composer install
 vendor/bin/phpunit
 bin/qa
 ```
