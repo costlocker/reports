@@ -80,7 +80,7 @@ class CostlockerClient
                         return [
                             'client_rate' => $project['client_rate'],
                             'hrs_budget' => $this->sum($projects, 'hrs_budget'),
-                            'hrs_tracked' => $this->sum($projects, 'hrs_tracked'),
+                            'hrs_tracked_total' => $this->sum($projects, 'hrs_tracked'),
                         ];
                     },
                     $this->map($personnelCosts[$person['id']], 'project_id')
