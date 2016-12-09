@@ -7,20 +7,16 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
-use GuzzleHttp\Client;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Swift_Mailer;
-use Swift_Message;
-use Swift_Attachment;
 
 class GenerateReportCommand extends Command
 {
     private $mailer;
 
-    public function __construct(Swift_Mailer $mailer)
+    public function __construct(Mailer $mailer)
     {
         parent::__construct();
         $this->mailer = $mailer;
@@ -50,14 +46,7 @@ class GenerateReportCommand extends Command
             '',
         ]);
 
-        $client = new CostlockerClient(new Client([
-            'base_uri' => $apiHost,
-            'http_errors' => true,
-            'headers' => [
-                'Api-Token' => $apiKey,
-            ],
-        ]));
-
+        $client = CostlockerClient::build($apiHost, $apiKey);
         $report = $client($month);
 
         $headers = [
@@ -200,14 +189,7 @@ class GenerateReportCommand extends Command
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($xlsFile);
 
-        $email = Swift_Message::newInstance()
-            ->addTo($recipient)
-            ->setFrom(['do-not-reply@costlocker.com' => 'Costlocker Reporter'])
-            ->setSubject("Report {$report->selectedMonth->format('Y-m')}")
-            ->setBody("Report {$report->selectedMonth->format('Y-m')}", 'text/plain')
-            ->attach(Swift_Attachment::fromPath($xlsFile));
-
-        $wasSent = $this->mailer->send($email);
+        $wasSent = $this->mailer->__invoke($recipient, $xlsFile, $report->selectedMonth);
         if ($wasSent) {
             unlink($xlsFile);
             $output->writeln('<comment>E-mail was sent!</comment>');

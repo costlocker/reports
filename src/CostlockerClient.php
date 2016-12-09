@@ -8,6 +8,17 @@ class CostlockerClient
 {
     private $client;
 
+    public static function build($apiHost, $apiKey)
+    {
+        return new CostlockerClient(new Client([
+            'base_uri' => $apiHost,
+            'http_errors' => true,
+            'headers' => [
+                'Api-Token' => $apiKey,
+            ],
+        ]));
+    }
+
     public function __construct(Client $c)
     {
         $this->client = $c;
