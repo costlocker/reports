@@ -4,7 +4,7 @@ namespace Costlocker\Reports;
 
 class CostlockerReportTest extends \PHPUnit_Framework_TestCase
 {
-    public function testFilterOnlyProjectsWithTrackedTime()
+    public function testFilterOnlyPeopleAndProjectsWithTrackedTime()
     {
         $report = new CostlockerReport();
         $report->people = [
@@ -13,9 +13,14 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
                     1 => ['hrs_tracked_month' => 10],
                     2 => ['hrs_tracked_month' => 0],
                 ]
-            ]
+            ],
+            2 => [
+                'projects' => []
+            ],
         ];
-        assertThat($report->getPersonProjects(1), arrayWithSize(1));
+        $people = $report->getActivePeople();
+        assertThat($people, arrayWithSize(1));
+        assertThat($people[1]['projects'], arrayWithSize(1));
     }
 
     public function testReturnAllProjectsWhenTimesheetIsEmpty()
@@ -29,7 +34,9 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
                 ]
             ]
         ];
-        assertThat($report->getPersonProjects(1), arrayWithSize(2));
+        $people = $report->getActivePeople();
+        assertThat($people, arrayWithSize(1));
+        assertThat($people[1]['projects'], arrayWithSize(2));
     }
 
     public function testFallbackForUnknownProject()

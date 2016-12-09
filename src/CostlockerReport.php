@@ -9,21 +9,26 @@ class CostlockerReport
     public $people;
     public $timesheet;
 
-    public function getPeople()
+    public function getActivePeople()
     {
-        return $this->people;
+        $people = [];
+        foreach ($this->people as $personId => $person) {
+            $projects = $this->getActiveProjects($personId);
+            if ($projects) {
+                $people[$personId] = ['projects' => $projects] + $person;
+            }
+        }
+        return $people ?: $this->people;
     }
 
-    public function getPersonProjects($personId)
+    private function getActiveProjects($personId)
     {
-        $projects = $this->people[$personId]['projects'] ?? [];
-        $projectsWithTrackedTime = array_filter(
-            $projects,
+        return array_filter(
+            $this->people[$personId]['projects'] ?? [],
             function (array $project) {
                 return $project['hrs_tracked_month'] > 0;
             }
         );
-        return $projectsWithTrackedTime ?: $projects;
     }
 
     public function getProjectName($idProject)
