@@ -93,11 +93,11 @@ class GenerateReportCommand extends Command
                 $person['salary_amount'],
                 '',
             ]);
-            foreach ($person['projects'] as $idProject => $project) {
+            foreach ($person['projects'] as $project) {
                 $table->addRow([
                     $person['name'],
-                    $report->getProjectName($idProject),
-                    $report->getProjectClient($idProject),
+                    $project['name'],
+                    $project['client'],
                     '',
                     '',
                     $project['hrs_tracked_total'],
@@ -172,11 +172,11 @@ class GenerateReportCommand extends Command
             }
             $addStyle($rowId, 'bdd7ee');
 
-            foreach ($person['projects'] as $idProject => $project) {
+            foreach ($person['projects'] as $project) {
                 $rowData = [
                     $person['name'],
-                    $report->getProjectName($idProject),
-                    $report->getProjectClient($idProject),
+                    $project['name'],
+                    $project['client'],
                     '',
                     '',
                     $project['hrs_tracked_month'],

@@ -12,10 +12,12 @@ class CostlockerReport
     public function getActivePeople()
     {
         $people = [];
-        foreach ($this->people as $personId => $person) {
+        foreach ($this->sortByName($this->people) as $personId => $person) {
             $projects = $this->getActiveProjects($personId);
             if ($projects) {
-                $people[$personId] = ['projects' => $projects] + $person;
+                $expandedProjects = $this->addProjectsNameAndClient($projects);
+                $person['projects'] = $this->sortByName($expandedProjects);
+                $people[$personId] = $person;
             }
         }
         return $people ?: $this->people;
@@ -31,12 +33,35 @@ class CostlockerReport
         );
     }
 
-    public function getProjectName($idProject)
+    private function addProjectsNameAndClient(array $projects)
+    {
+        foreach ($projects as $id => $project) {
+            $projects[$id] = $project + [
+                'name' => $this->getProjectName($id),
+                'client' => $this->getProjectClient($id),
+            ];
+        }
+        return $projects;
+    }
+
+    private function sortByName(array $items)
+    {
+        uasort(
+            $items,
+            function (array $first, array $second) {
+                return strcmp($first['name'], $second['name']);
+            }
+        );
+
+        return $items;
+    }
+
+    private function getProjectName($idProject)
     {
         return $this->projects[$idProject]['name'] ?? "#{$idProject}";
     }
 
-    public function getProjectClient($idProject)
+    private function getProjectClient($idProject)
     {
         return $this->projects[$idProject]['client'] ?? "#{$idProject} client";
     }
