@@ -10,6 +10,8 @@ use Symfony\Component\Console\Helper\Table;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class GenerateReportCommand extends Command
@@ -49,6 +51,15 @@ class GenerateReportCommand extends Command
         $client = CostlockerClient::build($apiHost, $apiKey);
         $report = $client($month);
 
+        if ($email) {
+            $this->emailRenderer($report, $email, $output);
+        } else {
+            $this->consoleRenderer($report, $output);
+        }
+    }
+
+    protected function consoleRenderer(CostlockerReport $report, OutputInterface $output)
+    {
         $headers = [
             'Person',
             'Project',
@@ -62,15 +73,6 @@ class GenerateReportCommand extends Command
             'Client Rate',
         ];
 
-        if ($email) {
-            $this->emailRenderer($headers, $report, $email, $output);
-        } else {
-            $this->consoleRenderer($headers, $report, $output);
-        }
-    }
-
-    protected function consoleRenderer(array $headers, CostlockerReport $report, OutputInterface $output)
-    {
         $table = new Table($output);
         $table->setHeaders($headers);
         foreach ($report->getActivePeople() as $person) {
@@ -101,14 +103,35 @@ class GenerateReportCommand extends Command
         $table->render();
     }
 
-    protected function emailRenderer(array $headers, CostlockerReport $report, $recipient, OutputInterface $output)
+    protected function emailRenderer(CostlockerReport $report, $recipient, OutputInterface $output)
     {
+        $headers = [
+            'IS PROFITABLE?',
+            'NAME',
+            'PROJECT',
+            'CLIENT',
+            ['Contracted', 'HRS'],
+            ['Wages', 'CZK'],
+            ['Tracked', 'HRS'],
+            ['Estimate', 'HRS'],
+            ['BILLABLE', 'hrs'],
+            ['NON-BILLABLE', 'hrs'],
+            ['CLIENT RATE', 'CZK'],
+            ['INVOICED PRICE', 'CZK'],
+            ['SALES', '%'],
+            ['NO SALES', '%'],
+            ['PROFITABILITY', 'CZK'],
+            ["NON-BILLABLE\nOn internal projects", 'CZK'],
+            ["NON-BILLABLE\nOn billable projects", 'CZK'],
+            ["TOTAL\nNon-Billable", 'CZK'],
+        ];
+
         $spreadsheet = new Spreadsheet();
         $worksheet = $spreadsheet->getActiveSheet();
         $worksheet->setTitle($report->selectedMonth->format('Y-m'));
 
         $rowId = 1;
-        $addStyle = function (&$rowId, $backgroundColor = null) use ($worksheet) {
+        $addStyle = function (&$rowId, $backgroundColor = null, $alignment = null) use ($worksheet) {
             $styles = [
                 'borders' => [
                     'allborders' => [
@@ -130,55 +153,95 @@ class GenerateReportCommand extends Command
                             'rgb' => $backgroundColor
                         ),
                     ],
+                    'alignment' => [
+                        'horizontal' => $alignment,
+                    ],
                 ];
             }
-            $worksheet->getStyle("A{$rowId}:J{$rowId}")->applyFromArray($styles);
+            $worksheet->getStyle("A{$rowId}:R{$rowId}")->applyFromArray($styles);
             $rowId++;
         };
-        
+        $setRowData = function ($rowId, array $rowData) use ($worksheet) {
+            foreach ($rowData as $index => $value) {
+                if (is_array($value)) {
+                    list($value, $format) = $value;
+                    $cell = $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $value, true);
+                    $cell->getStyle()->getNumberFormat()->setFormatCode($format);
+                } else {
+                    $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $value);
+                }
+            }
+        };
+
+        $unitRowId = $rowId + 1;
         foreach ($headers as $index => $header) {
-            $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $header);
+            $column = $this->indexToLetter($index);
+            if (is_array($header)) {
+                $worksheet->setCellValue("{$column}{$rowId}", $header[0]);
+                $worksheet->setCellValue("{$column}{$unitRowId}", "[{$header[1]}]");
+            } else {
+                $worksheet->setCellValue("{$column}{$rowId}", $header);
+                $worksheet->mergeCells("{$column}{$rowId}:{$column}{$unitRowId}");
+            }
         }
-        $addStyle($rowId, 'CCCCCC');
+        $addStyle($rowId, 'CCCCCC', Alignment::HORIZONTAL_CENTER);
+        $addStyle($rowId, 'CCCCCC', Alignment::HORIZONTAL_CENTER);
 
         foreach ($report->getActivePeople() as $person) {
+            $summaryRow = $rowId;
             $firstProjectRow = $rowId + 1;
             $lastProjectRow = $rowId + count($person['projects']);
             $rowData = [
+                "=IF(O{$summaryRow}>0, \"YES\", \"NO\")",
                 $person['name'],
                 '',
                 '',
                 $person['salary_hours'],
                 $person['salary_amount'],
-                "=SUM(F{$firstProjectRow}:F{$lastProjectRow})",
-                "=SUM(G{$firstProjectRow}:G{$lastProjectRow})",
-                "=SUM(H{$firstProjectRow}:H{$lastProjectRow})",
-                "=SUM(I{$firstProjectRow}:I{$lastProjectRow})",
+                ["=SUM(G{$firstProjectRow}:G{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
+                ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
+                ["=SUM(I{$firstProjectRow}:I{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
+                ["=SUM(J{$firstProjectRow}:J{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 '',
+                "=SUM(L{$firstProjectRow}:L{$lastProjectRow})",
+                ["=SUM(M{$firstProjectRow}:M{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
+                ["=1-M{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                "=L{$summaryRow}-F{$summaryRow}",
+                "=SUM(P{$firstProjectRow}:P{$lastProjectRow})",
+                "=SUM(Q{$firstProjectRow}:Q{$lastProjectRow})",
+                "=P{$summaryRow}+Q{$summaryRow}",
             ];
 
-            foreach ($rowData as $index => $value) {
-                $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $value);
-            }
+            $setRowData($rowId, $rowData);
             $addStyle($rowId, 'bdd7ee');
 
             foreach ($person['projects'] as $project) {
+                $isBillableProject = $project['client_rate'] > 0;
+                $nonBillableMoney = "=-1*((\$F\${$summaryRow}/\$E\${$summaryRow})*J{$rowId})";
                 $rowData = [
+                    '',
                     $person['name'],
                     $project['name'],
                     $project['client'],
                     '',
                     '',
-                    $project['hrs_tracked_month'],
-                    $project['hrs_budget'],
-                    "=MAX(0, G{$rowId}-"
-                        . "({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-F{$rowId}))",
-                    "=MAX(0, F{$rowId}-H{$rowId})",
+                    [$project['hrs_tracked_month'], NumberFormat::FORMAT_NUMBER_00],
+                    [$project['hrs_budget'], NumberFormat::FORMAT_NUMBER_00],
+                    [
+                        "=MAX(0, H{$rowId}-"
+                            . "({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-G{$rowId}))",
+                        NumberFormat::FORMAT_NUMBER_00
+                    ],
+                    ["=MAX(0, G{$rowId}-I{$rowId})", NumberFormat::FORMAT_NUMBER_00],
                     $project['client_rate'],
+                    "=I{$rowId}*K{$rowId}",
+                    ["=I{$rowId}/\$E\${$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                    '',
+                    '',
+                    $isBillableProject ? '' : $nonBillableMoney,
+                    $isBillableProject ? $nonBillableMoney : '',
                 ];
-                foreach ($rowData as $index => $value) {
-                    $worksheet->setCellValue("{$this->indexToLetter($index)}{$rowId}", $value);
-                };
+                $setRowData($rowId, $rowData);
                 $addStyle($rowId);
             }
         }
