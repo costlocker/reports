@@ -89,9 +89,10 @@ class GenerateReportCommand extends Command
                     $project['client'],
                     '',
                     '',
-                    $project['hrs_tracked_total'],
+                    $project['hrs_tracked_month'],
                     $project['hrs_budget'],
-                    "{$project['hrs_budget']} - ({$project['hrs_tracked_total']} - {$project['hrs_tracked_month']})",
+                    "{$project['hrs_budget']} - ({$project['hrs_tracked_total']} - "
+                        . "{$project['hrs_tracked_after_month']} - {$project['hrs_tracked_month']})",
                     'tracked - billable',
                     $project['client_rate'],
                 ]);
@@ -170,7 +171,8 @@ class GenerateReportCommand extends Command
                     '',
                     $project['hrs_tracked_month'],
                     $project['hrs_budget'],
-                    "=MAX(0, G{$rowId}-({$project['hrs_tracked_total']}-F{$rowId}))",
+                    "=MAX(0, G{$rowId}-"
+                        . "({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-F{$rowId}))",
                     "=MAX(0, F{$rowId}-H{$rowId})",
                     $project['client_rate'],
                 ];

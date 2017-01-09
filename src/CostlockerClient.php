@@ -58,15 +58,13 @@ class CostlockerClient
         $rawData = $this->request([
             'Simple_People' => new \stdClass(),
             'Simple_Projects_Ce' => new \stdClass(),
-            'Simple_Timesheet' => [
-                'datef' => $month->format('Y-m-01'),
-                'datet' => $month->format('Y-m-t'),
-            ],
         ]);
 
         $people = [];
         $personnelCosts = $this->map($rawData['Simple_Projects_Ce'], 'person_id');
-        $timesheet = $this->groupTimesheetByPersonAndProject($rawData);
+        $currentTimesheet = $this->groupTimesheetByPersonAndProject($month, $month);
+        $nextMonth = clone $month;
+        $nextTimesheet = $this->groupTimesheetByPersonAndProject($nextMonth->modify('+32 days'));
 
         foreach ($rawData['Simple_People'] as $person) {
             $person += [
@@ -78,14 +76,15 @@ class CostlockerClient
                 'salary_hours' => $person['salary_hours'],
                 'salary_amount' => $person['salary_amount'],
                 'projects' => array_map(
-                    function (array $projects) use ($timesheet, $person) {
+                    function (array $projects) use ($currentTimesheet, $nextTimesheet, $person) {
                         $project = reset($projects);
 
                         return [
                             'client_rate' => $project['client_rate'],
                             'hrs_budget' => $this->sum($projects, 'hrs_budget'),
                             'hrs_tracked_total' => $this->sum($projects, 'hrs_tracked'),
-                            'hrs_tracked_month' => $timesheet[$person['id']][$project['project_id']] ?? 0,
+                            'hrs_tracked_month' => $currentTimesheet[$person['id']][$project['project_id']] ?? 0,
+                            'hrs_tracked_after_month' => $nextTimesheet[$person['id']][$project['project_id']] ?? 0,
                         ];
                     },
                     $this->map($personnelCosts[$person['id']] ?? [], 'project_id')
@@ -96,8 +95,15 @@ class CostlockerClient
         return $people;
     }
 
-    private function groupTimesheetByPersonAndProject(array $rawData)
+    private function groupTimesheetByPersonAndProject(\DateTime $monthStart, \DateTime $monthEnd = null)
     {
+        $rawData = $this->request([
+            'Simple_Timesheet' => [
+                'datef' => $monthStart->format('Y-m-01'),
+                'datet' => $monthEnd ? $monthEnd->format('Y-m-t') : null,
+            ],
+        ]);
+
         return array_map(
             function (array $personSheet) {
                 return array_map(

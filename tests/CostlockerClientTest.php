@@ -37,7 +37,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 
     public function testGroupPeopleByProject()
     {
-        $this->whenApiReturns('people-and-costs.json');
+        $this->whenApiReturns('people-and-costs.json', 'timesheet-february.json', 'timesheet-march.json');
         $this->assertEquals(
             [
                 1 => [
@@ -50,12 +50,14 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                             'hrs_budget' => 10 + 2,
                             'hrs_tracked_total' => 1.0858333333333401,
                             'hrs_tracked_month' => 1800 / 3600,
+                            'hrs_tracked_after_month' => 0,
                         ],
                         1 => [
                             'client_rate' => 800,
                             'hrs_budget' => 70 + 1,
                             'hrs_tracked_total' => 2.611944444444422,
                             'hrs_tracked_month' => (9823 + 2000) / 3600,
+                            'hrs_tracked_after_month' => 6423 / 3600,
                         ],
                     ],
                 ],
@@ -69,12 +71,14 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                             'hrs_budget' => 10 + 20,
                             'hrs_tracked_total' => 0,
                             'hrs_tracked_month' => 0,
+                            'hrs_tracked_after_month' => 0,
                         ],
                         1 => [
                             'client_rate' => 500,
                             'hrs_budget' => 100,
                             'hrs_tracked_total' => 71.95,
                             'hrs_tracked_month' => 1823 / 3600,
+                            'hrs_tracked_after_month' => 0,
                         ],
                     ],
                 ],
@@ -89,10 +93,12 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    private function whenApiReturns($response)
+    private function whenApiReturns()
     {
-        $this->httpClient->shouldReceive('get')->andReturn(
-            new Response(200, [], file_get_contents(__DIR__ . "/fixtures/{$response}"))
-        );
+        foreach (func_get_args() as $response) {
+            $this->httpClient->shouldReceive('get')->once()->andReturn(
+                new Response(200, [], file_get_contents(__DIR__ . "/fixtures/{$response}"))
+            );
+        }
     }
 }
