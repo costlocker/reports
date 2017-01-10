@@ -26,6 +26,7 @@ class GenerateReportCommand extends Command
             ->setName('report')
             ->addOption('date', 'd', InputOption::VALUE_REQUIRED, 'Select month', 'previous month')
             ->addOption('host', 'a', InputOption::VALUE_REQUIRED, 'apiUrl|apiKey')
+            ->addOption('hardcodedHours', 'hh', InputOption::VALUE_REQUIRED, 'Hardcoded salary hours')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients');
     }
 
@@ -33,21 +34,23 @@ class GenerateReportCommand extends Command
     {
         $month = new \DateTime($input->getOption('date'));
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
-        $email = $input->getOption('email');
+        $settings = new ReportSettings();
+        $settings->email = $input->getOption('email');
+        $settings->hardcodedHours = $input->getOption('hardcodedHours');
 
         $output->writeln([
             "<comment>Report</comment>",
             "<info>Month:</info> {$month->format('Y-m')}",
             "<info>API Url:</info> {$apiHost}",
             "<info>API Key:</info> {$apiKey}",
-            "<info>E-mail Recipients:</info> {$email}",
+            "<info>E-mail Recipients:</info> {$settings->email}",
             '',
         ]);
 
         $client = CostlockerClient::build($apiHost, $apiKey);
         $report = $client($month);
 
-        $exporterType = $email ? 'xls' : 'console';
-        $this->exporters[$exporterType]($report, $output, $email);
+        $exporterType = $settings->email ? 'xls' : 'console';
+        $this->exporters[$exporterType]($report, $output, $settings);
     }
 }

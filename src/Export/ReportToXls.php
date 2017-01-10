@@ -11,6 +11,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Costlocker\Reports\Mailer;
 use Costlocker\Reports\CostlockerReport;
+use Costlocker\Reports\ReportSettings;
 
 class ReportToXls
 {
@@ -21,7 +22,7 @@ class ReportToXls
         $this->mailer = $mailer;
     }
 
-    public function __invoke(CostlockerReport $report, OutputInterface $output, $recipient)
+    public function __invoke(CostlockerReport $report, OutputInterface $output, ReportSettings $settings)
     {
         $currencyFormat = '# ##0 [$Kč-405]';
         $headers = [
@@ -124,7 +125,7 @@ class ReportToXls
                 $person['name'],
                 '',
                 '',
-                $person['salary_hours'],
+                $settings->hardcodedHours ?: $person['salary_hours'],
                 [$person['salary_amount'], $currencyFormat],
                 ["=SUM(G{$firstProjectRow}:G{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
@@ -179,7 +180,7 @@ class ReportToXls
             $column->setAutoSize(true);
         }
 
-        $this->export($report, $spreadsheet, $output, $recipient);
+        $this->export($report, $spreadsheet, $output, $settings->email);
     }
 
     private function export(CostlockerReport $report, Spreadsheet $spreadsheet, $output, $recipient)
