@@ -14,7 +14,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->httpClient = m::mock(Client::class);
-        $this->costlocker = new CostlockerClient($this->httpClient);
+        $this->costlocker = new CostlockerClient($this->httpClient, 20000);
     }
 
     public function testLoadProjectAndClients()

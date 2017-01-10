@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 class CostlockerClient
 {
     private $client;
+    private $defaultSalary;
 
     public static function build($apiHost, $apiKey)
     {
@@ -19,9 +20,10 @@ class CostlockerClient
         ]));
     }
 
-    public function __construct(Client $c)
+    public function __construct(Client $c, $defaultSalary = 0)
     {
         $this->client = $c;
+        $this->defaultSalary = $defaultSalary;
     }
 
     public function __invoke(\DateTime $month)
@@ -70,8 +72,8 @@ class CostlockerClient
             $person += [
                 'type' => 'salary',
                 'salary_hours' => 8 * 20,
-                'salary_amount' => 20000,
-                'hourly_rate' => 20000 / (8 * 20),
+                'salary_amount' => $this->defaultSalary,
+                'hourly_rate' => $this->defaultSalary / (8 * 20),
             ];
 
             $projects = array_map(
