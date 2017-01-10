@@ -105,6 +105,7 @@ class GenerateReportCommand extends Command
 
     protected function emailRenderer(CostlockerReport $report, $recipient, OutputInterface $output)
     {
+        $currencyFormat = '# ##0 [$Kč-405]';
         $headers = [
             'IS PROFITABLE?',
             'NAME',
@@ -197,19 +198,19 @@ class GenerateReportCommand extends Command
                 '',
                 '',
                 $person['salary_hours'],
-                $person['salary_amount'],
+                [$person['salary_amount'], $currencyFormat],
                 ["=SUM(G{$firstProjectRow}:G{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(I{$firstProjectRow}:I{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(J{$firstProjectRow}:J{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 '',
-                "=SUM(L{$firstProjectRow}:L{$lastProjectRow})",
+                ["=SUM(L{$firstProjectRow}:L{$lastProjectRow})", $currencyFormat],
                 ["=SUM(M{$firstProjectRow}:M{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
                 ["=1-M{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
-                "=L{$summaryRow}-F{$summaryRow}",
-                "=SUM(P{$firstProjectRow}:P{$lastProjectRow})",
-                "=SUM(Q{$firstProjectRow}:Q{$lastProjectRow})",
-                "=P{$summaryRow}+Q{$summaryRow}",
+                ["=L{$summaryRow}-F{$summaryRow}", $currencyFormat],
+                ["=SUM(P{$firstProjectRow}:P{$lastProjectRow})", $currencyFormat],
+                ["=SUM(Q{$firstProjectRow}:Q{$lastProjectRow})", $currencyFormat],
+                ["=P{$summaryRow}+Q{$summaryRow}", $currencyFormat],
             ];
 
             $setRowData($rowId, $rowData);
@@ -217,7 +218,7 @@ class GenerateReportCommand extends Command
 
             foreach ($person['projects'] as $project) {
                 $isBillableProject = $project['client_rate'] > 0;
-                $nonBillableMoney = "=-1*((\$F\${$summaryRow}/\$E\${$summaryRow})*J{$rowId})";
+                $nonBillableMoney = ["=-1*((\$F\${$summaryRow}/\$E\${$summaryRow})*J{$rowId})", $currencyFormat];
                 $rowData = [
                     '',
                     $person['name'],
@@ -233,8 +234,8 @@ class GenerateReportCommand extends Command
                         NumberFormat::FORMAT_NUMBER_00
                     ],
                     ["=MAX(0, G{$rowId}-I{$rowId})", NumberFormat::FORMAT_NUMBER_00],
-                    $project['client_rate'],
-                    "=I{$rowId}*K{$rowId}",
+                    [$project['client_rate'], $currencyFormat],
+                    ["=I{$rowId}*K{$rowId}", $currencyFormat],
                     ["=I{$rowId}/\$E\${$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                     '',
                     '',
