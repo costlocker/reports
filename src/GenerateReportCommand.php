@@ -107,24 +107,24 @@ class GenerateReportCommand extends Command
     {
         $currencyFormat = '# ##0 [$Kč-405]';
         $headers = [
-            'IS PROFITABLE?',
-            'NAME',
-            'PROJECT',
-            'CLIENT',
-            ['Contracted', 'HRS'],
-            ['Wages', 'CZK'],
-            ['Tracked', 'HRS'],
-            ['Estimate', 'HRS'],
-            ['BILLABLE', 'hrs'],
-            ['NON-BILLABLE', 'hrs'],
-            ['CLIENT RATE', 'CZK'],
-            ['INVOICED PRICE', 'CZK'],
-            ['SALES', '%'],
-            ['NO SALES', '%'],
-            ['PROFITABILITY', 'CZK'],
-            ["NON-BILLABLE\nOn internal projects", 'CZK'],
-            ["NON-BILLABLE\nOn billable projects", 'CZK'],
-            ["TOTAL\nNon-Billable", 'CZK'],
+            ['IS PROFITABLE?', 'd6dce5'],
+            ['NAME', 'd6dce5'],
+            ['PROJECT', 'd6dce5'],
+            ['CLIENT', 'd6dce5'],
+            ['Contracted', 'd0cece', 'HRS'],
+            ['Wages', 'd0cece', 'CZK'],
+            ['Tracked', 'd0cece', 'HRS'],
+            ['Estimate', 'd0cece', 'HRS'],
+            ['BILLABLE', 'ffd966', 'hrs'],
+            ['NON-BILLABLE', 'd0cece', 'hrs'],
+            ['CLIENT RATE', 'ffd966', 'CZK'],
+            ['INVOICED PRICE', 'ffd966', 'CZK'],
+            ['SALES', 'fbe5d6', '%'],
+            ['NO SALES', 'fbe5d6', '%'],
+            ['PROFITABILITY', 'fbe5d6', 'CZK'],
+            ["NON-BILLABLE\nOn internal projects", 'f4b183', 'CZK'],
+            ["NON-BILLABLE\nOn billable projects", 'f4b183', 'CZK'],
+            ["TOTAL\nNon-Billable", 'ed7d31', 'CZK'],
         ];
 
         $spreadsheet = new Spreadsheet();
@@ -151,7 +151,7 @@ class GenerateReportCommand extends Command
                     'fill' => [
                         'type' => Fill::FILL_SOLID,
                         'startcolor' => array(
-                            'rgb' => $backgroundColor
+                            'rgb' => $backgroundColor != 'transparent' ? $backgroundColor : null,
                         ),
                     ],
                     'alignment' => [
@@ -177,16 +177,25 @@ class GenerateReportCommand extends Command
         $unitRowId = $rowId + 1;
         foreach ($headers as $index => $header) {
             $column = $this->indexToLetter($index);
-            if (is_array($header)) {
-                $worksheet->setCellValue("{$column}{$rowId}", $header[0]);
-                $worksheet->setCellValue("{$column}{$unitRowId}", "[{$header[1]}]");
+            list($header, $backgroundColor, $unit) = $header + [2 => null];
+            if ($unit) {
+                $worksheet->setCellValue("{$column}{$rowId}", $header);
+                $worksheet->setCellValue("{$column}{$unitRowId}", "[{$unit}]");
             } else {
                 $worksheet->setCellValue("{$column}{$rowId}", $header);
                 $worksheet->mergeCells("{$column}{$rowId}:{$column}{$unitRowId}");
             }
+            $worksheet->getStyle("{$column}{$rowId}:{$column}{$unitRowId}")->applyFromArray([
+                'fill' => [
+                    'type' => Fill::FILL_SOLID,
+                    'startcolor' => array(
+                        'rgb' => $backgroundColor
+                    ),
+                ],
+            ]);
         }
-        $addStyle($rowId, 'CCCCCC', Alignment::HORIZONTAL_CENTER);
-        $addStyle($rowId, 'CCCCCC', Alignment::HORIZONTAL_CENTER);
+        $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
+        $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
 
         foreach ($report->getActivePeople() as $person) {
             $summaryRow = $rowId;
