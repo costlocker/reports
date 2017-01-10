@@ -68,27 +68,43 @@ class CostlockerClient
 
         foreach ($rawData['Simple_People'] as $person) {
             $person += [
+                'type' => 'salary',
                 'salary_hours' => 8 * 20,
                 'salary_amount' => 20000,
+                'hourly_rate' => 20000 / (8 * 20),
             ];
+
+            $projects = array_map(
+                function (array $projects) use ($currentTimesheet, $nextTimesheet, $person) {
+                    $project = reset($projects);
+
+                    return [
+                        'client_rate' => $project['client_rate'],
+                        'hrs_budget' => $this->sum($projects, 'hrs_budget'),
+                        'hrs_tracked_total' => $this->sum($projects, 'hrs_tracked'),
+                        'hrs_tracked_month' => $currentTimesheet[$person['id']][$project['project_id']] ?? 0,
+                        'hrs_tracked_after_month' => $nextTimesheet[$person['id']][$project['project_id']] ?? 0,
+                    ];
+                },
+                $this->map($personnelCosts[$person['id']] ?? [], 'project_id')
+            );
+            $trackedHours = array_sum(
+                array_map(
+                    function (array $project) {
+                        return $project['hrs_tracked_month'];
+                    },
+                    $projects
+                )
+            );
+
+            $isEmployee = $person['type'] == 'salary';
             $people[$person['id']] = [
                 'name' => "{$person['first_name']} {$person['last_name']}",
-                'salary_hours' => $person['salary_hours'],
-                'salary_amount' => $person['salary_amount'],
-                'projects' => array_map(
-                    function (array $projects) use ($currentTimesheet, $nextTimesheet, $person) {
-                        $project = reset($projects);
-
-                        return [
-                            'client_rate' => $project['client_rate'],
-                            'hrs_budget' => $this->sum($projects, 'hrs_budget'),
-                            'hrs_tracked_total' => $this->sum($projects, 'hrs_tracked'),
-                            'hrs_tracked_month' => $currentTimesheet[$person['id']][$project['project_id']] ?? 0,
-                            'hrs_tracked_after_month' => $nextTimesheet[$person['id']][$project['project_id']] ?? 0,
-                        ];
-                    },
-                    $this->map($personnelCosts[$person['id']] ?? [], 'project_id')
-                ),
+                'is_employee' => $isEmployee,
+                'salary_hours' => $isEmployee ? $person['salary_hours'] : $trackedHours,
+                'salary_amount' => $isEmployee ? $person['salary_amount'] : $trackedHours * $person['hourly_rate'],
+                'hourly_rate' => $person['hourly_rate'],
+                'projects' => $projects,
             ];
         }
 

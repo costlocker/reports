@@ -42,8 +42,10 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
             [
                 1 => [
                     'name' => 'Own TROK EZ5H Test',
+                    'is_employee' => true,
                     'salary_hours' => 160,
                     'salary_amount' => 20000,
+                    'hourly_rate' => 125,
                     'projects' => [
                         33 => [
                             'client_rate' => 20,
@@ -63,8 +65,10 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                 ],
                 2 => [
                     'name' => 'Uncle Bob',
+                    'is_employee' => true,
                     'salary_hours' => 80,
                     'salary_amount' => 30000,
+                    'hourly_rate' => 125,
                     'projects' => [
                         33 => [
                             'client_rate' => 50,
@@ -84,8 +88,10 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                 ],
                 3 => [
                     'name' => 'Lonely Wolf',
-                    'salary_hours' => 160,
-                    'salary_amount' => 20000,
+                    'is_employee' => false,
+                    'salary_hours' => 0,
+                    'salary_amount' => 0 * 100,
+                    'hourly_rate' => 100,
                     'projects' => [],
                 ],
             ],

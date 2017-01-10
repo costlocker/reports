@@ -125,8 +125,16 @@ class ReportToXls
                 $person['name'],
                 '',
                 '',
-                $settings->getHoursSalary($person['name'], "=G{$summaryRow}") ?: $person['salary_hours'],
-                [$person['salary_amount'], $currencyFormat],
+                [
+                    $person['is_employee'] ?
+                        ($settings->getHoursSalary($person['name'], "=G{$summaryRow}") ?: $person['salary_hours']) :
+                        "=G{$summaryRow}",
+                    NumberFormat::FORMAT_NUMBER_00
+                ],
+                [
+                    $person['is_employee'] ? $person['salary_amount'] : "=E{$summaryRow}*{$person['hourly_rate']}",
+                    $currencyFormat
+                ],
                 ["=SUM(G{$firstProjectRow}:G{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(I{$firstProjectRow}:I{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
