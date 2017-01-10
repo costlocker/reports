@@ -125,7 +125,7 @@ class ReportToXls
                 $person['name'],
                 '',
                 '',
-                $settings->hardcodedHours ?: $person['salary_hours'],
+                $settings->getHoursSalary($person['name'], "=G{$summaryRow}") ?: $person['salary_hours'],
                 [$person['salary_amount'], $currencyFormat],
                 ["=SUM(G{$firstProjectRow}:G{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
