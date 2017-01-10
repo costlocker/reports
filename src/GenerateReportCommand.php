@@ -228,6 +228,8 @@ class GenerateReportCommand extends Command
             foreach ($person['projects'] as $project) {
                 $isBillableProject = $project['client_rate'] > 0;
                 $nonBillableMoney = ["=-1*((\$F\${$summaryRow}/\$E\${$summaryRow})*J{$rowId})", $currencyFormat];
+                $remainingBillable =
+                    "H{$rowId}-({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-G{$rowId})";
                 $rowData = [
                     '',
                     $person['name'],
@@ -238,8 +240,7 @@ class GenerateReportCommand extends Command
                     [$project['hrs_tracked_month'], NumberFormat::FORMAT_NUMBER_00],
                     [$project['hrs_budget'], NumberFormat::FORMAT_NUMBER_00],
                     [
-                        "=MAX(0, H{$rowId}-"
-                            . "({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-G{$rowId}))",
+                        "=MIN(G{$rowId}, MAX(0, {$remainingBillable}))",
                         NumberFormat::FORMAT_NUMBER_00
                     ],
                     ["=MAX(0, G{$rowId}-I{$rowId})", NumberFormat::FORMAT_NUMBER_00],
