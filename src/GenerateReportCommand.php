@@ -47,10 +47,21 @@ class GenerateReportCommand extends Command
             '',
         ]);
 
+        $start = microtime(true);
         $client = CostlockerClient::build($apiHost, $apiKey);
         $report = $client($month);
+        $endApi = microtime(true);
 
         $exporterType = $settings->email ? 'xls' : 'console';
         $this->exporters[$exporterType]($report, $output, $settings);
+        $endExport = microtime(true);
+
+        $output->writeln([
+            '',
+            "<comment>Durations [s]</comment>",
+            "<info>API:</info> " . ($endApi - $start),
+            "<info>Export:</info> " . ($endExport - $endApi),
+            "<info>Total:</info> " . ($endExport - $start),
+        ]);
     }
 }
