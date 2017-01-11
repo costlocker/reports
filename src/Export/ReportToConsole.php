@@ -2,13 +2,13 @@
 
 namespace Costlocker\Reports\Export;
 
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
 use Costlocker\Reports\CostlockerReport;
+use Costlocker\Reports\ReportSettings;
 
 class ReportToConsole
 {
-    public function __invoke(CostlockerReport $report, OutputInterface $output)
+    public function __invoke(CostlockerReport $report, ReportSettings $settings)
     {
         $headers = [
             'Person',
@@ -23,7 +23,7 @@ class ReportToConsole
             'Client Rate',
         ];
 
-        $table = new Table($output);
+        $table = new Table($settings->output);
         $table->setHeaders($headers);
         foreach ($report->getActivePeople() as $person) {
             $table->addRow([

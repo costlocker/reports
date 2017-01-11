@@ -42,6 +42,7 @@ class GenerateReportCommand extends Command
 
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
         $settings = new ReportSettings();
+        $settings->output = $output;
         $settings->email = $input->getOption('email');
         $settings->hardcodedHours = $input->getOption('hardcodedHours');
 
@@ -69,17 +70,11 @@ class GenerateReportCommand extends Command
         $endApi = microtime(true);
 
         $exporterType = $settings->email ? 'xls' : 'console';
-        $createdFile = null;
         foreach ($reports as $report) {
-            $createdFile = $this->exporters[$exporterType]($report, $output, $settings);
+            $this->exporters[$exporterType]($report, $settings);
         }
-        if ($createdFile) {
-            $this->sendMail(
-                $settings->email,
-                $createdFile,
-                "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}",
-                $output
-            );
+        if ($settings->email) {
+            $this->sendMail($settings, "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}");
         }
         $endExport = microtime(true);
 
@@ -92,14 +87,15 @@ class GenerateReportCommand extends Command
         ]);
     }
 
-    private function sendMail($recipient, $xlsFile, $selectedMonths, $output)
+    private function sendMail(ReportSettings $settings, $selectedMonths)
     {
-        $wasSent = $this->mailer->__invoke($recipient, $xlsFile, $selectedMonths);
+        $xlsFile = $this->exporters['xls']->toFile($selectedMonths);
+        $wasSent = $this->mailer->__invoke($settings->email, $xlsFile, $selectedMonths);
         if ($wasSent) {
             unlink($xlsFile);
-            $output->writeln('<comment>E-mail was sent!</comment>');
+            $settings->output->writeln('<comment>E-mail was sent!</comment>');
         } else {
-            $output->writeln('<error>E-mail was not sent!</error>');
+            $settings->output->writeln('<error>E-mail was not sent!</error>');
         }
     }
 }

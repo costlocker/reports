@@ -2,7 +2,6 @@
 
 namespace Costlocker\Reports\Export;
 
-use Symfony\Component\Console\Output\OutputInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -14,7 +13,15 @@ use Costlocker\Reports\ReportSettings;
 
 class ReportToXls
 {
-    public function __invoke(CostlockerReport $report, OutputInterface $output, ReportSettings $settings)
+    private $spreadsheet;
+
+    public function __construct()
+    {
+        $this->spreadsheet = new Spreadsheet();
+        $this->spreadsheet->removeSheetByIndex(0);
+    }
+
+    public function __invoke(CostlockerReport $report, ReportSettings $settings)
     {
         $currencyFormat = '# ##0 [$Kč-405]';
         $headers = [
@@ -38,8 +45,7 @@ class ReportToXls
             ["TOTAL Non-Billable", 'ed7d31', 'CZK'],
         ];
 
-        $spreadsheet = new Spreadsheet();
-        $worksheet = $spreadsheet->getActiveSheet();
+        $worksheet = $this->spreadsheet->createSheet();
         $worksheet->setTitle($report->selectedMonth->format('Y-m'));
 
         $rowId = 1;
@@ -179,11 +185,14 @@ class ReportToXls
         foreach ($worksheet->getColumnDimensions() as $column) {
             $column->setAutoSize(true);
         }
+    }
 
-        $xlsFile = "var/reports/{$report->selectedMonth->format('Y-m')}.xlsx";
-        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+    public function toFile($filename)
+    {
+        $normalizedName = str_replace(' ', '', $filename);
+        $xlsFile = "var/reports/{$normalizedName}.xlsx";
+        $writer = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
         $writer->save($xlsFile);
-
         return $xlsFile;
     }
 

@@ -10,6 +10,8 @@ class ReportSettings
 
     public $email;
     public $hardcodedHours;
+    /** @var \Symfony\Component\Console\Output\OutputInterface */
+    public $output;
 
     public function getHoursSalary($person, $trackedHours = null)
     {
