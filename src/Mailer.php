@@ -15,13 +15,13 @@ class Mailer
         $this->mailer = $mailer;
     }
 
-    public function __invoke($recipient, $xlsFile, \DateTime $selectedMonth)
+    public function __invoke($recipient, $xlsFile, $selectedMonths)
     {
         $email = Swift_Message::newInstance()
             ->addTo($recipient)
             ->setFrom(['do-not-reply@costlocker.com' => 'Costlocker Reporter'])
-            ->setSubject("Report {$selectedMonth->format('Y-m')}")
-            ->setBody("Report {$selectedMonth->format('Y-m')}", 'text/plain')
+            ->setSubject("Report {$selectedMonths}")
+            ->setBody("Report {$selectedMonths}", 'text/plain')
             ->attach(Swift_Attachment::fromPath($xlsFile));
 
         return $this->mailer->send($email);

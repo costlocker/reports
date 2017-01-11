@@ -11,14 +11,16 @@ use Symfony\Component\Console\Helper\ProgressBar;
 class GenerateReportCommand extends Command
 {
     private $exporters;
+    private $mailer;
 
     public function __construct(Mailer $mailer)
     {
         parent::__construct();
         $this->exporters = [
             'console' => new Export\ReportToConsole(),
-            'xls' => new Export\ReportToXls($mailer),
+            'xls' => new Export\ReportToXls(),
         ];
+        $this->mailer = $mailer;
     }
 
     protected function configure()
@@ -67,8 +69,17 @@ class GenerateReportCommand extends Command
         $endApi = microtime(true);
 
         $exporterType = $settings->email ? 'xls' : 'console';
+        $createdFile = null;
         foreach ($reports as $report) {
-            $this->exporters[$exporterType]($report, $output, $settings);
+            $createdFile = $this->exporters[$exporterType]($report, $output, $settings);
+        }
+        if ($createdFile) {
+            $this->sendMail(
+                $settings->email,
+                $createdFile,
+                "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}",
+                $output
+            );
         }
         $endExport = microtime(true);
 
@@ -79,5 +90,16 @@ class GenerateReportCommand extends Command
             "<info>Export:</info> " . ($endExport - $endApi),
             "<info>Total:</info> " . ($endExport - $start),
         ]);
+    }
+
+    private function sendMail($recipient, $xlsFile, $selectedMonths, $output)
+    {
+        $wasSent = $this->mailer->__invoke($recipient, $xlsFile, $selectedMonths);
+        if ($wasSent) {
+            unlink($xlsFile);
+            $output->writeln('<comment>E-mail was sent!</comment>');
+        } else {
+            $output->writeln('<error>E-mail was not sent!</error>');
+        }
     }
 }

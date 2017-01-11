@@ -9,19 +9,11 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Costlocker\Reports\Mailer;
 use Costlocker\Reports\CostlockerReport;
 use Costlocker\Reports\ReportSettings;
 
 class ReportToXls
 {
-    private $mailer;
-
-    public function __construct(Mailer $mailer)
-    {
-        $this->mailer = $mailer;
-    }
-
     public function __invoke(CostlockerReport $report, OutputInterface $output, ReportSettings $settings)
     {
         $currencyFormat = '# ##0 [$Kč-405]';
@@ -188,22 +180,11 @@ class ReportToXls
             $column->setAutoSize(true);
         }
 
-        $this->export($report, $spreadsheet, $output, $settings->email);
-    }
-
-    private function export(CostlockerReport $report, Spreadsheet $spreadsheet, $output, $recipient)
-    {
         $xlsFile = "var/reports/{$report->selectedMonth->format('Y-m')}.xlsx";
         $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save($xlsFile);
 
-        $wasSent = $this->mailer->__invoke($recipient, $xlsFile, $report->selectedMonth);
-        if ($wasSent) {
-            unlink($xlsFile);
-            $output->writeln('<comment>E-mail was sent!</comment>');
-        } else {
-            $output->writeln('<error>E-mail was not sent!</error>');
-        }
+        return $xlsFile;
     }
 
     private function indexToLetter($number)
