@@ -27,4 +27,21 @@ class DatesTest extends \PHPUnit_Framework_TestCase
         Dates::getNextMonth($currentMonth);
         assertThat($currentMonth->format('Y-m'), is('2017-01'));
     }
+
+    /** @dataProvider provideMonthsInterval */
+    public function testGetMonthsBetweenTwoDates($monthStart, $monthEnd, $expectedMonthsCount)
+    {
+        $months = Dates::getMonthsBetween(new \DateTime($monthStart), new \DateTime($monthEnd));
+        assertThat($months, is(arrayWithSize($expectedMonthsCount)));
+    }
+
+    public function provideMonthsInterval()
+    {
+        return [
+            ['previous month', 'previous month', 1],
+            ['previous month', 'this month', 2],
+            ['2016-01-01', '2016-12-31', 12],
+            ['this month', 'previous month', 0],
+        ];
+    }
 }
