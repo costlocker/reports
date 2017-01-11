@@ -65,8 +65,7 @@ class CostlockerClient
         $people = [];
         $personnelCosts = $this->map($rawData['Simple_Projects_Ce'], 'person_id');
         $currentTimesheet = $this->groupTimesheetByPersonAndProject($month, $month);
-        $nextMonth = clone $month;
-        $nextTimesheet = $this->groupTimesheetByPersonAndProject($nextMonth->modify('+32 days'));
+        $nextTimesheet = $this->groupTimesheetByPersonAndProject(Dates::getNextMonth($month));
 
         foreach ($rawData['Simple_People'] as $person) {
             $person += [
