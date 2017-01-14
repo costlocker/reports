@@ -30,6 +30,7 @@ class GenerateReportCommand extends Command
             ->addOption('monthStart', 'ms', InputOption::VALUE_REQUIRED, 'First month', 'previous month')
             ->addOption('monthEnd', 'me', InputOption::VALUE_REQUIRED, 'Last month', 'previous month')
             ->addOption('host', 'a', InputOption::VALUE_REQUIRED, 'apiUrl|apiKey')
+            ->addOption('currency', 'c', InputOption::VALUE_REQUIRED, 'Currency', 'CZK')
             ->addOption('hardcodedHours', 'hh', InputOption::VALUE_REQUIRED, 'Hardcoded salary hours')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients');
     }
@@ -44,6 +45,7 @@ class GenerateReportCommand extends Command
         $settings = new ReportSettings();
         $settings->output = $output;
         $settings->email = $input->getOption('email');
+        $settings->currency = $input->getOption('currency');
         $settings->hardcodedHours = $input->getOption('hardcodedHours');
 
         $output->writeln([

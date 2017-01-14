@@ -9,6 +9,7 @@ class ReportSettings
     const TRACKED_HOURS = 'Tracker';
 
     public $email;
+    public $currency;
     public $hardcodedHours;
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     public $output;
