@@ -23,7 +23,7 @@ class ReportToXls
 
     public function __invoke(CostlockerReport $report, ReportSettings $settings)
     {
-        $currencyFormat = '# ##0 [$Kč-405]';
+        $currencyFormat = $this->getCurrencyFormat($settings->currency);
         $headers = [
             ['IS PROFITABLE?', 'd6dce5'],
             ['NAME', 'd6dce5'],
@@ -194,6 +194,15 @@ class ReportToXls
         $writer = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
         $writer->save($xlsFile);
         return $xlsFile;
+    }
+
+    private function getCurrencyFormat($currency)
+    {
+        static $mapping = [
+            'CZK' => '# ##0 [$Kč-405]',
+            'EUR' => NumberFormat::FORMAT_CURRENCY_EUR_SIMPLE,
+        ];
+        return $mapping[$currency] ?? "#,##0.00 {$currency}";
     }
 
     private function indexToLetter($number)
