@@ -46,7 +46,9 @@ class InspiroProvider
             ];
         };
 
-        return array_map(
+        $report = new InspiroReport();
+        $report->lastDay = $lastDay;
+        $report->clients = array_map(
             function (array $projects) use ($analyzeProjects) {
                 $states = $this->client->map($projects, 'state');
                 return [
@@ -56,6 +58,8 @@ class InspiroProvider
             },
             $this->client->map($projects, 'client')
         );
+
+        return $report;
     }
 
     public function determineProjectState(\DateTime $lastDay, $daStart, $daEnd)

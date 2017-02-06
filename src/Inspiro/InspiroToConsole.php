@@ -8,7 +8,7 @@ use Costlocker\Reports\ReportSettings;
 
 class InspiroToConsole
 {
-    public function __invoke(array $clients, ReportSettings $settings)
+    public function __invoke(InspiroReport $report, ReportSettings $settings)
     {
         $headers = [
             [
@@ -28,7 +28,7 @@ class InspiroToConsole
 
         $table = new Table($settings->output);
         $table->setHeaders($headers);
-        foreach ($clients as $client => $billing) {
+        foreach ($report->clients as $client => $billing) {
             $table->addRow([
                 "<comment>{$client}</comment>",
                 $billing['running']['revenue'],

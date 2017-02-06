@@ -18,7 +18,7 @@ class InspiroToXls
         $this->spreadsheet = $spreadsheet;
     }
 
-    public function __invoke(array $clients, ReportSettings $settings)
+    public function __invoke(InspiroReport $report, ReportSettings $settings)
     {
         $currencyFormat = $this->getCurrencyFormat($settings->currency);
         $headers = [
@@ -30,7 +30,7 @@ class InspiroToXls
         ];
 
         $worksheet = $this->spreadsheet->createSheet();
-        $worksheet->setTitle('Clients');
+        $worksheet->setTitle("{$report->lastDay->format('Y-01-01')} {$report->lastDay->format('Y-m-d')}");
 
         $rowId = 1;
         $addStyle = function (&$rowId, $backgroundColor = null, $alignment = null) use ($worksheet) {
@@ -99,7 +99,7 @@ class InspiroToXls
         $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
         $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
 
-        foreach ($clients as $client => $billing) {
+        foreach ($report->clients as $client => $billing) {
             $rowData = [
                 $client,
                 [$billing['finished']['revenue'], $currencyFormat],
