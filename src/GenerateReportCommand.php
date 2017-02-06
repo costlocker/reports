@@ -28,12 +28,19 @@ class GenerateReportCommand extends Command
                     'console' => new Profitability\ProfitabilityToConsole(),
                     'xls' => new Profitability\ProfitabilityToXls($this->spreadsheet),
                 ],
+                'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
+                    return "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}";
+                },
             ],
             'inspiro' => [
                 'provider' => Inspiro\InspiroProvider::class,
                 'exporters' => [
                     'console' => new Inspiro\InspiroToConsole(),
-                ]
+                    'xls' => new Inspiro\InspiroToXls($this->spreadsheet),
+                ],
+                'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
+                    return "Clients";
+                },
             ],
         ];
         $this->mailer = $mailer;
@@ -96,7 +103,7 @@ class GenerateReportCommand extends Command
             $reporter['exporters'][$exporterType]($report, $settings);
         }
         if ($settings->email) {
-            $this->sendMail($settings, "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}");
+            $this->sendMail($settings, $reporter['filename']($monthStart, $monthEnd));
         }
         $endExport = microtime(true);
 
@@ -109,10 +116,10 @@ class GenerateReportCommand extends Command
         ]);
     }
 
-    private function sendMail(ReportSettings $settings, $selectedMonths)
+    private function sendMail(ReportSettings $settings, $filename)
     {
-        $xlsFile = $this->spreadsheetToFile($selectedMonths);
-        $wasSent = $this->mailer->__invoke($settings->email, $xlsFile, $selectedMonths);
+        $xlsFile = $this->spreadsheetToFile($filename);
+        $wasSent = $this->mailer->__invoke($settings->email, $xlsFile, $filename);
         if ($wasSent) {
             unlink($xlsFile);
             $settings->output->writeln('<comment>E-mail was sent!</comment>');
