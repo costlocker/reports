@@ -23,4 +23,9 @@ class Dates
         $nextMonth->setDate($month->format('Y'), $month->format('m'), $month->format('t'));
         return $nextMonth->modify('+1 day');
     }
+
+    public static function getLastDatetimeInMonth(\DateTime $month)
+    {
+        return new \DateTime("{$month->format('Y-m-t')} 23:59:59");
+    }
 }

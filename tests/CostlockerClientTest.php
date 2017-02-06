@@ -120,7 +120,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                     ],
                 ],
             ],
-            $inspiro()
+            $inspiro(new \DateTime('2017-01-31 23:59:59'))
         );
     }
 

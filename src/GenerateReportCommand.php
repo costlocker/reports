@@ -23,6 +23,9 @@ class GenerateReportCommand extends Command
         $this->spreadsheet->removeSheetByIndex(0);
         $this->providers = [
             'profitability' => [
+                'interval' => function (\DateTime $monthStart, \DateTime $monthEnd) {
+                    return Dates::getMonthsBetween($monthStart, $monthEnd);
+                },
                 'provider' => Profitability\ProfitabilityProvider::class,
                 'exporters' => [
                     'console' => new Profitability\ProfitabilityToConsole(),
@@ -34,6 +37,12 @@ class GenerateReportCommand extends Command
             ],
             'inspiro' => [
                 'provider' => Inspiro\InspiroProvider::class,
+                'interval' => function (\DateTime $monthStart, \DateTime $monthEnd) {
+                    return [
+                        Dates::getLastDatetimeInMonth($monthStart),
+                        Dates::getLastDatetimeInMonth($monthEnd),
+                    ];
+                },
                 'exporters' => [
                     'console' => new Inspiro\InspiroToConsole(),
                     'xls' => new Inspiro\InspiroToXls($this->spreadsheet),
@@ -64,8 +73,8 @@ class GenerateReportCommand extends Command
     {
         $monthStart = new \DateTime($input->getOption('monthStart'));
         $monthEnd = new \DateTime($input->getOption('monthEnd'));
-        $interval = Dates::getMonthsBetween($monthStart, $monthEnd);
         $reporter = $this->providers[$input->getArgument('type')];
+        $interval = $reporter['interval']($monthStart, $monthEnd);
 
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
         $settings = new ReportSettings();

@@ -21,6 +21,21 @@ class DatesTest extends \PHPUnit_Framework_TestCase
         ];
     }
 
+    /** @dataProvider provideDay */
+    public function testGetLastDatetimeInMonth($input, $expectedDatetime)
+    {
+        $nextMonth = Dates::getLastDatetimeInMonth(new \DateTime($input));
+        assertThat($nextMonth->format('Y-m-d H:i:s'), is($expectedDatetime));
+    }
+
+    public function provideDay()
+    {
+        return [
+            ['2016-01-01', '2016-01-31 23:59:59'],
+            ['2016-01-31 20:00', '2016-01-31 23:59:59'],
+        ];
+    }
+
     public function testOriginalDateIsNotChanged()
     {
         $currentMonth = new \DateTime('2017-01-01');

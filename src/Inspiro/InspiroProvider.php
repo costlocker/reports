@@ -8,12 +8,12 @@ class InspiroProvider
 {
     private $client;
 
-    public function __construct(CostlockerClient $client)
+    public function __construct(CostlockerClient $client = null)
     {
         $this->client = $client;
     }
 
-    public function __invoke()
+    public function __invoke(\DateTime $lastDay)
     {
         $rawData = $this->client->request([
             'Simple_Projects' => new \stdClass(),
@@ -29,7 +29,7 @@ class InspiroProvider
             $projects[$project['id']] = [
                 'name' => $project['name'],
                 'client' => $clients[$project['client_id']][0]['name'],
-                'state' => $project['state'],
+                'state' => $this->determineProjectState($lastDay, $project['da_start'], $project['da_end']),
                 'revenue' => $project['revenue'],
                 'expenses' => $this->client->sum(
                     $expenses[$project['id']] ?? [],
@@ -56,5 +56,19 @@ class InspiroProvider
             },
             $this->client->map($projects, 'client')
         );
+    }
+
+    public function determineProjectState(\DateTime $lastDay, $daStart, $daEnd)
+    {
+        $dateStart = \DateTime::createFromFormat('Y-m-d', $daStart);
+        $dateEnd = $daEnd ? \DateTime::createFromFormat('Y-m-d', $daEnd) : null;
+
+        if ((!$dateEnd || $lastDay <= $dateEnd) && $dateStart->format('Y') == $lastDay->format('Y')) {
+            return 'running';
+        } elseif ($dateEnd && $dateEnd <= $lastDay && $dateEnd->format('Y') == $lastDay->format('Y')) {
+            return 'finished';
+        }
+
+        return 'legacy';
     }
 }
