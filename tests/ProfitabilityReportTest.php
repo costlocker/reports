@@ -1,12 +1,12 @@
 <?php
 
-namespace Costlocker\Reports;
+namespace Costlocker\Reports\Profitability;
 
-class CostlockerReportTest extends \PHPUnit_Framework_TestCase
+class ProfitabilityReportTest extends \PHPUnit_Framework_TestCase
 {
     public function testFilterOnlyPeopleAndProjectsWithTrackedTime()
     {
-        $report = new CostlockerReport();
+        $report = new ProfitabilityReport();
         $report->projects = [
             1 => ['name' => 'Web'],
             2 => ['name' => 'Marketing'],
@@ -31,7 +31,7 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
 
     public function testReturnAllProjectsWhenTimesheetIsEmpty()
     {
-        $report = new CostlockerReport();
+        $report = new ProfitabilityReport();
         $report->people = [
             1 => [
                 'name' => 'Amy',
@@ -48,7 +48,7 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
 
     public function testSortPeopleAndProjectsByName()
     {
-        $report = new CostlockerReport();
+        $report = new ProfitabilityReport();
         $report->projects = [
             1 => ['name' => 'Web'],
             2 => ['name' => 'Marketing'],
@@ -91,7 +91,7 @@ class CostlockerReportTest extends \PHPUnit_Framework_TestCase
 
     public function testFallbackNamesForUnknownProject()
     {
-        $report = new CostlockerReport();
+        $report = new ProfitabilityReport();
         $report->people = [
             1 => [
                 'name' => 'Amy',

@@ -5,28 +5,46 @@ namespace Costlocker\Reports;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class GenerateReportCommand extends Command
 {
-    private $exporters;
+    private $providers;
     private $mailer;
+    private $spreadsheet;
 
     public function __construct(Mailer $mailer)
     {
-        parent::__construct();
-        $this->exporters = [
-            'console' => new Export\ReportToConsole(),
-            'xls' => new Export\ReportToXls(),
+        $this->spreadsheet = new Spreadsheet();
+        $this->spreadsheet->removeSheetByIndex(0);
+        $this->providers = [
+            'profitability' => [
+                'provider' => Profitability\ProfitabilityProvider::class,
+                'exporters' => [
+                    'console' => new Profitability\ProfitabilityToConsole(),
+                    'xls' => new Profitability\ProfitabilityToXls($this->spreadsheet),
+                ],
+            ],
+            'inspiro' => [
+                'provider' => Inspiro\InspiroProvider::class,
+                'exporters' => [
+                    'console' => new Inspiro\InspiroToConsole(),
+                ]
+            ],
         ];
         $this->mailer = $mailer;
+        parent::__construct();
     }
 
     protected function configure()
     {
         $this
             ->setName('report')
+            ->addArgument('type', InputArgument::REQUIRED, implode(', ', array_keys($this->providers)))
             ->addOption('monthStart', 'ms', InputOption::VALUE_REQUIRED, 'First month', 'previous month')
             ->addOption('monthEnd', 'me', InputOption::VALUE_REQUIRED, 'Last month', 'previous month')
             ->addOption('host', 'a', InputOption::VALUE_REQUIRED, 'apiUrl|apiKey')
@@ -40,6 +58,7 @@ class GenerateReportCommand extends Command
         $monthStart = new \DateTime($input->getOption('monthStart'));
         $monthEnd = new \DateTime($input->getOption('monthEnd'));
         $interval = Dates::getMonthsBetween($monthStart, $monthEnd);
+        $reporter = $this->providers[$input->getArgument('type')];
 
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
         $settings = new ReportSettings();
@@ -62,9 +81,10 @@ class GenerateReportCommand extends Command
         $progressbar = new ProgressBar($output, count($interval));
         $progressbar->start();
         $client = CostlockerClient::build($apiHost, $apiKey);
+        $provider = new $reporter['provider']($client);
         $reports = [];
         foreach ($interval as $month) {
-            $reports[] = $client($month);
+            $reports[] = $provider($month);
             $progressbar->advance();
         }
         $progressbar->finish();
@@ -73,7 +93,7 @@ class GenerateReportCommand extends Command
 
         $exporterType = $settings->email ? 'xls' : 'console';
         foreach ($reports as $report) {
-            $this->exporters[$exporterType]($report, $settings);
+            $reporter['exporters'][$exporterType]($report, $settings);
         }
         if ($settings->email) {
             $this->sendMail($settings, "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}");
@@ -91,7 +111,7 @@ class GenerateReportCommand extends Command
 
     private function sendMail(ReportSettings $settings, $selectedMonths)
     {
-        $xlsFile = $this->exporters['xls']->toFile($selectedMonths);
+        $xlsFile = $this->spreadsheetToFile($selectedMonths);
         $wasSent = $this->mailer->__invoke($settings->email, $xlsFile, $selectedMonths);
         if ($wasSent) {
             unlink($xlsFile);
@@ -99,5 +119,14 @@ class GenerateReportCommand extends Command
         } else {
             $settings->output->writeln('<error>E-mail was not sent!</error>');
         }
+    }
+
+    private function spreadsheetToFile($filename)
+    {
+        $normalizedName = str_replace(' ', '', $filename);
+        $xlsFile = "var/reports/{$normalizedName}.xlsx";
+        $writer = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
+        $writer->save($xlsFile);
+        return $xlsFile;
     }
 }

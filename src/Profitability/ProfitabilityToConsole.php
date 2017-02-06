@@ -1,14 +1,13 @@
 <?php
 
-namespace Costlocker\Reports\Export;
+namespace Costlocker\Reports\Profitability;
 
 use Symfony\Component\Console\Helper\Table;
-use Costlocker\Reports\CostlockerReport;
 use Costlocker\Reports\ReportSettings;
 
-class ReportToConsole
+class ProfitabilityToConsole
 {
-    public function __invoke(CostlockerReport $report, ReportSettings $settings)
+    public function __invoke(ProfitabilityReport $report, ReportSettings $settings)
     {
         $headers = [
             'Person',

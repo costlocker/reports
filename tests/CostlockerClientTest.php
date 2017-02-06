@@ -9,12 +9,14 @@ use GuzzleHttp\Psr7\Response;
 class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 {
     private $httpClient;
-    private $costlocker;
+    private $costlockerClient;
+    private $profitability;
 
     protected function setUp()
     {
         $this->httpClient = m::mock(Client::class);
-        $this->costlocker = new CostlockerClient($this->httpClient, 20000);
+        $this->costlockerClient = new CostlockerClient($this->httpClient);
+        $this->profitability = new Profitability\ProfitabilityProvider($this->costlockerClient, 20000);
     }
 
     public function testLoadProjectAndClients()
@@ -31,7 +33,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                     'client' => 'deactivated',
                 ],
             ],
-            $this->costlocker->projects()
+            $this->profitability->projects()
         );
     }
 
@@ -95,13 +97,13 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                     'projects' => [],
                 ],
             ],
-            $this->costlocker->people(new \DateTime('2015-02-01'))
+            $this->profitability->people(new \DateTime('2015-02-01'))
         );
     }
 
     public function testAnalyzeFinishedProjects()
     {
-        $inspiro = new Inspiro\InspiroProvider($this->costlocker);
+        $inspiro = new Inspiro\InspiroProvider($this->costlockerClient);
         $this->whenApiReturns('clients-projects-expenses.json');
         $this->assertEquals(
             [

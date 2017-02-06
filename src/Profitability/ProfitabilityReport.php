@@ -1,8 +1,8 @@
 <?php
 
-namespace Costlocker\Reports;
+namespace Costlocker\Reports\Profitability;
 
-class CostlockerReport
+class ProfitabilityReport
 {
     public $selectedMonth;
     public $projects;

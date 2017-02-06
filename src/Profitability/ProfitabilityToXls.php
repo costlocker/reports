@@ -1,27 +1,24 @@
 <?php
 
-namespace Costlocker\Reports\Export;
+namespace Costlocker\Reports\Profitability;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use Costlocker\Reports\CostlockerReport;
 use Costlocker\Reports\ReportSettings;
 
-class ReportToXls
+class ProfitabilityToXls
 {
     private $spreadsheet;
 
-    public function __construct()
+    public function __construct(Spreadsheet $spreadsheet)
     {
-        $this->spreadsheet = new Spreadsheet();
-        $this->spreadsheet->removeSheetByIndex(0);
+        $this->spreadsheet = $spreadsheet;
     }
 
-    public function __invoke(CostlockerReport $report, ReportSettings $settings)
+    public function __invoke(ProfitabilityReport $report, ReportSettings $settings)
     {
         $currencyFormat = $this->getCurrencyFormat($settings->currency);
         $headers = [
@@ -185,15 +182,6 @@ class ReportToXls
         foreach ($worksheet->getColumnDimensions() as $column) {
             $column->setAutoSize(true);
         }
-    }
-
-    public function toFile($filename)
-    {
-        $normalizedName = str_replace(' ', '', $filename);
-        $xlsFile = "var/reports/{$normalizedName}.xlsx";
-        $writer = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
-        $writer->save($xlsFile);
-        return $xlsFile;
     }
 
     private function getCurrencyFormat($currency)
