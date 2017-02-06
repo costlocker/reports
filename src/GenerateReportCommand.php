@@ -39,7 +39,7 @@ class GenerateReportCommand extends Command
                     'xls' => new Inspiro\InspiroToXls($this->spreadsheet),
                 ],
                 'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
-                    return "Clients";
+                    return "{$monthStart->format('Y')} - {$monthEnd->format('Y')}";
                 },
             ],
         ];

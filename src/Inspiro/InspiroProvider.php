@@ -26,14 +26,11 @@ class InspiroProvider
         $projects = [];
 
         foreach ($rawData['Simple_Projects'] as $project) {
-            if ($project['state'] == 'running') {
-                continue;
-            }
             $projects[$project['id']] = [
                 'name' => $project['name'],
                 'client' => $clients[$project['client_id']][0]['name'],
+                'state' => $project['state'],
                 'revenue' => $project['revenue'],
-                'billed' => $project['billed'],
                 'expenses' => $this->client->sum(
                     $expenses[$project['id']] ?? [],
                     'sell'
@@ -41,13 +38,20 @@ class InspiroProvider
             ];
         }
 
+        $analyzeProjects = function (array $projects) {
+            return [
+                'projects' => count($projects),
+                'revenue' => $this->client->sum($projects, 'revenue'),
+                'expenses' => $this->client->sum($projects, 'expenses'),
+            ];
+        };
+
         return array_map(
-            function (array $projects) {
+            function (array $projects) use ($analyzeProjects) {
+                $states = $this->client->map($projects, 'state');
                 return [
-                    'projects' => count($projects),
-                    'revenue' => $this->client->sum($projects, 'revenue'),
-                    'billed' => $this->client->sum($projects, 'billed'),
-                    'expenses' => $this->client->sum($projects, 'expenses'),
+                    'running' => $analyzeProjects($states['running'] ?? []),
+                    'finished' => $analyzeProjects($states['finished'] ?? []),
                 ];
             },
             $this->client->map($projects, 'client')

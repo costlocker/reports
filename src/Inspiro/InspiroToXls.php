@@ -23,9 +23,10 @@ class InspiroToXls
         $currencyFormat = $this->getCurrencyFormat($settings->currency);
         $headers = [
             ['Client', 'd6dce5'],
-            ['Revenue', 'd6dce5', $settings->currency],
-            ['Project Expenses', 'd6dce5', $settings->currency],
-            ['Revenue - Project Expenses', 'd6dce5', $settings->currency],
+            ['Revenue (finished projects)', 'ffd966', $settings->currency],
+            ['Revenue (running projects)', 'fbe5d6', $settings->currency],
+            ['Revenue - Project Expenses (finished projects)', 'ffd966', $settings->currency],
+            ['Revenue - Project Expenses (running projects)', 'fbe5d6', $settings->currency],
         ];
 
         $worksheet = $this->spreadsheet->createSheet();
@@ -59,7 +60,7 @@ class InspiroToXls
                     ],
                 ];
             }
-            $worksheet->getStyle("A{$rowId}:D{$rowId}")->applyFromArray($styles);
+            $worksheet->getStyle("A{$rowId}:E{$rowId}")->applyFromArray($styles);
             $rowId++;
         };
         $setRowData = function ($rowId, array $rowData) use ($worksheet) {
@@ -101,9 +102,10 @@ class InspiroToXls
         foreach ($clients as $client => $billing) {
             $rowData = [
                 $client,
-                [$billing['revenue'], $currencyFormat],
-                [$billing['expenses'], $currencyFormat],
-                ["=B{$rowId}-C{$rowId}", $currencyFormat],
+                [$billing['finished']['revenue'], $currencyFormat],
+                [$billing['running']['revenue'], $currencyFormat],
+                ["=B{$rowId}-{$billing['finished']['expenses']}", $currencyFormat],
+                ["=C{$rowId}-{$billing['running']['expenses']}", $currencyFormat],
             ];
 
             $setRowData($rowId, $rowData);

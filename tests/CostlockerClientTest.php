@@ -108,10 +108,16 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             [
                 'kamil' => [
-                    'projects' => 2,
-                    'revenue' => 2200,
-                    'billed' => 2200,
-                    'expenses' => 1200
+                    'running' => [
+                        'projects' => 1,
+                        'revenue' => 0,
+                        'expenses' => 0
+                    ],
+                    'finished' => [
+                        'projects' => 2,
+                        'revenue' => 2200,
+                        'expenses' => 1200
+                    ],
                 ],
             ],
             $inspiro()
