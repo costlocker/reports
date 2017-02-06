@@ -99,6 +99,22 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function testAnalyzeFinishedProjects()
+    {
+        $this->whenApiReturns('clients-projects-expenses.json');
+        $this->assertEquals(
+            [
+                'kamil' => [
+                    'projects' => 2,
+                    'revenue' => 2200,
+                    'billed' => 2200,
+                    'expenses' => 1200
+                ],
+            ],
+            $this->costlocker->inspiro()
+        );
+    }
+
     private function whenApiReturns()
     {
         foreach (func_get_args() as $response) {

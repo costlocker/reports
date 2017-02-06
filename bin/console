@@ -14,5 +14,6 @@ $application->addCommands([
     new \Costlocker\Reports\GenerateReportCommand(
         new \Costlocker\Reports\Mailer(Swift_Mailer::newInstance($config['mailer']))
     ),
+    new Costlocker\Reports\InspiroReport()
 ]);
 $application->run();
