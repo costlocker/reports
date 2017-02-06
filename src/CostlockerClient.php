@@ -35,47 +35,6 @@ class CostlockerClient
         return $report;
     }
 
-    public function inspiro()
-    {
-        $rawData = $this->request([
-            'Simple_Projects' => new \stdClass(),
-            'Simple_Clients' => new \stdClass(),
-            'Simple_Projects_Expenses' => new \stdClass(),
-        ]);
-
-        $clients = $this->map($rawData['Simple_Clients'], 'id');
-        $expenses = $this->map($rawData['Simple_Projects_Expenses'], 'project_id');
-        $projects = [];
-
-        foreach ($rawData['Simple_Projects'] as $project) {
-            if ($project['state'] == 'running') {
-                continue;
-            }
-            $projects[$project['id']] = [
-                'name' => $project['name'],
-                'client' => $clients[$project['client_id']][0]['name'],
-                'revenue' => $project['revenue'],
-                'billed' => $project['billed'],
-                'expenses' => $this->sum(
-                    $expenses[$project['id']] ?? [],
-                    'sell'
-                ),
-            ];
-        }
-
-        return array_map(
-            function (array $projects) {
-                return [
-                    'projects' => count($projects),
-                    'revenue' => $this->sum($projects, 'revenue'),
-                    'billed' => $this->sum($projects, 'billed'),
-                    'expenses' => $this->sum($projects, 'expenses'),
-                ];
-            },
-            $this->map($projects, 'client')
-        );
-    }
-
     public function projects()
     {
         $rawData = $this->request([
@@ -177,7 +136,7 @@ class CostlockerClient
         );
     }
 
-    private function request(array $request)
+    public function request(array $request)
     {
         $response = $this->client->get(
             '/api-public/v1/',
@@ -188,7 +147,7 @@ class CostlockerClient
         return json_decode($response->getBody(), true);
     }
 
-    private function map(array $rawData, $id)
+    public function map(array $rawData, $id)
     {
         $indexedItems = [];
 
@@ -199,7 +158,7 @@ class CostlockerClient
         return $indexedItems;
     }
 
-    private function sum(array $rawData, $attribute)
+    public function sum(array $rawData, $attribute)
     {
         return array_sum(
             array_map(

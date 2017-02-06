@@ -101,6 +101,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 
     public function testAnalyzeFinishedProjects()
     {
+        $inspiro = new Inspiro\InspiroProvider($this->costlocker);
         $this->whenApiReturns('clients-projects-expenses.json');
         $this->assertEquals(
             [
@@ -111,7 +112,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                     'expenses' => 1200
                 ],
             ],
-            $this->costlocker->inspiro()
+            $inspiro()
         );
     }
 

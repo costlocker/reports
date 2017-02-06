@@ -6,7 +6,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\Table;
 
 class InspiroReport extends Command
 {
@@ -20,28 +19,12 @@ class InspiroReport extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
+        $settings = new ReportSettings();
+        $settings->output = $output;
         $client = CostlockerClient::build($apiHost, $apiKey);
-        $projects = $client->inspiro();
 
-        $headers = [
-            'Client',
-            'Revenue',
-            'Project Expenses',
-            'Revenue - Project Expenses',
-            'Projects Count',
-        ];
-
-        $table = new Table($output);
-        $table->setHeaders($headers);
-        foreach ($projects as $client => $billing) {
-            $table->addRow([
-                "<comment>{$client}</comment>",
-                $billing['revenue'],
-                $billing['expenses'],
-                $billing['revenue'] - $billing['expenses'],
-                $billing['projects'],
-            ]);
-        }
-        $table->render();
+        $provider = new \Costlocker\Reports\Inspiro\InspiroProvider($client);
+        $export = new \Costlocker\Reports\Inspiro\InspiroToConsole();
+        $export($provider(), $settings);
     }
 }
