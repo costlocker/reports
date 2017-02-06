@@ -28,7 +28,7 @@ class InspiroToConsole
 
         $table = new Table($settings->output);
         $table->setHeaders($headers);
-        foreach ($report->clients as $client => $billing) {
+        foreach ($report->getActiveClients() as $client => $billing) {
             $table->addRow([
                 "<comment>{$client}</comment>",
                 $billing['running']['revenue'],

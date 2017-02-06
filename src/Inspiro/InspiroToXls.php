@@ -99,7 +99,7 @@ class InspiroToXls
         $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
         $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
 
-        foreach ($report->clients as $client => $billing) {
+        foreach ($report->getActiveClients() as $client => $billing) {
             $rowData = [
                 $client,
                 [$billing['finished']['revenue'], $currencyFormat],
