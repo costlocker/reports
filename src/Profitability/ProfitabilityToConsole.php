@@ -26,10 +26,10 @@ class ProfitabilityToConsole
         $table->setHeaders($headers);
         foreach ($report->getActivePeople() as $person) {
             $table->addRow([
-                "<info>{$person['name']}</info>",
+                "<comment>{$person['name']} ({$settings->getPosition($person['name'])})</comment>",
                 '',
                 '',
-                $person['salary_hours'],
+                "{$person['salary_hours']} ({$settings->getHoursSalary($person['name'], 'tracked')})",
                 $person['salary_amount'],
                 '',
             ]);

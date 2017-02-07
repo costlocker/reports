@@ -24,6 +24,7 @@ class ProfitabilityToXls
         $headers = [
             ['IS PROFITABLE?', 'd6dce5'],
             ['NAME', 'd6dce5'],
+            ['POSITION', 'd6dce5'],
             ['PROJECT', 'd6dce5'],
             ['CLIENT', 'd6dce5'],
             ['Contracted', 'd0cece', 'HRS'],
@@ -73,7 +74,7 @@ class ProfitabilityToXls
                     ],
                 ];
             }
-            $worksheet->getStyle("A{$rowId}:R{$rowId}")->applyFromArray($styles);
+            $worksheet->getStyle("A{$rowId}:S{$rowId}")->applyFromArray($styles);
             $rowId++;
         };
         $setRowData = function ($rowId, array $rowData) use ($worksheet) {
@@ -116,32 +117,33 @@ class ProfitabilityToXls
             $firstProjectRow = $rowId + 1;
             $lastProjectRow = $rowId + count($person['projects']);
             $rowData = [
-                "=IF(O{$summaryRow}>0, \"YES\", \"NO\")",
+                "=IF(P{$summaryRow}>0, \"YES\", \"NO\")",
                 $person['name'],
+                $settings->getPosition($person['name']),
                 '',
                 '',
                 [
                     $person['is_employee'] ?
-                        ($settings->getHoursSalary($person['name'], "=G{$summaryRow}") ?: $person['salary_hours']) :
-                        "=G{$summaryRow}",
+                        ($settings->getHoursSalary($person['name'], "=H{$summaryRow}") ?: $person['salary_hours']) :
+                        "=H{$summaryRow}",
                     NumberFormat::FORMAT_NUMBER_00
                 ],
                 [
-                    $person['is_employee'] ? $person['salary_amount'] : "=E{$summaryRow}*{$person['hourly_rate']}",
+                    $person['is_employee'] ? $person['salary_amount'] : "=F{$summaryRow}*{$person['hourly_rate']}",
                     $currencyFormat
                 ],
-                ["=SUM(G{$firstProjectRow}:G{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(I{$firstProjectRow}:I{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 ["=SUM(J{$firstProjectRow}:J{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
+                ["=SUM(K{$firstProjectRow}:K{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                 '',
-                ["=SUM(L{$firstProjectRow}:L{$lastProjectRow})", $currencyFormat],
-                ["=SUM(M{$firstProjectRow}:M{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
-                ["=1-M{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
-                ["=L{$summaryRow}-F{$summaryRow}", $currencyFormat],
-                ["=SUM(P{$firstProjectRow}:P{$lastProjectRow})", $currencyFormat],
+                ["=SUM(M{$firstProjectRow}:M{$lastProjectRow})", $currencyFormat],
+                ["=SUM(N{$firstProjectRow}:N{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
+                ["=1-N{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                ["=M{$summaryRow}-G{$summaryRow}", $currencyFormat],
                 ["=SUM(Q{$firstProjectRow}:Q{$lastProjectRow})", $currencyFormat],
-                ["=P{$summaryRow}+Q{$summaryRow}", $currencyFormat],
+                ["=SUM(R{$firstProjectRow}:R{$lastProjectRow})", $currencyFormat],
+                ["=Q{$summaryRow}+R{$summaryRow}", $currencyFormat],
             ];
 
             $setRowData($rowId, $rowData);
@@ -149,12 +151,13 @@ class ProfitabilityToXls
 
             foreach ($person['projects'] as $project) {
                 $isBillableProject = $project['client_rate'] > 0;
-                $nonBillableMoney = ["=-1*((\$F\${$summaryRow}/\$E\${$summaryRow})*J{$rowId})", $currencyFormat];
+                $nonBillableMoney = ["=-1*((\$G\${$summaryRow}/\$F\${$summaryRow})*K{$rowId})", $currencyFormat];
                 $remainingBillable =
-                    "H{$rowId}-({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-G{$rowId})";
+                    "I{$rowId}-({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-H{$rowId})";
                 $rowData = [
                     '',
                     $person['name'],
+                    $settings->getPosition($person['name']),
                     $project['name'],
                     $project['client'],
                     '',
@@ -162,13 +165,13 @@ class ProfitabilityToXls
                     [$project['hrs_tracked_month'], NumberFormat::FORMAT_NUMBER_00],
                     [$project['hrs_budget'], NumberFormat::FORMAT_NUMBER_00],
                     [
-                        "=MIN(G{$rowId}, MAX(0, {$remainingBillable}))",
+                        "=MIN(H{$rowId}, MAX(0, {$remainingBillable}))",
                         NumberFormat::FORMAT_NUMBER_00
                     ],
-                    ["=MAX(0, G{$rowId}-I{$rowId})", NumberFormat::FORMAT_NUMBER_00],
+                    ["=MAX(0, H{$rowId}-J{$rowId})", NumberFormat::FORMAT_NUMBER_00],
                     [$project['client_rate'], $currencyFormat],
-                    ["=I{$rowId}*K{$rowId}", $currencyFormat],
-                    ["=I{$rowId}/\$E\${$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=J{$rowId}*L{$rowId}", $currencyFormat],
+                    ["=J{$rowId}/\$F\${$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                     '',
                     '',
                     $isBillableProject ? '' : $nonBillableMoney,
