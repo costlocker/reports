@@ -151,7 +151,7 @@ class ProfitabilityToXls
 
             foreach ($person['projects'] as $project) {
                 $isBillableProject = $project['client_rate'] > 0;
-                $nonBillableMoney = ["=-1*((\$G\${$summaryRow}/\$F\${$summaryRow})*K{$rowId})", $currencyFormat];
+                $nonBillableMoney = ["=-1*((G{$summaryRow}/F{$summaryRow})*K{$rowId})", $currencyFormat];
                 $remainingBillable =
                     "I{$rowId}-({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-H{$rowId})";
                 $rowData = [
@@ -171,7 +171,7 @@ class ProfitabilityToXls
                     ["=MAX(0, H{$rowId}-J{$rowId})", NumberFormat::FORMAT_NUMBER_00],
                     [$project['client_rate'], $currencyFormat],
                     ["=J{$rowId}*L{$rowId}", $currencyFormat],
-                    ["=J{$rowId}/\$F\${$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=J{$rowId}/F{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                     '',
                     '',
                     $isBillableProject ? '' : $nonBillableMoney,
@@ -180,6 +180,10 @@ class ProfitabilityToXls
                 $setRowData($rowId, $rowData);
                 $addStyle($rowId);
             }
+        }
+
+        if (!$settings->personsSettings) {
+            $worksheet->removeColumn('C');
         }
 
         foreach ($worksheet->getColumnDimensions() as $column) {
