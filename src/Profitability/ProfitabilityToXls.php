@@ -108,6 +108,7 @@ class ProfitabilityToXls
                     ),
                 ],
             ]);
+            $worksheet->getColumnDimension($column)->setAutoSize(true);
         }
         $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
         $addStyle($rowId, 'transparent', Alignment::HORIZONTAL_CENTER);
@@ -184,10 +185,6 @@ class ProfitabilityToXls
 
         if (!$settings->personsSettings) {
             $worksheet->removeColumn('C');
-        }
-
-        foreach ($worksheet->getColumnDimensions() as $column) {
-            $column->setAutoSize(true);
         }
     }
 
