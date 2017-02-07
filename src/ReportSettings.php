@@ -16,28 +16,45 @@ class ReportSettings
 
     public function getHoursSalary($person, $trackedHours = null)
     {
+        $hours = $this->getPersonField($person, 'hours');
+        return $hours == ReportSettings::TRACKED_HOURS ? $trackedHours : $hours;
+    }
+
+    public function getPosition($person)
+    {
+        return $this->getPersonField($person, 'position');
+    }
+
+    private function getPersonField($person, $field)
+    {
         if ($this->hardcodedHours) {
-            static $defaultHours = null, $persons = [];
+            static $default = null, $persons = [];
             if (!$persons) {
-                list($defaultHours, $persons) = $this->parseCsvFile();
+                list($default, $persons) = $this->parseCsvFile();
             }
-            $hours = $persons[$person] ?? $defaultHours;
-            return $hours == ReportSettings::TRACKED_HOURS ? $trackedHours : $hours;
+            return $persons[$person][$field] ?? $default[$field];
         }
         return null;
     }
 
     private function parseCsvFile()
     {
-        $defaultHours = null;
+        $default = [
+            'hours' => 0,
+            'position' => null,
+        ];
         $persons = [];
         foreach (CsvParser::fromFile($this->hardcodedHours, ['encoding' => 'UTF-8']) as $index => $line) {
+            $settings = [
+                'hours' => $line[1],
+                'position' => $line[2],
+            ];
             if ($index == 0) {
-                $defaultHours = $line[1];
+                $default = $settings;
             } else {
-                $persons[$line[0]] = $line[1];
+                $persons[$line[0]] = $settings;
             }
         }
-        return [$defaultHours, $persons];
+        return [$default, $persons];
     }
 }
