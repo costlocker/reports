@@ -10,7 +10,7 @@ class ReportSettings
 
     public $email;
     public $currency;
-    public $hardcodedHours;
+    public $personsSettings;
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     public $output;
 
@@ -27,7 +27,7 @@ class ReportSettings
 
     private function getPersonField($person, $field)
     {
-        if ($this->hardcodedHours) {
+        if ($this->personsSettings) {
             static $default = null, $persons = [];
             if (!$persons) {
                 list($default, $persons) = $this->parseCsvFile();
@@ -44,7 +44,7 @@ class ReportSettings
             'position' => null,
         ];
         $persons = [];
-        foreach (CsvParser::fromFile($this->hardcodedHours, ['encoding' => 'UTF-8']) as $index => $line) {
+        foreach (CsvParser::fromFile($this->personsSettings, ['encoding' => 'UTF-8']) as $index => $line) {
             $settings = [
                 'hours' => $line[1],
                 'position' => $line[2],
