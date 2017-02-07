@@ -29,7 +29,7 @@ class InspiroProvider
             $projects[$project['id']] = [
                 'name' => $project['name'],
                 'client' => $clients[$project['client_id']][0]['name'],
-                'state' => $this->determineProjectState($lastDay, $project['da_start'], $project['da_end']),
+                'state' => $this->determineProjectState($lastDay, $project),
                 'revenue' => $project['revenue'],
                 'expenses' => $this->client->sum(
                     $expenses[$project['id']] ?? [],
@@ -62,15 +62,17 @@ class InspiroProvider
         return $report;
     }
 
-    public function determineProjectState(\DateTime $lastDay, $daStart, $daEnd)
+    public function determineProjectState(\DateTime $lastDay, array $project)
     {
-        $dateStart = \DateTime::createFromFormat('Y-m-d', $daStart);
-        $dateEnd = $daEnd ? \DateTime::createFromFormat('Y-m-d', $daEnd) : null;
+        $dateStart = \DateTime::createFromFormat('Y-m-d', $project['da_start']);
+        $dateEnd = $project['da_end'] ? \DateTime::createFromFormat('Y-m-d', $project['da_end']) : null;
+        $firstDay = new \DateTime("{$lastDay->format('Y')}-01-01 00:00");
 
-        if ((!$dateEnd || $lastDay <= $dateEnd) && $dateStart->format('Y') == $lastDay->format('Y')) {
-            return 'running';
-        } elseif ($dateEnd && $dateEnd <= $lastDay && $dateEnd->format('Y') == $lastDay->format('Y')) {
+        if ($project['state'] == 'finished' && $dateEnd >= $firstDay && $dateEnd <= $lastDay) {
             return 'finished';
+        }
+        if ($project['state'] == 'running' && $dateStart >= $firstDay && $dateStart <= $lastDay) {
+            return 'running';
         }
 
         return 'legacy';
