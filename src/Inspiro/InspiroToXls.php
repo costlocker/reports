@@ -23,14 +23,18 @@ class InspiroToXls
         $currencyFormat = $this->getCurrencyFormat($settings->currency);
         $headers = [
             ['Client', 'd6dce5'],
+            ['Projects (finished projects)', 'ffd966', 'count'],
             ['Revenue (finished projects)', 'ffd966', $settings->currency],
-            ['Revenue (running projects)', 'fbe5d6', $settings->currency],
             ['Revenue - Project Expenses (finished projects)', 'ffd966', $settings->currency],
+            ['Profit (finished projects)', 'ffd966', $settings->currency],
+            ['Projects (running projects)', 'fbe5d6', 'count'],
+            ['Revenue (running projects)', 'fbe5d6', $settings->currency],
             ['Revenue - Project Expenses (running projects)', 'fbe5d6', $settings->currency],
+            ['Profit (running projects)', 'fbe5d6', $settings->currency],
         ];
 
         $worksheet = $this->spreadsheet->createSheet();
-        $worksheet->setTitle("{$report->lastDay->format('Y-01-01')} {$report->lastDay->format('Y-m-d')}");
+        $worksheet->setTitle($report->lastDay->format('Y'));
 
         $rowId = 1;
         $addStyle = function (&$rowId, $backgroundColor = null, $alignment = null) use ($worksheet) {
@@ -60,7 +64,7 @@ class InspiroToXls
                     ],
                 ];
             }
-            $worksheet->getStyle("A{$rowId}:E{$rowId}")->applyFromArray($styles);
+            $worksheet->getStyle("A{$rowId}:I{$rowId}")->applyFromArray($styles);
             $rowId++;
         };
         $setRowData = function ($rowId, array $rowData) use ($worksheet) {
@@ -102,10 +106,14 @@ class InspiroToXls
         foreach ($report->getActiveClients() as $client => $billing) {
             $rowData = [
                 $client,
+                [$billing['finished']['projects'], NumberFormat::FORMAT_NUMBER],
                 [$billing['finished']['revenue'], $currencyFormat],
+                ["=C{$rowId}-{$billing['finished']['expenses']}", $currencyFormat],
+                ['', $currencyFormat],
+                [$billing['running']['projects'], NumberFormat::FORMAT_NUMBER],
                 [$billing['running']['revenue'], $currencyFormat],
-                ["=B{$rowId}-{$billing['finished']['expenses']}", $currencyFormat],
-                ["=C{$rowId}-{$billing['running']['expenses']}", $currencyFormat],
+                ["=G{$rowId}-{$billing['running']['expenses']}", $currencyFormat],
+                ['', $currencyFormat],
             ];
 
             $setRowData($rowId, $rowData);

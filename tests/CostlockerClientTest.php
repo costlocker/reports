@@ -116,7 +116,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                     'finished' => [
                         'projects' => 2,
                         'revenue' => 2200,
-                        'expenses' => 1200
+                        'expenses' => 1100
                     ],
                 ],
             ],

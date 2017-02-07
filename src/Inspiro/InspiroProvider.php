@@ -33,7 +33,7 @@ class InspiroProvider
                 'revenue' => $project['revenue'],
                 'expenses' => $this->client->sum(
                     $expenses[$project['id']] ?? [],
-                    'sell'
+                    'buy'
                 ),
             ];
         }
