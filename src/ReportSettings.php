@@ -15,6 +15,9 @@ class ReportSettings
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     public $output;
 
+    private $persons;
+    private $defaultPerson;
+
     public function getHoursSalary($person, $trackedHours = null)
     {
         $hours = $this->getPersonField($person, 'hours');
@@ -26,36 +29,46 @@ class ReportSettings
         return $this->getPersonField($person, 'position');
     }
 
+    public function getAvailablePositions()
+    {
+        $this->parseCsvFile();
+        $positions = [$this->defaultPerson['position']];
+        foreach ($this->persons as $person) {
+            $positions[] = $person['position'];
+        }
+        return array_values(array_unique($positions));
+    }
+
     private function getPersonField($person, $field)
     {
         if ($this->personsSettings) {
-            static $default = null, $persons = [];
-            if (!$persons) {
-                list($default, $persons) = $this->parseCsvFile();
-            }
-            return $persons[$person][$field] ?? $default[$field];
+            $this->parseCsvFile();
+            return $this->persons[$person][$field] ?? $this->defaultPerson[$field];
         }
         return null;
     }
 
     private function parseCsvFile()
     {
-        $default = [
+        if ($this->defaultPerson) {
+            return;
+        }
+
+        $this->defaultPerson = [
             'hours' => 0,
             'position' => null,
         ];
-        $persons = [];
+        $this->persons = [];
         foreach (CsvParser::fromFile($this->personsSettings, ['encoding' => 'UTF-8']) as $index => $line) {
             $settings = [
                 'hours' => $line[1],
                 'position' => $line[2],
             ];
             if ($index == 0) {
-                $default = $settings;
+                $this->defaultPerson = $settings;
             } else {
-                $persons[$line[0]] = $settings;
+                $this->persons[$line[0]] = $settings;
             }
         }
-        return [$default, $persons];
     }
 }
