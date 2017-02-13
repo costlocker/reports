@@ -60,7 +60,7 @@ class ProfitabilityToXls
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
             $position = $settings->getPosition($person['name']);
-            $aggregatedPositionsInMonth[$position][] = [$monthReport->getWorksheetReference(), $summaryRow];
+            $aggregatedPositionsInMonth[$position][$person['name']][] = [$monthReport->getWorksheetReference(), $summaryRow];
 
             $monthReport
                 ->addRow(
@@ -147,11 +147,13 @@ class ProfitabilityToXls
             );
         }
 
-        foreach ($aggregatedPositionsInMonth as $position => $rows) {
-            $this->aggregatedPositions[$position] = array_merge(
-                $this->aggregatedPositions[$position] ?? [],
-                $rows
-            );
+        foreach ($aggregatedPositionsInMonth as $position => $personRows) {
+            foreach ($personRows as $person => $rows) {
+                $this->aggregatedPositions[$position][$person] = array_merge(
+                    $this->aggregatedPositions[$position][$person] ?? [],
+                    $rows
+                );   
+            }
         }
 
         $quarter = $report->selectedMonth->format('n') / 3;
@@ -206,9 +208,13 @@ class ProfitabilityToXls
 
         $firstPosition = $xls->getRowId();
         $summaryRow = $xls->getRowId(count($aggregatedPositions));
-        foreach ($aggregatedPositions as $position => $rows) {
+        foreach ($aggregatedPositions as $position => $personCells) {
             $positionRowId = $xls->getRowId();
-            $aggregate = function ($function, $column) use ($rows) {
+            $allCells = array_reduce(array_values($personCells), 'array_merge', []);
+
+            $aggregate = function ($function, $column, $customRows = null) use ($allCells) {
+                $rows = is_array($customRows) ? $customRows : $allCells;
+
                 if (!$rows) {
                     return 0;
                 }
@@ -224,10 +230,10 @@ class ProfitabilityToXls
                 return "={$function}(" . implode(',', $references) . ')';
             };
             $xls
-                ->setRowVisibility(count($rows) > 0)
+                ->setRowVisibility(count($allCells) > 0)
                 ->addRow([
                     $position,
-                    $aggregate('COUNTA', 'B'),
+                    $aggregate('COUNTA', 'B', array_map('reset', $personCells)), // count unique
                     [$aggregate('AVERAGE', 'N'), NumberFormat::FORMAT_PERCENTAGE_00],
                     [$aggregate('SUM', 'T'), $currencyFormat],
                     [$aggregate('AVERAGE', 'O'), NumberFormat::FORMAT_PERCENTAGE_00],
