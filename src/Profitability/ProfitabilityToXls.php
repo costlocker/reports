@@ -11,6 +11,8 @@ use Costlocker\Reports\ReportSettings;
 
 class ProfitabilityToXls
 {
+    const MODE_SUMMARY = 'summary';
+
     private $spreadsheet;
 
     public function __construct(Spreadsheet $spreadsheet)
@@ -179,6 +181,9 @@ class ProfitabilityToXls
                     $isBillableProject ? $nonBillableMoney : '',
                 ];
                 $setRowData($rowId, $rowData);
+                if ($settings->exportSettings == self::MODE_SUMMARY) {
+                    $worksheet->getRowDimension($rowId)->setVisible(false);
+                }
                 $addStyle($rowId);
             }
         }

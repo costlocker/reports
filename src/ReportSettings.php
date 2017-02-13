@@ -11,6 +11,7 @@ class ReportSettings
     public $email;
     public $currency;
     public $personsSettings;
+    public $exportSettings;
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     public $output;
 

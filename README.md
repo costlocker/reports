@@ -4,8 +4,8 @@
 
 ```bash
 # crontab
-0 8 1 * * bin/console report profitability --monthStart "previous month" --monthEnd "previous month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --currency EUR 2>&1 >> report.log
-0 8 1 1 * bin/console report profitability --monthStart "now - 12 months" --monthEnd "now - 1 month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --personsSettings var/2fresh/persons.csv 2>&1 >> report.log
+0 8 1 * * bin/console report profitability:detailed --monthStart "previous month" --monthEnd "previous month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --currency EUR 2>&1 >> report.log
+0 8 1 1 * bin/console report profitability:summary --monthStart "now - 12 months" --monthEnd "now - 1 month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --personsSettings var/2fresh/persons.csv 2>&1 >> report.log
 ```
 
 ## Inspiro

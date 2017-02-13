@@ -73,12 +73,14 @@ class GenerateReportCommand extends Command
     {
         $monthStart = new \DateTime($input->getOption('monthStart'));
         $monthEnd = new \DateTime($input->getOption('monthEnd'));
-        $reporter = $this->providers[$input->getArgument('type')];
+        list($type, $exportSettings) = explode(':', $input->getArgument('type')) + [1 => null];
+        $reporter = $this->providers[$type];
         $interval = $reporter['interval']($monthStart, $monthEnd);
 
         list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
         $settings = new ReportSettings();
         $settings->output = $output;
+        $settings->exportSettings = $exportSettings;
         $settings->email = $input->getOption('email');
         $settings->currency = $input->getOption('currency');
         $settings->personsSettings = $input->getOption('personsSettings');
