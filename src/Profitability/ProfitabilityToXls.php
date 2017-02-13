@@ -12,7 +12,9 @@ class ProfitabilityToXls
     const MODE_SUMMARY = 'summary';
 
     private $spreadsheet;
-    private $months;
+    private $aggregatedMonths;
+    private $aggregatedQuarters;
+    private $aggregatedPositions = [];
 
     public function __construct(Spreadsheet $spreadsheet)
     {
@@ -22,16 +24,11 @@ class ProfitabilityToXls
     public function __invoke(ProfitabilityReport $report, ReportSettings $settings)
     {
         $currencyFormat = XlsBuilder::getCurrencyFormat($settings->currency);
+        $aggregatedPositionsInMonth = array_fill_keys($settings->getAvailablePositions(), []);
 
-        $aggregatedPositions = array_fill_keys($settings->getAvailablePositions(), []);
-        if ($settings->personsSettings && !$this->months) {
-            $this->months = new XlsBuilder($this->spreadsheet, 'Months');
-            $this->months
-                ->addRow(['Počet prodaných hodin', ['=6000', NumberFormat::FORMAT_NUMBER]])
-                ->addRow(['Celkový plán nákladů', ['=5000000', $currencyFormat]])
-                ->addRow(['Průměrná fakturovaná cena', ['=1300', $currencyFormat]])
-                ->addRow(['Plánovaná vytíženost', ['=0.65', NumberFormat::FORMAT_PERCENTAGE_00]])
-                ->skipRows(2);
+        if ($settings->personsSettings && !$this->aggregatedMonths) {
+            $this->aggregatedMonths = new XlsBuilder($this->spreadsheet, 'Months');
+            $this->aggregatedQuarters = new XlsBuilder($this->spreadsheet, 'Quarters');
         }
 
         $monthReport = new XlsBuilder($this->spreadsheet, $report->selectedMonth->format('Y-m'));
@@ -63,7 +60,7 @@ class ProfitabilityToXls
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
             $position = $settings->getPosition($person['name']);
-            $aggregatedPositions[$position][] = $summaryRow;
+            $aggregatedPositionsInMonth[$position][] = [$monthReport->getWorksheetReference(), $summaryRow];
 
             $monthReport
                 ->addRow(
@@ -142,107 +139,147 @@ class ProfitabilityToXls
             ->hideColumn('T');
 
         if ($settings->personsSettings) {
-            $this->months
-                ->addSuperHeader(
-                    [$report->selectedMonth->format('Y-m'), '92d050'],
-                    'Q'
-                )
-                ->addHeaders([
-                    ['Position', 'adb9ca'],
-                    ['Employees', 'adb9ca'],
-                    ['Billable', 'ffc000', '%'],
-                    ['Billable', 'ffc000', $settings->currency],
-                    ['Total Non-Billable', '8faadc', '%'],
-                    ['Total Non-Billable', '8faadc', $settings->currency],
-                    ["NON-BILLABLE On internal projects", '8faadc', $settings->currency],
-                    ["NON-BILLABLE On billable projects", '8faadc', $settings->currency],
-                    ['Profitability', 'ffff66', $settings->currency],
-                    ['Wages', '66ffff', $settings->currency],
-                    ['', 'ffffff'],
-                    ['Plan', 'cc99ff', '%'],
-                    ['Plan', 'cc99ff', $settings->currency],
-                    ['Billable', 'ffc000', '%'],
-                    ['Billable', 'ffc000', $settings->currency],
-                    ['Diff', 'ff0000', '%'],
-                    ['Diff', 'ff0000', $settings->currency],
-                ]);
-
-            $firstPosition = $this->months->getRowId();
-            $summaryRow = $this->months->getRowId(count($aggregatedPositions));
-            foreach ($aggregatedPositions as $position => $rows) {
-                $positionRowId = $this->months->getRowId();
-                $aggregate = function ($function, $column) use ($rows, $monthReport) {
-                    if (!$rows) {
-                        return 0;
-                    }
-
-                    $references = array_map(
-                        function ($rowId) use ($monthReport, $column) {
-                            return $monthReport->getCellReference($column, $rowId);
-                        },
-                        $rows
-                    );
-
-                    return "={$function}(" . implode(',', $references) . ')';
-                };
-                $this->months
-                    ->setRowVisibility(count($rows) > 0)
-                    ->addRow([
-                        $position,
-                        $aggregate('COUNTA', 'B'),
-                        [$aggregate('AVERAGE', 'N'), NumberFormat::FORMAT_PERCENTAGE_00],
-                        [$aggregate('SUM', 'T'), $currencyFormat],
-                        [$aggregate('AVERAGE', 'O'), NumberFormat::FORMAT_PERCENTAGE_00],
-                        [$aggregate('SUM', 'S'), $currencyFormat],
-                        [$aggregate('SUM', 'Q'), $currencyFormat],
-                        [$aggregate('SUM', 'R'), $currencyFormat],
-                        [$aggregate('SUM', 'P'), $currencyFormat],
-                        [$aggregate('SUM', 'G'), $currencyFormat],
-                        '',
-                        ['=B4', NumberFormat::FORMAT_PERCENTAGE_00],
-                        ["=(B1*L{$positionRowId})*B3/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
-                        ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
-                        ["=D{$positionRowId}", $currencyFormat],
-                        ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
-                        ["=C{$positionRowId}-M{$positionRowId}", $currencyFormat],
-                    ]);
-            }
-
-            $aggregateAll = function ($column) use ($firstPosition, $summaryRow) {
-                return "=SUM({$column}{$firstPosition}:{$column}" . ($summaryRow - 1) . ')';
-            };
-            $this->months
-                ->addRow([
-                    '',
-                    $aggregateAll('B'),
-                    '',
-                    [$aggregateAll('D'), $currencyFormat],
-                    '',
-                    [$aggregateAll('F'), $currencyFormat],
-                    [$aggregateAll('G'), $currencyFormat],
-                    [$aggregateAll('H'), $currencyFormat],
-                    [$aggregateAll('I'), $currencyFormat],
-                    [$aggregateAll('J'), $currencyFormat],
-                    '',
-                    '',
-                    [$aggregateAll('M'), $currencyFormat],
-                    '',
-                    [$aggregateAll('O'), $currencyFormat],
-                    '',
-                    [$aggregateAll('Q'), $currencyFormat],
-                ])
-                ->skipRows(1)
-                ->addRow(
-                    [
-                        11 => "Zisk dle plánu",
-                        "=M{$summaryRow}-B2",
-                        '',
-                        'Ztráta',
-                        "=M{$summaryRow}-O{$summaryRow}"
-                    ],
-                    'ffccff'
-                )
-                ->skipRows(3);
+            $this->aggregate(
+                $this->aggregatedMonths,
+                $report->selectedMonth->format('Y-m'),
+                $aggregatedPositionsInMonth,
+                $settings
+            );
         }
+
+        foreach ($aggregatedPositionsInMonth as $position => $rows) {
+            $this->aggregatedPositions[$position] = array_merge(
+                $this->aggregatedPositions[$position] ?? [],
+                $rows
+            );
+        }
+
+        $quarter = $report->selectedMonth->format('n') / 3;
+        if (is_int($quarter)) {
+            $this->aggregate(
+                $this->aggregatedQuarters,
+                $report->selectedMonth->format("{$quarter}Q Y"),
+                $this->aggregatedPositions,
+                $settings
+            );
+            $this->aggregatedPositions = [];
+        }
+    }
+
+    private function aggregate(XlsBuilder $xls, $title, array $aggregatedPositions, ReportSettings $settings)
+    {
+        $currencyFormat = XlsBuilder::getCurrencyFormat($settings->currency);
+
+        if ($xls->getRowId() == 1) {
+            $xls
+                ->addRow(['Počet prodaných hodin', ['=6000', NumberFormat::FORMAT_NUMBER]])
+                ->addRow(['Celkový plán nákladů', ['=5000000', $currencyFormat]])
+                ->addRow(['Průměrná fakturovaná cena', ['=1300', $currencyFormat]])
+                ->addRow(['Plánovaná vytíženost', ['=0.65', NumberFormat::FORMAT_PERCENTAGE_00]])
+                ->skipRows(2);
+        }
+
+        $xls
+            ->addSuperHeader(
+                [$title, '92d050'],
+                'Q'
+            )
+            ->addHeaders([
+                ['Position', 'adb9ca'],
+                ['Employees', 'adb9ca'],
+                ['Billable', 'ffc000', '%'],
+                ['Billable', 'ffc000', $settings->currency],
+                ['Total Non-Billable', '8faadc', '%'],
+                ['Total Non-Billable', '8faadc', $settings->currency],
+                ["NON-BILLABLE On internal projects", '8faadc', $settings->currency],
+                ["NON-BILLABLE On billable projects", '8faadc', $settings->currency],
+                ['Profitability', 'ffff66', $settings->currency],
+                ['Wages', '66ffff', $settings->currency],
+                ['', 'ffffff'],
+                ['Plan', 'cc99ff', '%'],
+                ['Plan', 'cc99ff', $settings->currency],
+                ['Billable', 'ffc000', '%'],
+                ['Billable', 'ffc000', $settings->currency],
+                ['Diff', 'ff0000', '%'],
+                ['Diff', 'ff0000', $settings->currency],
+            ]);
+
+        $firstPosition = $xls->getRowId();
+        $summaryRow = $xls->getRowId(count($aggregatedPositions));
+        foreach ($aggregatedPositions as $position => $rows) {
+            $positionRowId = $xls->getRowId();
+            $aggregate = function ($function, $column) use ($rows) {
+                if (!$rows) {
+                    return 0;
+                }
+
+                $references = array_map(
+                    function ($reference) use ($column) {
+                        list($worksheet, $rowId) = $reference;
+                        return "{$worksheet}{$column}{$rowId}";
+                    },
+                    $rows
+                );
+
+                return "={$function}(" . implode(',', $references) . ')';
+            };
+            $xls
+                ->setRowVisibility(count($rows) > 0)
+                ->addRow([
+                    $position,
+                    $aggregate('COUNTA', 'B'),
+                    [$aggregate('AVERAGE', 'N'), NumberFormat::FORMAT_PERCENTAGE_00],
+                    [$aggregate('SUM', 'T'), $currencyFormat],
+                    [$aggregate('AVERAGE', 'O'), NumberFormat::FORMAT_PERCENTAGE_00],
+                    [$aggregate('SUM', 'S'), $currencyFormat],
+                    [$aggregate('SUM', 'Q'), $currencyFormat],
+                    [$aggregate('SUM', 'R'), $currencyFormat],
+                    [$aggregate('SUM', 'P'), $currencyFormat],
+                    [$aggregate('SUM', 'G'), $currencyFormat],
+                    '',
+                    ['=B4', NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=(B1*L{$positionRowId})*B3/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
+                    ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=D{$positionRowId}", $currencyFormat],
+                    ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=C{$positionRowId}-M{$positionRowId}", $currencyFormat],
+                ]);
+        }
+
+        $aggregateAll = function ($column) use ($firstPosition, $summaryRow) {
+            return "=SUM({$column}{$firstPosition}:{$column}" . ($summaryRow - 1) . ')';
+        };
+        $xls
+            ->addRow([
+                '',
+                $aggregateAll('B'),
+                '',
+                [$aggregateAll('D'), $currencyFormat],
+                '',
+                [$aggregateAll('F'), $currencyFormat],
+                [$aggregateAll('G'), $currencyFormat],
+                [$aggregateAll('H'), $currencyFormat],
+                [$aggregateAll('I'), $currencyFormat],
+                [$aggregateAll('J'), $currencyFormat],
+                '',
+                '',
+                [$aggregateAll('M'), $currencyFormat],
+                '',
+                [$aggregateAll('O'), $currencyFormat],
+                '',
+                [$aggregateAll('Q'), $currencyFormat],
+            ])
+            ->skipRows(1)
+            ->addRow(
+                [
+                    11 => "Zisk dle plánu",
+                    "=M{$summaryRow}-B2",
+                    '',
+                    'Ztráta',
+                    "=M{$summaryRow}-O{$summaryRow}"
+                ],
+                'ffccff'
+            )
+            ->skipRows(3);
     }
 }

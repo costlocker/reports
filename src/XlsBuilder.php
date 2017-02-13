@@ -143,9 +143,9 @@ class XlsBuilder
         return $this->rowId + $nextRowsCount;
     }
 
-    public function getCellReference($column, $rowId)
+    public function getWorksheetReference()
     {
-        return "'{$this->worksheet->getTitle()}'!{$column}{$rowId}";
+        return "'{$this->worksheet->getTitle()}'!";
     }
 
     private function indexToLetter($number)
