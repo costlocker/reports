@@ -14,6 +14,8 @@ class ProfitabilityToXls
     const MODE_SUMMARY = 'summary';
 
     private $spreadsheet;
+    private $monthsAggregation;
+    private $monthRowId;
 
     public function __construct(Spreadsheet $spreadsheet)
     {
@@ -22,6 +24,25 @@ class ProfitabilityToXls
 
     public function __invoke(ProfitabilityReport $report, ReportSettings $settings)
     {
+        $aggregatedPositions = array_fill_keys($settings->getAvailablePositions(), []);
+        if ($settings->personsSettings && !$this->monthsAggregation) {
+            $this->monthsAggregation = $this->spreadsheet->createSheet();
+            $this->monthsAggregation->setTitle('Months');
+            $this->monthRowId = 1;
+            $this->monthsAggregation->setCellValue("A{$this->monthRowId}", 'Počet prodaných hodin');
+            $this->monthsAggregation->setCellValue("B{$this->monthRowId}", '=6000');
+            $this->monthRowId++;
+            $this->monthsAggregation->setCellValue("A{$this->monthRowId}", 'Celkový plán nákladů');
+            $this->monthsAggregation->setCellValue("B{$this->monthRowId}", '=5000000');
+            $this->monthRowId++;
+            $this->monthsAggregation->setCellValue("A{$this->monthRowId}", 'Průměrná fakturovaná cena');
+            $this->monthsAggregation->setCellValue("B{$this->monthRowId}", '=1300');
+            $this->monthRowId++;
+            $this->monthsAggregation->setCellValue("A{$this->monthRowId}", 'Plánovaná vytíženost');
+            $this->monthsAggregation->setCellValue("B{$this->monthRowId}", '=65');
+            $this->monthRowId += 2;
+        }
+
         $currencyFormat = $this->getCurrencyFormat($settings->currency);
         $headers = [
             ['IS PROFITABLE?', 'd6dce5'],
@@ -43,6 +64,7 @@ class ProfitabilityToXls
             ["NON-BILLABLE On internal projects", 'f4b183', $settings->currency],
             ["NON-BILLABLE On billable projects", 'f4b183', $settings->currency],
             ["TOTAL Non-Billable", 'ed7d31', $settings->currency],
+            ["TOTAL Billable", 'ffd966', $settings->currency],
         ];
 
         $worksheet = $this->spreadsheet->createSheet();
@@ -76,7 +98,7 @@ class ProfitabilityToXls
                     ],
                 ];
             }
-            $worksheet->getStyle("A{$rowId}:S{$rowId}")->applyFromArray($styles);
+            $worksheet->getStyle("A{$rowId}:T{$rowId}")->applyFromArray($styles);
             $rowId++;
         };
         $setRowData = function ($rowId, array $rowData) use ($worksheet) {
@@ -119,10 +141,12 @@ class ProfitabilityToXls
             $summaryRow = $rowId;
             $firstProjectRow = $rowId + 1;
             $lastProjectRow = $rowId + count($person['projects']);
+            $position = $settings->getPosition($person['name']);
+            $aggregatedPositions[$position][] = $summaryRow;
             $rowData = [
                 "=IF(P{$summaryRow}>0, \"YES\", \"NO\")",
                 $person['name'],
-                $settings->getPosition($person['name']),
+                $position,
                 '',
                 '',
                 [
@@ -147,6 +171,7 @@ class ProfitabilityToXls
                 ["=SUM(Q{$firstProjectRow}:Q{$lastProjectRow})", $currencyFormat],
                 ["=SUM(R{$firstProjectRow}:R{$lastProjectRow})", $currencyFormat],
                 ["=Q{$summaryRow}+R{$summaryRow}", $currencyFormat],
+                ["=(G{$summaryRow}/F{$summaryRow})*J{$summaryRow}", $currencyFormat],
             ];
 
             $setRowData($rowId, $rowData);
@@ -190,6 +215,83 @@ class ProfitabilityToXls
 
         if (!$settings->personsSettings) {
             $worksheet->removeColumn('C');
+        }
+        $worksheet->getColumnDimension('T')->setVisible(false);
+
+        if ($settings->personsSettings) {
+            $this->monthsAggregation->setCellValue("A{$this->monthRowId}", $report->selectedMonth->format('Y-m'));
+            $this->monthsAggregation->mergeCells("A{$this->monthRowId}:J{$this->monthRowId}");
+            $this->monthRowId++;
+            $this->monthsAggregation->setCellValue("A{$this->monthRowId}", 'Position');
+            $this->monthsAggregation->setCellValue("B{$this->monthRowId}", 'Employees');
+            $this->monthsAggregation->setCellValue("C{$this->monthRowId}", 'Billable %');
+            $this->monthsAggregation->setCellValue("D{$this->monthRowId}", 'Billable CZK');
+            $this->monthsAggregation->setCellValue("E{$this->monthRowId}", 'Total Non-Billable %');
+            $this->monthsAggregation->setCellValue("F{$this->monthRowId}", 'Total Non-Billable CZK');
+            $this->monthsAggregation->setCellValue("G{$this->monthRowId}", 'Internal Non-Billable CZK');
+            $this->monthsAggregation->setCellValue("H{$this->monthRowId}", 'Billable Non-Billable CZK');
+            $this->monthsAggregation->setCellValue("I{$this->monthRowId}", 'Profitability');
+            $this->monthsAggregation->setCellValue("J{$this->monthRowId}", 'Wages');
+            $this->monthsAggregation->setCellValue("L{$this->monthRowId}", 'Plan %');
+            $this->monthsAggregation->setCellValue("M{$this->monthRowId}", 'Plan CZK');
+            $this->monthsAggregation->setCellValue("N{$this->monthRowId}", 'Billable %');
+            $this->monthsAggregation->setCellValue("O{$this->monthRowId}", 'Billable CZK');
+            $this->monthsAggregation->setCellValue("P{$this->monthRowId}", 'Diff %');
+            $this->monthsAggregation->setCellValue("Q{$this->monthRowId}", 'Diff CZK');
+            $this->monthRowId++;
+
+            $firstPosition = $this->monthRowId;
+            $summaryRow = $firstPosition + count($aggregatedPositions);
+            foreach ($aggregatedPositions as $position => $rows) {
+                $aggregate = function ($function, $column) use ($rows, $worksheet) {
+                    if (!$rows) {
+                        return 0;
+                    }
+
+                    $references = array_map(
+                        function ($rowId) use ($worksheet, $column) {
+                            return "'{$worksheet->getTitle()}'!{$column}{$rowId}";
+                        },
+                        $rows
+                    );
+
+                    return "={$function}(" . implode(',', $references) . ')';
+                };
+                $this->monthsAggregation->setCellValue("A{$this->monthRowId}", $position);
+                $this->monthsAggregation->setCellValue("B{$this->monthRowId}", $aggregate('COUNTA', 'B'));
+                $this->monthsAggregation->setCellValue("C{$this->monthRowId}", $aggregate('AVERAGE', 'N'));
+                $this->monthsAggregation->setCellValue("D{$this->monthRowId}", $aggregate('SUM', 'T'));
+                $this->monthsAggregation->setCellValue("E{$this->monthRowId}", $aggregate('AVERAGE', 'O'));
+                $this->monthsAggregation->setCellValue("F{$this->monthRowId}", $aggregate('SUM', 'S'));
+                $this->monthsAggregation->setCellValue("G{$this->monthRowId}", $aggregate('SUM', 'Q'));
+                $this->monthsAggregation->setCellValue("H{$this->monthRowId}", $aggregate('SUM', 'R'));
+                $this->monthsAggregation->setCellValue("I{$this->monthRowId}", $aggregate('SUM', 'P'));
+                $this->monthsAggregation->setCellValue("J{$this->monthRowId}", $aggregate('SUM', 'G'));
+                // forecast
+                $this->monthsAggregation->setCellValue("L{$this->monthRowId}", '=B4');
+                $this->monthsAggregation->setCellValue("M{$this->monthRowId}",
+                    "=(B1*L{$this->monthRowId})*B3/B{$summaryRow}*B{$this->monthRowId}"
+                );
+                $this->monthsAggregation->setCellValue("N{$this->monthRowId}", "=C{$this->monthRowId}");
+                $this->monthsAggregation->setCellValue("O{$this->monthRowId}", "=D{$this->monthRowId}");
+                $this->monthsAggregation->setCellValue("P{$this->monthRowId}", "=N{$this->monthRowId}-L{$this->monthRowId}");
+                $this->monthsAggregation->setCellValue("Q{$this->monthRowId}", "=C{$this->monthRowId}-M{$this->monthRowId}");
+                $this->monthRowId++;
+            }
+
+            foreach (['B', 'D', 'F', 'G', 'H', 'I', 'J', 'M', 'O', 'Q'] as $column) {
+                $this->monthsAggregation->setCellValue(
+                    "{$column}{$this->monthRowId}",
+                    "=SUM({$column}{$firstPosition}:{$column}" . ($this->monthRowId - 1) . ')'
+                );
+            }
+
+            $this->monthRowId += 2;
+            $this->monthsAggregation->setCellValue("L{$this->monthRowId}", "Zisk dle plánu");
+            $this->monthsAggregation->setCellValue("M{$this->monthRowId}", "=M{$summaryRow}-B2");
+            $this->monthsAggregation->setCellValue("O{$this->monthRowId}", "Ztráta");
+            $this->monthsAggregation->setCellValue("P{$this->monthRowId}", "=M{$summaryRow}-O{$summaryRow}");
+            $this->monthRowId += 3;
         }
     }
 
