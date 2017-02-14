@@ -21,6 +21,7 @@ class ReportSettingsTest extends \PHPUnit_Framework_TestCase
         $settings = new ReportSettings();
         assertThat($settings->getHoursSalary('Unknown'), is(nullValue()));
         assertThat($settings->getPosition('Unknown'), is(nullValue()));
+        assertThat($settings->getAvailablePositions(), is(emptyArray()));
     }
 
     public function testGetAllAvailablePositions()

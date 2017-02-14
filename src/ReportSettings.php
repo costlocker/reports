@@ -36,7 +36,7 @@ class ReportSettings
         foreach ($this->persons as $person) {
             $positions[] = $person['position'];
         }
-        return array_values(array_unique($positions));
+        return array_values(array_unique(array_filter($positions)));
     }
 
     private function getPersonField($person, $field)
@@ -59,6 +59,11 @@ class ReportSettings
             'position' => null,
         ];
         $this->persons = [];
+
+        if (!$this->personsSettings) {
+            return;
+        }
+
         foreach (CsvParser::fromFile($this->personsSettings, ['encoding' => 'UTF-8']) as $index => $line) {
             $settings = [
                 'hours' => $line[1],

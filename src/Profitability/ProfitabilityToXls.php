@@ -150,26 +150,26 @@ class ProfitabilityToXls
                 $aggregatedPositionsInMonth,
                 $settings
             );
-        }
 
-        foreach ($aggregatedPositionsInMonth as $position => $personRows) {
-            foreach ($personRows as $person => $rows) {
-                $this->aggregatedPositions[$position][$person] = array_merge(
-                    $this->aggregatedPositions[$position][$person] ?? [],
-                    $rows
-                );
+            foreach ($aggregatedPositionsInMonth as $position => $personRows) {
+                foreach ($personRows as $person => $rows) {
+                    $this->aggregatedPositions[$position][$person] = array_merge(
+                        $this->aggregatedPositions[$position][$person] ?? [],
+                        $rows
+                    );
+                }
             }
-        }
 
-        $quarter = $report->selectedMonth->format('n') / 3;
-        if (is_int($quarter)) {
-            $this->aggregate(
-                $this->aggregatedQuarters,
-                $report->selectedMonth->format("{$quarter}Q Y"),
-                $this->aggregatedPositions,
-                $settings
-            );
-            $this->aggregatedPositions = [];
+            $quarter = $report->selectedMonth->format('n') / 3;
+            if (is_int($quarter)) {
+                $this->aggregate(
+                    $this->aggregatedQuarters,
+                    $report->selectedMonth->format("{$quarter}Q Y"),
+                    $this->aggregatedPositions,
+                    $settings
+                );
+                $this->aggregatedPositions = [];
+            }
         }
     }
 
