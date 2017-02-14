@@ -198,24 +198,29 @@ class ProfitabilityToXls
                 '92d050',
                 Alignment::HORIZONTAL_LEFT
             )
+            ->mergeCells('C', 'D')
+            ->mergeCells('E', 'F')
+            ->mergeCells('L', 'M')
+            ->mergeCells('N', 'O')
+            ->mergeCells('P', 'Q')
             ->addHeaders([
                 ['Position', 'adb9ca'],
                 ['Employees', 'adb9ca'],
                 ['Billable', 'ffc000', '%'],
-                ['Billable', 'ffc000', $settings->currency],
+                ['', 'ffc000', $settings->currency],
                 ['Total Non-Billable', '8faadc', '%'],
-                ['Total Non-Billable', '8faadc', $settings->currency],
+                ['', '8faadc', $settings->currency],
                 ["NON-BILLABLE On internal projects", '8faadc', $settings->currency],
                 ["NON-BILLABLE On billable projects", '8faadc', $settings->currency],
                 ['Profitability', 'ffff66', $settings->currency],
                 ['Wages', '66ffff', $settings->currency],
                 ['', 'ffffff'],
                 ['Plan', 'cc99ff', '%'],
-                ['Plan', 'cc99ff', $settings->currency],
+                ['', 'cc99ff', $settings->currency],
                 ['Billable', 'ffc000', '%'],
-                ['Billable', 'ffc000', $settings->currency],
-                ['Diff', 'ff0000', '%'],
-                ['Diff', 'ff0000', $settings->currency],
+                ['', 'ffc000', $settings->currency],
+                ['Plan vs Billable', 'ff0000', '%'],
+                ['', 'ff0000', $settings->currency],
             ]);
 
         $firstPosition = $xls->getRowId();
@@ -268,25 +273,28 @@ class ProfitabilityToXls
             return "=SUM({$column}{$firstPosition}:{$column}" . ($summaryRow - 1) . ')';
         };
         $xls
-            ->addRow([
-                '',
-                $aggregateAll('B'),
-                '',
-                [$aggregateAll('D'), $currencyFormat],
-                '',
-                [$aggregateAll('F'), $currencyFormat],
-                [$aggregateAll('G'), $currencyFormat],
-                [$aggregateAll('H'), $currencyFormat],
-                [$aggregateAll('I'), $currencyFormat],
-                [$aggregateAll('J'), $currencyFormat],
-                '',
-                '',
-                [$aggregateAll('M'), $currencyFormat],
-                '',
-                [$aggregateAll('O'), $currencyFormat],
-                '',
-                [$aggregateAll('Q'), $currencyFormat],
-            ])
+            ->addRow(
+                [
+                    '',
+                    $aggregateAll('B'),
+                    '',
+                    [$aggregateAll('D'), $currencyFormat],
+                    '',
+                    [$aggregateAll('F'), $currencyFormat],
+                    [$aggregateAll('G'), $currencyFormat],
+                    [$aggregateAll('H'), $currencyFormat],
+                    [$aggregateAll('I'), $currencyFormat],
+                    [$aggregateAll('J'), $currencyFormat],
+                    '',
+                    '',
+                    [$aggregateAll('M'), $currencyFormat],
+                    '',
+                    [$aggregateAll('O'), $currencyFormat],
+                    '',
+                    [$aggregateAll('Q'), $currencyFormat],
+                ],
+                'eeeeee'
+            )
             ->skipRows(1)
             ->addRow(
                 [

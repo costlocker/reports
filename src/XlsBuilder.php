@@ -162,7 +162,6 @@ class XlsBuilder
             ->addCondition('0')
             ->getStyle()->applyFromArray([
                 'font' => [
-                    'bold' => true,
                     'color' => [
                         'rgb' => $color
                     ]
