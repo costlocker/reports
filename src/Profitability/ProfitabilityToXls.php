@@ -4,6 +4,7 @@ namespace Costlocker\Reports\Profitability;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Costlocker\Reports\ReportSettings;
 use Costlocker\Reports\XlsBuilder;
@@ -185,6 +186,11 @@ class ProfitabilityToXls
                 ->skipRows(2);
         }
 
+        $evaluateNumber = [
+            $xls->compareToZero(Conditional::OPERATOR_LESSTHAN, 'ff0000'),
+            $xls->compareToZero(Conditional::OPERATOR_GREATERTHAN, '0000ff'),
+        ];
+
         $xls
             ->mergeCells('A', 'Q')
             ->addRow(
@@ -253,7 +259,7 @@ class ProfitabilityToXls
                     ["=(B1*L{$positionRowId})*B3/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
                     ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
                     ["=D{$positionRowId}", $currencyFormat],
-                    ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00, $evaluateNumber],
                     ["=C{$positionRowId}-M{$positionRowId}", $currencyFormat],
                 ]);
         }
@@ -285,10 +291,10 @@ class ProfitabilityToXls
             ->addRow(
                 [
                     11 => "Zisk dle plánu",
-                    "=M{$summaryRow}-B2",
+                    ["=M{$summaryRow}-B2", $currencyFormat, $evaluateNumber],
                     '',
                     'Ztráta',
-                    "=M{$summaryRow}-O{$summaryRow}"
+                    ["=M{$summaryRow}-O{$summaryRow}", $currencyFormat, $evaluateNumber],
                 ],
                 'ffccff'
             )

@@ -6,6 +6,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Conditional;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class XlsBuilder
@@ -58,9 +59,13 @@ class XlsBuilder
     {
         foreach ($data as $index => $value) {
             if (is_array($value)) {
-                list($value, $format) = $value;
-                $cell = $this->worksheet->setCellValue("{$this->indexToLetter($index)}{$this->rowId}", $value, true);
+                list($value, $format, $conditionals) = $value + [2 => []];
+                $coordinate = "{$this->indexToLetter($index)}{$this->rowId}";
+                $cell = $this->worksheet->setCellValue($coordinate, $value, true);
                 $cell->getStyle()->getNumberFormat()->setFormatCode($format);
+                if ($conditionals) {
+                    $cell->getStyle()->setConditionalStyles($conditionals);
+                }
             } else {
                 $this->worksheet->setCellValue("{$this->indexToLetter($index)}{$this->rowId}", $value);
             }
@@ -146,6 +151,24 @@ class XlsBuilder
     public function getWorksheetReference()
     {
         return "'{$this->worksheet->getTitle()}'!";
+    }
+
+    public function compareToZero($operator, $color)
+    {
+        $conditional = new Conditional();
+        $conditional
+            ->setConditionType(Conditional::CONDITION_CELLIS)
+            ->setOperatorType($operator)
+            ->addCondition('0')
+            ->getStyle()->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => [
+                        'rgb' => $color
+                    ]
+                ],
+            ]);
+        return $conditional;
     }
 
     private function indexToLetter($number)
