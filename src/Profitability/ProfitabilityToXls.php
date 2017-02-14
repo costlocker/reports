@@ -62,7 +62,8 @@ class ProfitabilityToXls
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
             $position = $settings->getPosition($person['name']);
-            $aggregatedPositionsInMonth[$position][$person['name']][] = [$monthReport->getWorksheetReference(), $summaryRow];
+            $aggregatedPositionsInMonth[$position][$person['name']][] =
+                [$monthReport->getWorksheetReference(), $summaryRow];
 
             $monthReport
                 ->addRow(
@@ -79,7 +80,8 @@ class ProfitabilityToXls
                             NumberFormat::FORMAT_NUMBER_00
                         ],
                         [
-                            $person['is_employee'] ? $person['salary_amount'] : "=F{$summaryRow}*{$person['hourly_rate']}",
+                            $person['is_employee'] ?
+                                $person['salary_amount'] : "=F{$summaryRow}*{$person['hourly_rate']}",
                             $currencyFormat
                         ],
                         ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
@@ -104,7 +106,8 @@ class ProfitabilityToXls
                 $isBillableProject = $project['client_rate'] > 0;
                 $nonBillableMoney = ["=-1*((G{$summaryRow}/F{$summaryRow})*K{$projectRowId})", $currencyFormat];
                 $remainingBillable =
-                    "I{$projectRowId}-({$project['hrs_tracked_total']}-{$project['hrs_tracked_after_month']}-H{$projectRowId})";
+                    "I{$projectRowId}-({$project['hrs_tracked_total']}" .
+                    "-{$project['hrs_tracked_after_month']}-H{$projectRowId})";
 
                 $monthReport
                     ->setRowVisibility($settings->exportSettings != self::MODE_SUMMARY)
@@ -141,35 +144,40 @@ class ProfitabilityToXls
             ->hideColumn('T');
 
         if ($settings->personsSettings) {
+            $this->addAggregations($report, $settings, $aggregatedPositionsInMonth);
+        }
+    }
+
+    private function addAggregations(ProfitabilityReport $report, ReportSettings $settings, array $positions)
+    {
+        $this->aggregate(
+            $this->aggregatedMonths,
+            [
+                "=DATE({$report->selectedMonth->format('Y, m, d')})",
+                'MMMM YYYY'
+            ],
+            $positions,
+            $settings
+        );
+
+        foreach ($positions as $position => $personRows) {
+            foreach ($personRows as $person => $rows) {
+                $this->aggregatedPositions[$position][$person] = array_merge(
+                    $this->aggregatedPositions[$position][$person] ?? [],
+                    $rows
+                );
+            }
+        }
+
+        $quarter = $report->selectedMonth->format('n') / 3;
+        if (is_int($quarter)) {
             $this->aggregate(
-                $this->aggregatedMonths,
-                [
-                    "=DATE({$report->selectedMonth->format('Y')}, {$report->selectedMonth->format('m')}, {$report->selectedMonth->format('d')})",
-                    'MMMM YYYY'
-                ],
-                $aggregatedPositionsInMonth,
+                $this->aggregatedQuarters,
+                $report->selectedMonth->format("{$quarter}Q Y"),
+                $this->aggregatedPositions,
                 $settings
             );
-
-            foreach ($aggregatedPositionsInMonth as $position => $personRows) {
-                foreach ($personRows as $person => $rows) {
-                    $this->aggregatedPositions[$position][$person] = array_merge(
-                        $this->aggregatedPositions[$position][$person] ?? [],
-                        $rows
-                    );
-                }
-            }
-
-            $quarter = $report->selectedMonth->format('n') / 3;
-            if (is_int($quarter)) {
-                $this->aggregate(
-                    $this->aggregatedQuarters,
-                    $report->selectedMonth->format("{$quarter}Q Y"),
-                    $this->aggregatedPositions,
-                    $settings
-                );
-                $this->aggregatedPositions = [];
-            }
+            $this->aggregatedPositions = [];
         }
     }
 
