@@ -3,6 +3,7 @@
 namespace Costlocker\Reports\Profitability;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Costlocker\Reports\ReportSettings;
 use Costlocker\Reports\XlsBuilder;
@@ -141,7 +142,10 @@ class ProfitabilityToXls
         if ($settings->personsSettings) {
             $this->aggregate(
                 $this->aggregatedMonths,
-                $report->selectedMonth->format('Y-m'),
+                [
+                    "=DATE({$report->selectedMonth->format('Y')}, {$report->selectedMonth->format('m')}, {$report->selectedMonth->format('d')})",
+                    'MMMM YYYY'
+                ],
                 $aggregatedPositionsInMonth,
                 $settings
             );
@@ -152,7 +156,7 @@ class ProfitabilityToXls
                 $this->aggregatedPositions[$position][$person] = array_merge(
                     $this->aggregatedPositions[$position][$person] ?? [],
                     $rows
-                );   
+                );
             }
         }
 
@@ -182,9 +186,11 @@ class ProfitabilityToXls
         }
 
         $xls
-            ->addSuperHeader(
-                [$title, '92d050'],
-                'Q'
+            ->mergeCells('A', 'Q')
+            ->addRow(
+                [$title],
+                '92d050',
+                Alignment::HORIZONTAL_LEFT
             )
             ->addHeaders([
                 ['Position', 'adb9ca'],

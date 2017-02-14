@@ -20,12 +20,6 @@ class XlsBuilder
         $this->rowId = 1;
     }
 
-    public function addSuperHeader(array $header, $lastColumn)
-    {
-        $this->worksheet->mergeCells("A{$this->rowId}:{$lastColumn}{$this->rowId}");
-        return $this->addHeaders([$header], false);
-    }
-
     public function addHeaders(array $headers, $hasUnit = true)
     {
         $unitRowId = $hasUnit ? $this->rowId + 1 : $this->rowId;
@@ -110,6 +104,12 @@ class XlsBuilder
         $this->worksheet->getStyle("{$firstColumn}{$this->rowId}:{$lastColumn}{$this->rowId}")
             ->applyFromArray($styles);
         $this->rowId++;
+    }
+
+    public function mergeCells($firstColumn, $lastColumn)
+    {
+        $this->worksheet->mergeCells("{$firstColumn}{$this->rowId}:{$lastColumn}{$this->rowId}");
+        return $this;
     }
 
     public function setRowVisibility($isVisible)
