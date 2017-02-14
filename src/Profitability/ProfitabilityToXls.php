@@ -260,7 +260,7 @@ class ProfitabilityToXls
                     ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
                     ["=D{$positionRowId}", $currencyFormat],
                     ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00, $evaluateNumber],
-                    ["=C{$positionRowId}-M{$positionRowId}", $currencyFormat],
+                    ["=O{$positionRowId}-M{$positionRowId}", $currencyFormat],
                 ]);
         }
 
