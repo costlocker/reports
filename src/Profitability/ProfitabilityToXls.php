@@ -17,6 +17,7 @@ class ProfitabilityToXls
     private $aggregatedMonths;
     private $aggregatedQuarters;
     private $aggregatedPositions = [];
+    private $previousAggregations = [];
 
     public function __construct(Spreadsheet $spreadsheet)
     {
@@ -150,14 +151,18 @@ class ProfitabilityToXls
 
     private function addAggregations(ProfitabilityReport $report, ReportSettings $settings, array $positions)
     {
+        $lastDay = "DATE({$report->selectedMonth->format('Y, m, t')})";
         $this->aggregate(
             $this->aggregatedMonths,
-            [
-                "=DATE({$report->selectedMonth->format('Y, m, d')})",
-                'MMMM YYYY'
-            ],
             $positions,
-            $settings
+            $settings,
+            [
+                'title' => [
+                    "=DATE({$report->selectedMonth->format('Y, m, d')})",
+                    'MMMM YYYY'
+                ],
+                'lastDay' => $lastDay,
+            ]
         );
 
         foreach ($positions as $position => $personRows) {
@@ -173,19 +178,27 @@ class ProfitabilityToXls
         if (is_int($quarter)) {
             $this->aggregate(
                 $this->aggregatedQuarters,
-                $report->selectedMonth->format("{$quarter}Q Y"),
                 $this->aggregatedPositions,
-                $settings
+                $settings,
+                [
+                    'title' => $report->selectedMonth->format("{$quarter}Q Y"),
+                    'lastDay' => $lastDay,
+                ]
             );
             $this->aggregatedPositions = [];
         }
     }
 
-    private function aggregate(XlsBuilder $xls, $title, array $aggregatedPositions, ReportSettings $settings)
-    {
+    private function aggregate(
+        XlsBuilder $xls,
+        array $aggregatedPositions,
+        ReportSettings $settings,
+        array $texts
+    ) {
         $currencyFormat = XlsBuilder::getCurrencyFormat($settings->currency);
 
         if ($xls->getRowId() == 1) {
+            $this->previousAggregations[$xls->getWorksheetReference()] = 1;
             $xls
                 ->addRow(['Počet prodaných hodin', ['=6000', NumberFormat::FORMAT_NUMBER]])
                 ->addRow(['Celkový plán nákladů', ['=5000000', $currencyFormat]])
@@ -202,7 +215,7 @@ class ProfitabilityToXls
         $xls
             ->mergeCells('A', 'Q')
             ->addRow(
-                [$title],
+                [$texts['title']],
                 '92d050',
                 Alignment::HORIZONTAL_LEFT
             )
@@ -306,14 +319,20 @@ class ProfitabilityToXls
             ->skipRows(1)
             ->addRow(
                 [
-                    11 => "Zisk dle plánu",
-                    ["=M{$summaryRow}-B2", $currencyFormat, $evaluateNumber],
+                    11 => "=CONCATENATE(\"Stav k \", TEXT({$texts['lastDay']},\"dd.mmmm\"))",
+                    [
+                        "=M{$this->previousAggregations[$xls->getWorksheetReference()]}+P{$xls->getRowId()}",
+                        $currencyFormat,
+                        $evaluateNumber
+                    ],
                     '',
                     'Ztráta',
-                    ["=M{$summaryRow}-O{$summaryRow}", $currencyFormat, $evaluateNumber],
+                    ["=O{$summaryRow}-M{$summaryRow}", $currencyFormat, $evaluateNumber],
                 ],
                 'ffccff'
             )
             ->skipRows(3);
+
+        $this->previousAggregations[$xls->getWorksheetReference()] = $xls->getRowId(-4);
     }
 }
