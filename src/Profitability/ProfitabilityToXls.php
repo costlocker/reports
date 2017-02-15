@@ -162,6 +162,29 @@ class ProfitabilityToXls
                     'MMMM YYYY'
                 ],
                 'lastDay' => $lastDay,
+                'groups' => [
+                    1 => 6000,
+                    2 => 6000,
+                    3 => 6000,
+                    4 => 6000,
+                    5 => 6000,
+                    6 => 6000,
+                    7 => 6000,
+                    8 => 6000,
+                    9 => 6000,
+                    10 => 6000,
+                    11 => 6000,
+                    12 => 6000,
+                ],
+                'groupsFormatter' => function ($group) use ($report) {
+                    $date = \DateTime::createFromFormat('Y-n-d', "{$report->selectedMonth->format('Y')}-{$group}-02");
+                    return [
+                        "=DATE({$date->format('Y, m, d')})",
+                        'MMMM'
+                    ];
+                },
+                'groupsCount' => 12,
+                'currentGroup' => $report->selectedMonth->format('n')
             ]
         );
 
@@ -183,6 +206,16 @@ class ProfitabilityToXls
                 [
                     'title' => $report->selectedMonth->format("{$quarter}Q Y"),
                     'lastDay' => $lastDay,
+                    'groups' => [
+                        1 => "=SUM('Months'!B5:B7)",
+                        2 => "=SUM('Months'!B8:B10)",
+                        3 => "=SUM('Months'!B11:B13)",
+                        4 => "=SUM('Months'!B14:B16)",
+                    ],
+                    'groupsFormatter' => function ($group) {
+                        return "Q{$group}";
+                    },
+                    'currentGroup' => $quarter,
                 ]
             );
             $this->aggregatedPositions = [];
@@ -200,11 +233,14 @@ class ProfitabilityToXls
         if ($xls->getRowId() == 1) {
             $this->previousAggregations[$xls->getWorksheetReference()] = 1;
             $xls
-                ->addRow(['Počet prodaných hodin', ['=6000', NumberFormat::FORMAT_NUMBER]])
-                ->addRow(['Celkový plán nákladů', ['=5000000', $currencyFormat]])
+                ->addRow(['Celkový plán nákladů', ['=5000000', $currencyFormat]]) // unused in calculations
                 ->addRow(['Průměrná fakturovaná cena', ['=1300', $currencyFormat]])
                 ->addRow(['Plánovaná vytíženost', ['=0.65', NumberFormat::FORMAT_PERCENTAGE_00]])
-                ->skipRows(2);
+                ->addRow(['', 'Počet prodaných hodin']);
+            foreach ($texts['groups'] as $group => $hours) {
+                $xls->addRow([$texts['groupsFormatter']($group), [$hours, NumberFormat::FORMAT_NUMBER]]);
+            }
+            $xls->skipRows(2);
         }
 
         $evaluateNumber = [
@@ -267,6 +303,7 @@ class ProfitabilityToXls
 
                 return "={$function}(" . implode(',', $references) . ')';
             };
+            $groupHours = 4 + $texts['currentGroup'];
             $xls
                 ->setRowVisibility(count($allCells) > 0)
                 ->addRow([
@@ -281,8 +318,8 @@ class ProfitabilityToXls
                     [$aggregate('SUM', 'P'), $currencyFormat],
                     [$aggregate('SUM', 'G'), $currencyFormat],
                     '',
-                    ['=B4', NumberFormat::FORMAT_PERCENTAGE_00],
-                    ["=(B1*L{$positionRowId})*B3/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
+                    ['=B3', NumberFormat::FORMAT_PERCENTAGE_00],
+                    ["=(B{$groupHours}*L{$positionRowId})*B2/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
                     ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
                     ["=D{$positionRowId}", $currencyFormat],
                     ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00, $evaluateNumber],
