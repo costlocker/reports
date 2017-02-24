@@ -66,10 +66,11 @@ class ProfitabilityToXls
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
 
+            $profitabilityColumn = $settings->personsSettings ? 'P' : 'O';
             $monthReport
                 ->addRow(
                     [
-                        "=IF(P{$summaryRow}>0, \"YES\", \"NO\")",
+                        "=IF({$profitabilityColumn}{$summaryRow}>0, \"YES\", \"NO\")",
                         $person['name'],
                         $position,
                         '',
