@@ -48,13 +48,12 @@ class ProfitabilityProvider
     {
         $rawData = $this->client->request([
             'Simple_People' => new \stdClass(),
-            'Simple_Projects_Ce' => new \stdClass(),
         ]);
 
         $people = [];
-        $personnelCosts = $this->client->map($rawData['Simple_Projects_Ce'], 'person_id');
-        $currentTimesheet = $this->groupTimesheetByPersonAndProject($month, $month);
+        list($currentTimesheet, $activeProjects) = $this->groupTimesheetByPersonAndProject($month, $month, true);
         $nextTimesheet = $this->groupTimesheetByPersonAndProject(Dates::getNextMonth($month));
+        $personnelCosts = $this->personnelCosts($activeProjects);
 
         foreach ($rawData['Simple_People'] as $person) {
             $person += [
@@ -101,19 +100,37 @@ class ProfitabilityProvider
         return $people;
     }
 
-    private function groupTimesheetByPersonAndProject(\DateTime $monthStart, \DateTime $monthEnd = null)
+    public function personnelCosts(array $projects)
     {
+        $rawData = $this->client->request([
+            'Simple_Projects_Ce' => [
+                'project' => $projects
+            ],
+        ]);
+
+        return $this->client->map($rawData['Simple_Projects_Ce'], 'person_id');
+    }
+
+    private function groupTimesheetByPersonAndProject(
+        \DateTime $monthStart,
+        \DateTime $monthEnd = null,
+        $withProjects = false
+    ) {
         $rawData = $this->client->request([
             'Simple_Timesheet' => [
                 'datef' => $monthStart->format('Y-m-01'),
                 'datet' => $monthEnd ? $monthEnd->format('Y-m-t') : null,
             ],
         ]);
-
-        return array_map(
-            function (array $personSheet) {
+        $projects = [];
+        $timesheet = array_map(
+            function (array $personSheet) use (&$projects) {
                 return array_map(
-                    function ($projectSheet) {
+                    function ($projectSheet) use (&$projects) {
+                        $projects = array_merge(
+                            $projects,
+                            array_keys($this->client->map($projectSheet, 'project'))
+                        );
                         $trackedSeconds = $this->client->sum($projectSheet, 'interval');
 
                         return $trackedSeconds / 3600;
@@ -123,5 +140,7 @@ class ProfitabilityProvider
             },
             $this->client->map($rawData['Simple_Timesheet'], 'person')
         );
+
+        return $withProjects ? [$timesheet, array_unique($projects)] : $timesheet;
     }
 }

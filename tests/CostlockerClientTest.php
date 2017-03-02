@@ -39,7 +39,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 
     public function testGroupPeopleByProject()
     {
-        $this->whenApiReturns('people-and-costs.json', 'timesheet-february.json', 'timesheet-march.json');
+        $this->whenApiReturns('people.json', 'timesheet-february.json', 'timesheet-march.json', 'personnel-costs.json');
         $this->assertEquals(
             [
                 1 => [
