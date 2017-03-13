@@ -103,7 +103,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 
     public function testAnalyzeFinishedProjects()
     {
-        $inspiro = new Inspiro\InspiroProvider($this->costlockerClient);
+        $clientsRevenues = new Clients\ClientsRevenuesProvider($this->costlockerClient);
         $this->whenApiReturns('clients-projects-expenses.json');
         $this->assertEquals(
             [
@@ -120,7 +120,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                     ],
                 ],
             ],
-            $inspiro(new \DateTime('2017-01-31 23:59:59'))->clients
+            $clientsRevenues(new \DateTime('2017-01-31 23:59:59'))->clients
         );
     }
 

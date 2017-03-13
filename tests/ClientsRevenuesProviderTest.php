@@ -1,13 +1,13 @@
 <?php
 
-namespace Costlocker\Reports\Inspiro;
+namespace Costlocker\Reports\Clients;
 
-class InspiroProviderTest extends \PHPUnit_Framework_TestCase
+class ClientsRevenuesProviderTest extends \PHPUnit_Framework_TestCase
 {
     /** @dataProvider provideDates */
     public function testCompareDatesLikeInCostlockerFilters(array $project, $expectedState)
     {
-        $provider = new InspiroProvider();
+        $provider = new ClientsRevenuesProvider();
         assertThat(
             $provider->determineProjectState(
                 \DateTime::createFromFormat('Y-m-d', '2017-01-31'),

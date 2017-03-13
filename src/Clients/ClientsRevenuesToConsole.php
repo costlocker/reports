@@ -1,14 +1,14 @@
 <?php
 
-namespace Costlocker\Reports\Inspiro;
+namespace Costlocker\Reports\Clients;
 
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Costlocker\Reports\ReportSettings;
 
-class InspiroToConsole
+class ClientsRevenuesToConsole
 {
-    public function __invoke(InspiroReport $report, ReportSettings $settings)
+    public function __invoke(ClientsRevenuesReport $report, ReportSettings $settings)
     {
         $headers = [
             [

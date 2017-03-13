@@ -8,14 +8,14 @@
 0 8 1 1 * bin/console report profitability:summary --monthStart "now - 12 months" --monthEnd "now - 1 month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --personsSettings var/2fresh/persons.csv 2>&1 >> report.log
 ```
 
-## Inspiro
+## Clients Revenues
 
 API don't return profit, so table must be filled from [real DB](https://gitlab.costlocker.io/costlocker/backend/blob/develop/app/model/Report/ReportMain.php#L535)
 
 1. Generate report
 
 ```bash
-bin/console report inspiro --monthStart "2016-12" --monthEnd "2017-01" --host "https://app.costlocker.com|superSecretToken" --email save
+bin/console report clients --monthStart "2016-12" --monthEnd "2017-01" --host "https://app.costlocker.com|superSecretToken" --email save
 ```
 
 2. Paste unformatted results

@@ -35,8 +35,8 @@ class GenerateReportCommand extends Command
                     return "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}";
                 },
             ],
-            'inspiro' => [
-                'provider' => Inspiro\InspiroProvider::class,
+            'clients' => [
+                'provider' => Clients\ClientsRevenuesProvider::class,
                 'interval' => function (\DateTime $monthStart, \DateTime $monthEnd) {
                     return [
                         Dates::getLastDatetimeInMonth($monthStart),
@@ -44,8 +44,8 @@ class GenerateReportCommand extends Command
                     ];
                 },
                 'exporters' => [
-                    'console' => new Inspiro\InspiroToConsole(),
-                    'xls' => new Inspiro\InspiroToXls($this->spreadsheet),
+                    'console' => new Clients\ClientsRevenuesToConsole(),
+                    'xls' => new Clients\ClientsRevenuesToXls($this->spreadsheet),
                 ],
                 'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
                     return "{$monthStart->format('Y')} - {$monthEnd->format('Y')}";

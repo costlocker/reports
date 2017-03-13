@@ -1,13 +1,13 @@
 <?php
 
-namespace Costlocker\Reports\Inspiro;
+namespace Costlocker\Reports\Clients;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Costlocker\Reports\ReportSettings;
 use Costlocker\Reports\XlsBuilder;
 
-class InspiroToXls
+class ClientsRevenuesToXls
 {
     private $spreadsheet;
 
@@ -16,7 +16,7 @@ class InspiroToXls
         $this->spreadsheet = $spreadsheet;
     }
 
-    public function __invoke(InspiroReport $report, ReportSettings $settings)
+    public function __invoke(ClientsRevenuesReport $report, ReportSettings $settings)
     {
         $currencyFormat = XlsBuilder::getCurrencyFormat($settings->currency);
 

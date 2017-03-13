@@ -1,8 +1,8 @@
 <?php
 
-namespace Costlocker\Reports\Inspiro;
+namespace Costlocker\Reports\Clients;
 
-class InspiroReport
+class ClientsRevenuesReport
 {
     public $lastDay;
     public $clients;

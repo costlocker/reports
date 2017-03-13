@@ -1,10 +1,10 @@
 <?php
 
-namespace Costlocker\Reports\Inspiro;
+namespace Costlocker\Reports\Clients;
 
 use Costlocker\Reports\CostlockerClient;
 
-class InspiroProvider
+class ClientsRevenuesProvider
 {
     private $client;
 
@@ -46,7 +46,7 @@ class InspiroProvider
             ];
         };
 
-        $report = new InspiroReport();
+        $report = new ClientsRevenuesReport();
         $report->lastDay = $lastDay;
         $report->clients = array_map(
             function (array $projects) use ($analyzeProjects) {
