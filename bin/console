@@ -7,7 +7,11 @@ require __DIR__ . '/../vendor/autoload.php';
 
 \Symfony\Component\Debug\ErrorHandler::register();
 
-$config = require __DIR__ . '/../app/config.php';
+if (file_exists(__DIR__ . '/../app/config.php')) {
+    $config = require __DIR__ . '/../app/config.php';
+} else {
+    $config = require __DIR__ . '/../app/config.default.php';
+}
 
 $application = new Symfony\Component\Console\Application();
 $application->addCommands([
