@@ -1,0 +1,15 @@
+machine:
+    php:
+        version: 7.1.0
+
+dependencies:
+    cache_directories:
+        - ~/.composer/cache
+
+test:
+    override:
+        - vendor/bin/phpunit --testdox-html ./var/tests/testdox.html --testdox-text ./var/tests/testdox.txt
+        - bin/qa
+    post:
+        - cp -r ./var/QA $CIRCLE_ARTIFACTS
+        - cp -r ./var/tests $CIRCLE_ARTIFACTS
