@@ -1,62 +1,96 @@
+
 # Costlocker reports
 
-## Usage
+Generate XLSX reports from [Costlocker API](http://docs.costlocker.apiary.io/).
+
+## Requirements
+
+- PHP >= 7.0
+
+## Install
 
 ```bash
-# crontab
-0 8 1 * * bin/console report profitability:detailed --monthStart "previous month" --monthEnd "previous month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --currency EUR 2>&1 >> report.log
-0 8 1 1 * bin/console report profitability:summary --monthStart "now - 12 months" --monthEnd "now - 1 month" --host "https://new.costlocker.com|apiKey" --email "kamil@costlocker.com" --personsSettings var/2fresh/persons.csv 2>&1 >> report.log
-```
-
-## Clients Revenues
-
-API don't return profit, so table must be filled from [real DB](https://gitlab.costlocker.io/costlocker/backend/blob/develop/app/model/Report/ReportMain.php#L535)
-
-1. Generate report
-
-```bash
-bin/console report clients --monthStart "2016-12" --monthEnd "2017-01" --host "https://app.costlocker.com|superSecretToken" --email save
-```
-
-2. Paste unformatted results
-
-```sql
-SELECT
-    client.name,
-    SUM(CASE WHEN state = 1 THEN 1 ELSE 0 END) AS count_finished,
-    '=' || SUM(CASE WHEN state = 1 THEN revenue_act_sum + revenue_exp_sum - disc ELSE 0 END) as revenue_finished,
-    '=C' || (row_number() OVER () + 2) || '-' || SUM(CASE WHEN state = 1 THEN COALESCE(costs_exp_sum, 0) ELSE 0 END) as revenues_minus_expenses_finished,
-    '=' || SUM(CASE WHEN state = 1 THEN COALESCE(revenue_act_sum + revenue_exp_sum - disc - COALESCE(costs_act_tracked_sum, 0), 0) - costs_exp_sum ELSE 0 END) as profit_finished,
-    SUM(CASE WHEN state = 0 THEN 1 ELSE 0 END) AS count_running,
-    '=' || SUM(CASE WHEN state = 0 THEN revenue_act_sum + revenue_exp_sum - disc ELSE 0 END) as revenue_running,
-    '=G' || (row_number() OVER () + 2) || '-' || SUM(CASE WHEN state = 0 THEN COALESCE(costs_exp_sum, 0) ELSE 0 END) as revenues_minus_expenses_running,
-    '=' || SUM(CASE WHEN state = 0 THEN COALESCE(revenue_act_sum + revenue_exp_sum - disc - COALESCE(costs_act_tracked_sum, 0), 0) - costs_exp_sum ELSE 0 END) as profit_running
-FROM project
-JOIN client ON client_id = client.id
-WHERE project.type = 0 AND project.tenant_id = 17
-    AND (
-        (project.state = 0 AND project.da_start >= '2016-01-01') OR 
-        (project.state = 1 AND project.da_end >= '2016-01-01'))
-    AND (
-        (project.state = 0 AND project.da_start <= '2016-12-31') OR 
-        (project.state = 1 AND project.da_end <= '2016-12-31')
-    ) 
-GROUP BY client.name
-ORDER BY client.name
-```
-
-## Development
-
-``` bash
-git clone ...
+git clone https://github.com/costlocker/reports.git
 composer install
-vendor/bin/phpunit
-bin/qa
+bin/console report --help
 ```
 
-### Mail sender
+##### Custom mailer (gmail, ...)
 
-```
+By default [`mail()`](http://swiftmailer.org/docs/sending.html#using-the-mail-transport)
+is used for sending e-mails. But you can define custom 
+[`Swift_MailTransport`](http://swiftmailer.org/docs/sending.html#) in `app/config.php`.
+
+```bash
 cp app/config.default.php app/config.php
 nano app/config.php
 ```
+
+## Available reports
+
+All examples are using environment variable with url and api key.
+
+```
+COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
+```
+
+##### Options
+
+| CLI option | Value | Description |
+| ---------- | ------------- | ----------- |
+| `--host` | `https://app.costlocker.com|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
+| `--email` | | Show simplified console report |
+| `--email` | `save` | Report is saved in `var/reports` if e-mail is _invalid_ |
+| `--email` | `john@example.com` | Send report to the email |
+| `--monthStart` | `previous month` | First month use for generating report |
+| `--monthEnd` | `current month` | Last month for generating report |
+
+### Profitability
+
+Are your employees profitable? 
+
+![screen shot 2017-03-13 at 13 22 50](https://cloud.githubusercontent.com/assets/7994022/23854122/36654c14-07f0-11e7-9f1e-be320344f5e0.png)
+
+```bash
+# monthly report for January and February 2017 saved in var/reports
+bin/console report profitability --monthStart "2017-01" --monthEnd "2017-03" --host $COSTLOCKER_HOST --email "save"
+```
+
+![screen shot 2017-03-13 at 13 25 08](https://cloud.githubusercontent.com/assets/7994022/23854171/807855a8-07f0-11e7-98b1-32ec70ca4d02.png)
+
+```bash
+# summary report for year 2016 sent to mail
+bin/console report profitability:summary --monthStart "2016-01" --monthEnd "2016-12" --host $COSTLOCKER_HOST --personsSettings tests/fixtures/persons.csv --email "john@example.com"
+```
+
+##### Options
+
+| CLI option | Value | Description |
+| ---------- | ------- | ----------- |
+| `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
+| `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculaction, take a look at [example](/tests/fixtures/persons.csv) |
+
+### Clients revenues
+
+Find clients revenues for finished and running projects
+
+![screen shot 2017-03-13 at 13 21 58](https://cloud.githubusercontent.com/assets/7994022/23854087/0ebe01e2-07f0-11e7-9bd2-be12c9ee9ec8.png)
+
+```bash
+# yearly report grouped by clients printed to console
+bin/console report clients --monthStart "2016-12" --monthEnd "2017-01" --host $COSTLOCKER_HOST
+```
+##### Why is column _Profit_ empty?
+
+Profit isn't available in [API](http://docs.costlocker.apiary.io/#reference/0/projects).
+Write me at `development@costlocker.com` if you need profit in clients report.
+
+## Contributing
+
+Contributions from others would be very much appreciated! Send 
+[pull request](https://github.com/costlocker/reports/pulls)/[issue](https://github.com/costlocker/reports/issues). Thanks!
+
+## License
+
+Copyright (c) 2017 Costlocker SE. MIT Licensed,
+see [LICENSE](/LICENSE) for details.

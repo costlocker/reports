@@ -1,5 +1,6 @@
 {
     "name": "costlocker/reports",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Costlocker\\Reports\\": "src/"
@@ -12,6 +13,7 @@
         }
     ],
     "require": {
+        "php": ">=7.0",
         "symfony/console": "^3.2",
         "guzzlehttp/guzzle": "^6.2",
         "phpoffice/phpspreadsheet": "dev-develop",
