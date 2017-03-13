@@ -1,6 +1,8 @@
 
 # Costlocker reports
 
+[![CircleCI](https://circleci.com/gh/costlocker/reports/tree/master.svg?style=svg&circle-token=6a72d2fe098452b9b7113b830c035045e58e65d7)](https://circleci.com/gh/costlocker/reports/tree/master)
+
 Generate XLSX reports from [Costlocker API](http://docs.costlocker.apiary.io/).
 
 ## Requirements
