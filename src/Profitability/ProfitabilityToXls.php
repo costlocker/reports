@@ -28,8 +28,9 @@ class ProfitabilityToXls
     {
         $currencyFormat = XlsBuilder::getCurrencyFormat($settings->currency);
         $aggregatedPositionsInMonth = array_fill_keys($settings->getAvailablePositions(), []);
+        $isSummaryMode = $settings->exportSettings == self::MODE_SUMMARY && $settings->personsSettings;
 
-        if ($settings->personsSettings && !$this->aggregatedMonths) {
+        if ($isSummaryMode && !$this->aggregatedMonths) {
             $this->aggregatedMonths = new XlsBuilder($this->spreadsheet, 'Months');
             $this->aggregatedQuarters = new XlsBuilder($this->spreadsheet, 'Quarters');
         }
@@ -112,7 +113,7 @@ class ProfitabilityToXls
                     "-{$project['hrs_tracked_after_month']}-H{$projectRowId})";
 
                 $monthReport
-                    ->setRowVisibility($settings->exportSettings != self::MODE_SUMMARY)
+                    ->setRowVisibility(!$isSummaryMode)
                     ->addRow([
                         '',
                         $person['name'],
@@ -145,7 +146,7 @@ class ProfitabilityToXls
             ->removeColumnIf('C', !$settings->personsSettings)
             ->hideColumn('T');
 
-        if ($settings->personsSettings) {
+        if ($isSummaryMode) {
             $this->addAggregations($report, $settings, $aggregatedPositionsInMonth);
         }
     }
