@@ -2,8 +2,10 @@
 
 if [ ! -f qa/phpqa ];
 then
-    echo "installing phpqa globally"
-    (git clone https://github.com/EdgedesignCZ/phpqa.git ./qa  && cd qa && composer install --no-dev)
+    echo "phpqa must be installed in 'qa' directory"
+    echo "> Create symlink to global phpqa '(cd qa && ln -s $(which phpqa) phpqa)'"
+    echo "> Or install it in subdirectory '(git clone https://github.com/EdgedesignCZ/phpqa.git ./qa  && cd qa && composer install --no-dev)'"
+    exit 1
 fi
 
 qa/phpqa --report --verbose \

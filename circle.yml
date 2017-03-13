@@ -5,6 +5,8 @@ machine:
 dependencies:
     cache_directories:
         - ~/.composer/cache
+    post:
+        - 'git clone https://github.com/EdgedesignCZ/phpqa.git ./qa  && cd qa && composer install --no-dev'
 
 test:
     override:
