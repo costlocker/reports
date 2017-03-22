@@ -35,22 +35,6 @@ class GenerateReportCommand extends Command
                     return "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}";
                 },
             ],
-            'clients' => [
-                'provider' => Clients\ClientsRevenuesProvider::class,
-                'interval' => function (\DateTime $monthStart, \DateTime $monthEnd) {
-                    return [
-                        Dates::getLastDatetimeInMonth($monthStart),
-                        Dates::getLastDatetimeInMonth($monthEnd),
-                    ];
-                },
-                'exporters' => [
-                    'console' => new Clients\ClientsRevenuesToConsole(),
-                    'xls' => new Clients\ClientsRevenuesToXls($this->spreadsheet),
-                ],
-                'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
-                    return "{$monthStart->format('Y')} - {$monthEnd->format('Y')}";
-                },
-            ],
         ];
         $this->mailer = $mailer;
         parent::__construct();

@@ -46,6 +46,8 @@ COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
 | `--email` | `john@example.com` | Send report to the email |
 | `--monthStart` | `previous month` | First month use for generating report |
 | `--monthEnd` | `current month` | Last month for generating report |
+| `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
+| `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculaction, take a look at [example](/tests/fixtures/persons.csv) |
 
 ### Profitability
 
@@ -64,28 +66,6 @@ bin/console report profitability --monthStart "2017-01" --monthEnd "2017-03" --h
 # summary report for year 2016 sent to mail
 bin/console report profitability:summary --monthStart "2016-01" --monthEnd "2016-12" --host $COSTLOCKER_HOST --personsSettings tests/fixtures/persons.csv --email "john@example.com"
 ```
-
-##### Options
-
-| CLI option | Value | Description |
-| ---------- | ------- | ----------- |
-| `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
-| `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculaction, take a look at [example](/tests/fixtures/persons.csv) |
-
-### Clients revenues
-
-Find clients revenues for finished and running projects
-
-![screen shot 2017-03-13 at 13 21 58](https://cloud.githubusercontent.com/assets/7994022/23854087/0ebe01e2-07f0-11e7-9bd2-be12c9ee9ec8.png)
-
-```bash
-# yearly report grouped by clients printed to console
-bin/console report clients --monthStart "2016-12" --monthEnd "2017-01" --host $COSTLOCKER_HOST
-```
-##### Why is column _Profit_ empty?
-
-Profit isn't available in [API](http://docs.costlocker.apiary.io/#reference/0/projects).
-Write me at `development@costlocker.com` if you need profit in clients report.
 
 ## Contributing
 

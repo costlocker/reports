@@ -101,29 +101,6 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    public function testAnalyzeFinishedProjects()
-    {
-        $clientsRevenues = new Clients\ClientsRevenuesProvider($this->costlockerClient);
-        $this->whenApiReturns('clients-projects-expenses.json');
-        $this->assertEquals(
-            [
-                'kamil' => [
-                    'running' => [
-                        'projects' => 1,
-                        'revenue' => 0,
-                        'expenses' => 0
-                    ],
-                    'finished' => [
-                        'projects' => 2,
-                        'revenue' => 2200,
-                        'expenses' => 1100
-                    ],
-                ],
-            ],
-            $clientsRevenues(new \DateTime('2017-01-31 23:59:59'))->clients
-        );
-    }
-
     private function whenApiReturns()
     {
         foreach (func_get_args() as $response) {
