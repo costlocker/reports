@@ -25,7 +25,11 @@
             "billed": 0,
             "hours_budgeted": 170,
             "hours_tracked": 74.561944444444,
-            "tags": [],
+            "tags": [
+                {
+                    "id": 1
+                }
+            ],
             "responsible_people": [
                 {
                     "id": "2"
@@ -51,6 +55,16 @@
                     "id": "1"
                 }
             ]
+        }
+    ],
+    "Simple_Tags": [
+        {
+            "id": "1",
+            "name": "billable"
+        },
+        {
+            "id": "2",
+            "name": "design"
         }
     ]
 }

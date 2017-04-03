@@ -29,15 +29,23 @@ class ProfitabilityProvider
         $rawData = $this->client->request([
             'Simple_Projects' => new \stdClass(),
             'Simple_Clients' => new \stdClass(),
+            'Simple_Tags' => new \stdClass(),
         ]);
 
         $clients = $this->client->map($rawData['Simple_Clients'], 'id');
+        $tags = $this->client->map($rawData['Simple_Tags'], 'id');
         $projects = [];
 
         foreach ($rawData['Simple_Projects'] as $project) {
             $projects[$project['id']] = [
                 'name' => $project['name'],
                 'client' => $clients[$project['client_id']][0]['name'],
+                'tags' => array_map(
+                    function (array $tag) use ($tags) {
+                        return $tags[$tag['id']][0]['name'];
+                    },
+                    $project['tags']
+                ),
             ];
         }
 

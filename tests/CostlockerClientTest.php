@@ -21,16 +21,18 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 
     public function testLoadProjectAndClients()
     {
-        $this->whenApiReturns('projects-and-clients.json');
+        $this->whenApiReturns('projects-and-clients-and-tags.json');
         $this->assertEquals(
             [
                 1 => [
                     'name' => 'eshop',
                     'client' => 'Kamil',
+                    'tags' => ['billable'],
                 ],
                 33 => [
                     'name' => 'comm strategy',
                     'client' => 'deactivated',
+                    'tags' => [],
                 ],
             ],
             $this->profitability->projects()
