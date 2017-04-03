@@ -37,8 +37,9 @@ class ProfitabilityReport
     {
         foreach ($projects as $id => $project) {
             $projects[$id] = $project + [
-                'name' => $this->getProjectName($id),
-                'client' => $this->getProjectClient($id),
+                'name' => $this->getProjectAttribute($id, 'name', "#{$id}"),
+                'client' => $this->getProjectAttribute($id, 'client', "#{$id} client"),
+                'tags' => $this->getProjectAttribute($id, 'tags', []),
             ];
         }
         return $projects;
@@ -56,13 +57,8 @@ class ProfitabilityReport
         return $items;
     }
 
-    private function getProjectName($idProject)
+    private function getProjectAttribute($idProject, $attribute, $default)
     {
-        return $this->projects[$idProject]['name'] ?? "#{$idProject}";
-    }
-
-    private function getProjectClient($idProject)
-    {
-        return $this->projects[$idProject]['client'] ?? "#{$idProject} client";
+        return $this->projects[$idProject][$attribute] ?? $default;
     }
 }

@@ -103,5 +103,6 @@ class ProfitabilityReportTest extends \PHPUnit_Framework_TestCase
         $people = $report->getActivePeople();
         assertThat($people[1]['projects'][1]['name'], is('#1'));
         assertThat($people[1]['projects'][1]['client'], is('#1 client'));
+        assertThat($people[1]['projects'][1]['tags'], is(emptyArray()));
     }
 }
