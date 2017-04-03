@@ -12,6 +12,7 @@ class ProfitabilityToConsole
         $headers = [
             'Person',
             'Project',
+            'Tags',
             'Client',
             'Hours',
             'Salary',
@@ -29,6 +30,7 @@ class ProfitabilityToConsole
                 "<comment>{$person['name']} ({$settings->getPosition($person['name'])})</comment>",
                 '',
                 '',
+                '',
                 "{$person['salary_hours']} ({$settings->getHoursSalary($person['name'], 'tracked')})",
                 $person['salary_amount'],
                 '',
@@ -37,6 +39,7 @@ class ProfitabilityToConsole
                 $table->addRow([
                     $person['name'],
                     $project['name'],
+                    implode(', ', $project['tags']),
                     $project['client'],
                     '',
                     '',

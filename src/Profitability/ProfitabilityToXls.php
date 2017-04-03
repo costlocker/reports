@@ -41,6 +41,7 @@ class ProfitabilityToXls
             ['NAME', 'd6dce5'],
             ['POSITION', 'd6dce5'],
             ['PROJECT', 'd6dce5'],
+            ['TAGS', 'd6dce5'],
             ['CLIENT', 'd6dce5'],
             ['Contracted', 'd0cece', 'HRS'],
             ['Wages', 'd0cece', $settings->currency],
@@ -67,7 +68,7 @@ class ProfitabilityToXls
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
 
-            $profitabilityColumn = $settings->personsSettings ? 'P' : 'O';
+            $profitabilityColumn = $isSummaryMode ? 'Q' : 'O';
             $monthReport
                 ->addRow(
                     [
@@ -76,30 +77,31 @@ class ProfitabilityToXls
                         $position,
                         '',
                         '',
+                        '',
                         [
                             $person['is_employee'] ?
-                                ($settings->getHoursSalary($person['name'], "=H{$summaryRow}") ?: $person['salary_hours']) :
-                                "=H{$summaryRow}",
+                                ($settings->getHoursSalary($person['name'], "=I{$summaryRow}") ?: $person['salary_hours']) :
+                                "=I{$summaryRow}",
                             NumberFormat::FORMAT_NUMBER_00
                         ],
                         [
                             $person['is_employee'] ?
-                                $person['salary_amount'] : "=F{$summaryRow}*{$person['hourly_rate']}",
+                                $person['salary_amount'] : "=G{$summaryRow}*{$person['hourly_rate']}",
                             $currencyFormat
                         ],
-                        ["=SUM(H{$firstProjectRow}:H{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                         ["=SUM(I{$firstProjectRow}:I{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                         ["=SUM(J{$firstProjectRow}:J{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                         ["=SUM(K{$firstProjectRow}:K{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
+                        ["=SUM(L{$firstProjectRow}:L{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                         '',
-                        ["=SUM(M{$firstProjectRow}:M{$lastProjectRow})", $currencyFormat],
-                        ["=SUM(N{$firstProjectRow}:N{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
-                        ["=1-N{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
-                        ["=M{$summaryRow}-G{$summaryRow}", $currencyFormat],
-                        ["=SUM(Q{$firstProjectRow}:Q{$lastProjectRow})", $currencyFormat],
+                        ["=SUM(N{$firstProjectRow}:N{$lastProjectRow})", $currencyFormat],
+                        ["=SUM(O{$firstProjectRow}:O{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
+                        ["=1-O{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                        ["=N{$summaryRow}-H{$summaryRow}", $currencyFormat],
                         ["=SUM(R{$firstProjectRow}:R{$lastProjectRow})", $currencyFormat],
-                        ["=Q{$summaryRow}+R{$summaryRow}", $currencyFormat],
-                        ["=(G{$summaryRow}/F{$summaryRow})*J{$summaryRow}", $currencyFormat],
+                        ["=SUM(S{$firstProjectRow}:S{$lastProjectRow})", $currencyFormat],
+                        ["=R{$summaryRow}+S{$summaryRow}", $currencyFormat],
+                        ["=(H{$summaryRow}/G{$summaryRow})*K{$summaryRow}", $currencyFormat],
                     ],
                     'bdd7ee'
                 );
@@ -107,10 +109,10 @@ class ProfitabilityToXls
             foreach ($person['projects'] as $project) {
                 $projectRowId = $monthReport->getRowId();
                 $isBillableProject = $project['client_rate'] > 0;
-                $nonBillableMoney = ["=-1*((G{$summaryRow}/F{$summaryRow})*K{$projectRowId})", $currencyFormat];
+                $nonBillableMoney = ["=-1*((H{$summaryRow}/G{$summaryRow})*L{$projectRowId})", $currencyFormat];
                 $remainingBillable =
-                    "I{$projectRowId}-({$project['hrs_tracked_total']}" .
-                    "-{$project['hrs_tracked_after_month']}-H{$projectRowId})";
+                    "J{$projectRowId}-({$project['hrs_tracked_total']}" .
+                    "-{$project['hrs_tracked_after_month']}-I{$projectRowId})";
 
                 $monthReport
                     ->setRowVisibility(!$isSummaryMode)
@@ -119,19 +121,20 @@ class ProfitabilityToXls
                         $person['name'],
                         $settings->getPosition($person['name']),
                         $project['name'],
+                        implode(', ', $project['tags']),
                         $project['client'],
                         '',
                         '',
                         [$project['hrs_tracked_month'], NumberFormat::FORMAT_NUMBER_00],
                         [$project['hrs_budget'], NumberFormat::FORMAT_NUMBER_00],
                         [
-                            "=MIN(H{$projectRowId}, MAX(0, {$remainingBillable}))",
+                            "=MIN(I{$projectRowId}, MAX(0, {$remainingBillable}))",
                             NumberFormat::FORMAT_NUMBER_00
                         ],
-                        ["=MAX(0, H{$projectRowId}-J{$projectRowId})", NumberFormat::FORMAT_NUMBER_00],
+                        ["=MAX(0, I{$projectRowId}-K{$projectRowId})", NumberFormat::FORMAT_NUMBER_00],
                         [$project['client_rate'], $currencyFormat],
-                        ["=J{$projectRowId}*L{$projectRowId}", $currencyFormat],
-                        ["=J{$projectRowId}/F{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
+                        ["=K{$projectRowId}*M{$projectRowId}", $currencyFormat],
+                        ["=K{$projectRowId}/G{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                         '',
                         '',
                         $isBillableProject ? '' : $nonBillableMoney,
@@ -143,8 +146,9 @@ class ProfitabilityToXls
         }
 
         $monthReport
-            ->removeColumnIf('C', !$settings->personsSettings)
-            ->hideColumn('T');
+            ->removeColumnIf('E', !$isSummaryMode)
+            ->removeColumnIf('C', !$isSummaryMode)
+            ->hideColumn($isSummaryMode ? 'U' : 'S');
 
         if ($isSummaryMode) {
             $this->addAggregations($report, $settings, $aggregatedPositionsInMonth);
@@ -311,14 +315,14 @@ class ProfitabilityToXls
                 ->addRow([
                     $position,
                     $aggregate('COUNTA', 'B', array_map('reset', $personCells)), // count unique
-                    [$aggregate('AVERAGE', 'N'), NumberFormat::FORMAT_PERCENTAGE_00],
-                    [$aggregate('SUM', 'T'), $currencyFormat],
                     [$aggregate('AVERAGE', 'O'), NumberFormat::FORMAT_PERCENTAGE_00],
+                    [$aggregate('SUM', 'U'), $currencyFormat],
+                    [$aggregate('AVERAGE', 'P'), NumberFormat::FORMAT_PERCENTAGE_00],
+                    [$aggregate('SUM', 'T'), $currencyFormat],
+                    [$aggregate('SUM', 'R'), $currencyFormat],
                     [$aggregate('SUM', 'S'), $currencyFormat],
                     [$aggregate('SUM', 'Q'), $currencyFormat],
-                    [$aggregate('SUM', 'R'), $currencyFormat],
-                    [$aggregate('SUM', 'P'), $currencyFormat],
-                    [$aggregate('SUM', 'G'), $currencyFormat],
+                    [$aggregate('SUM', 'H'), $currencyFormat],
                     '',
                     ['=B3', NumberFormat::FORMAT_PERCENTAGE_00],
                     ["=(B{$groupHours}*L{$positionRowId})*B2/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
