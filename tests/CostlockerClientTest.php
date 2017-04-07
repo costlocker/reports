@@ -27,7 +27,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
                 1 => [
                     'name' => 'eshop',
                     'client' => 'Kamil',
-                    'tags' => ['billable'],
+                    'tags' => ['billable', 'design'],
                 ],
                 33 => [
                     'name' => 'comm strategy',

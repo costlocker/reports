@@ -37,15 +37,17 @@ class ProfitabilityProvider
         $projects = [];
 
         foreach ($rawData['Simple_Projects'] as $project) {
+            $projectTags = array_map(
+                function (array $tag) use ($tags) {
+                    return $tags[$tag['id']][0]['name'];
+                },
+                $project['tags']
+            );
+            sort($projectTags);
             $projects[$project['id']] = [
                 'name' => $project['name'],
                 'client' => $clients[$project['client_id']][0]['name'],
-                'tags' => array_map(
-                    function (array $tag) use ($tags) {
-                        return $tags[$tag['id']][0]['name'];
-                    },
-                    $project['tags']
-                ),
+                'tags' => $projectTags,
             ];
         }
 
