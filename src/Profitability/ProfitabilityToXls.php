@@ -369,7 +369,7 @@ class ProfitabilityToXls
                         $evaluateNumber
                     ],
                     '',
-                    'Ztráta',
+                    'Ztráta za měsíc',
                     ["=O{$summaryRow}-M{$summaryRow}", $currencyFormat, $evaluateNumber],
                 ],
                 'ffccff'
