@@ -40,7 +40,7 @@ COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
 
 | CLI option | Value | Description |
 | ---------- | ------------- | ----------- |
-| `--host` | `https://app.costlocker.com|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
+| `--host` | `https://app.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
 | `--email` | | Show simplified console report |
 | `--email` | `save` | Report is saved in `var/reports` if e-mail is _invalid_ |
 | `--email` | `john@example.com` | Send report to the email |
@@ -53,14 +53,14 @@ COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
 
 Are your employees profitable? 
 
-![screen shot 2017-03-13 at 13 22 50](https://cloud.githubusercontent.com/assets/7994022/23854122/36654c14-07f0-11e7-9f1e-be320344f5e0.png)
+![Detailed report](https://cloud.githubusercontent.com/assets/7994022/24850859/f8818d2a-1dd1-11e7-91fa-9af4006e22e7.png)
 
 ```bash
 # monthly report for January and February 2017 saved in var/reports
 bin/console report profitability --monthStart "2017-01" --monthEnd "2017-03" --host $COSTLOCKER_HOST --email "save"
 ```
 
-![screen shot 2017-03-13 at 13 25 08](https://cloud.githubusercontent.com/assets/7994022/23854171/807855a8-07f0-11e7-98b1-32ec70ca4d02.png)
+![Summary report](https://cloud.githubusercontent.com/assets/7994022/23854171/807855a8-07f0-11e7-98b1-32ec70ca4d02.png)
 
 ```bash
 # summary report for year 2016 sent to mail
