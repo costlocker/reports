@@ -8,11 +8,14 @@ Generate XLSX reports from [Costlocker API](http://docs.costlocker.apiary.io/).
 ## Requirements
 
 - PHP >= 7.0
+- composer
+- `curl` extension
 
-## Install
+## Installation
 
 ```bash
 git clone https://github.com/costlocker/reports.git
+cd reports
 composer install
 bin/console report --help
 ```
@@ -30,7 +33,8 @@ nano app/config.php
 
 ## Available reports
 
-All examples are using environment variable with url and api key.
+All examples are using environment variable with url and 
+[api key](http://docs.costlocker.apiary.io/#reference/0/authentication/personal-access-token).
 
 ```
 COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
@@ -43,11 +47,11 @@ COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
 | `--host` | `https://app.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
 | `--email` | | Show simplified console report |
 | `--email` | `save` | Report is saved in `var/reports` if e-mail is _invalid_ |
-| `--email` | `john@example.com` | Send report to the email |
+| `--email` | `john@example.com` | Send report to the email provided |
 | `--monthStart` | `previous month` | First month use for generating report |
 | `--monthEnd` | `current month` | Last month for generating report |
 | `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
-| `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculaction, take a look at [example](/tests/fixtures/persons.csv) |
+| `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculation, take a look at [example](/tests/fixtures/persons.csv) |
 
 ### Profitability
 
