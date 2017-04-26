@@ -37,14 +37,14 @@ All examples are using environment variable with url and
 [api key](http://docs.costlocker.apiary.io/#reference/0/authentication/personal-access-token).
 
 ```
-COSTLOCKER_HOST="https://app.costlocker.com|<YOUR_API_KEY>"
+COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
 ```
 
 ##### Options
 
 | CLI option | Value | Description |
 | ---------- | ------------- | ----------- |
-| `--host` | `https://app.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
+| `--host` | `https://new.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
 | `--email` | | Show simplified console report |
 | `--email` | `save` | Report is saved in `var/reports` if e-mail is _invalid_ |
 | `--email` | `john@example.com` | Send report to the email provided |
