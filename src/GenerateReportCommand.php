@@ -100,6 +100,10 @@ class GenerateReportCommand extends Command
         foreach ($reports as $report) {
             $reporter['exporters'][$exporterType]($report, $settings);
         }
+        if (method_exists($reporter['exporters'][$exporterType], 'after')) {
+            $reporter['exporters'][$exporterType]->after();
+        }
+         
         if ($settings->email) {
             $this->sendMail($settings, $reporter['filename']($monthStart, $monthEnd));
         }

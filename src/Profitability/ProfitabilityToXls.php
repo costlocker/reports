@@ -16,8 +16,10 @@ class ProfitabilityToXls
     private $spreadsheet;
     private $aggregatedMonths;
     private $aggregatedQuarters;
+    private $people;
     private $aggregatedPositions = [];
     private $previousAggregations = [];
+    private $employees = [];
 
     public function __construct(Spreadsheet $spreadsheet)
     {
@@ -33,6 +35,14 @@ class ProfitabilityToXls
         if ($isSummaryMode && !$this->aggregatedMonths) {
             $this->aggregatedMonths = new XlsBuilder($this->spreadsheet, 'Months');
             $this->aggregatedQuarters = new XlsBuilder($this->spreadsheet, 'Quarters');
+        }
+        if (!$this->people) {
+            $this->people = new XlsBuilder($this->spreadsheet, 'People');
+            if (!$settings->personsSettings) {
+                $this->people
+                    ->hideColumn('B')
+                    ->hideColumn('C');
+            }
         }
 
         $monthReport = new XlsBuilder($this->spreadsheet, $report->selectedMonth->format('Y-m'));
@@ -71,6 +81,15 @@ class ProfitabilityToXls
             }
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
+
+            if (!array_key_exists($person['name'], $this->employees)) {
+                $this->employees[$person['name']] = [
+                    'hours' => $settings->getHoursSalary($person['name']),
+                    'position' => $settings->getPosition($person['name']),
+                    'months' => [],
+                ];
+            }
+            $this->employees[$person['name']]['months'][] = $report->selectedMonth;
 
             $profitabilityColumn = $isSummaryMode ? 'Q' : 'O';
             $monthReport
@@ -156,6 +175,44 @@ class ProfitabilityToXls
 
         if ($isSummaryMode) {
             $this->addAggregations($report, $settings, $aggregatedPositionsInMonth);
+        }
+    }
+
+    public function after()
+    {
+        if (!$this->people) {
+            return;
+        }
+
+        $this->people->addHeaders([
+            ['Name', 'd6dce5'],
+            ['Group', 'd6dce5'],
+            ['Hours', 'd6dce5', 'h'],
+            ['Last tracking', 'ffd966', 'month'],
+            ['Tracked months', 'ffd966', 'count'],
+        ]);
+
+        foreach ($this->employees as $person => $data) {
+            $lastMonth = end($data['months']);
+            $monthsStrings = array_map(
+                function (\DateTime $month) {
+                    return "\"{$month->format('Y-m')}\"";
+                },
+                $data['months']
+            );
+            $this->people->addRow([
+                $person,
+                $data['position'],
+                [$data['hours'], NumberFormat::FORMAT_NUMBER],
+                [
+                    "=DATE({$lastMonth->format('Y, m, d')})",
+                    'MMMM YYYY',
+                ],
+                [
+                    '=COUNTA(' . implode(',', $monthsStrings)  . ')',
+                    NumberFormat::FORMAT_NUMBER,
+                ]
+            ]);
         }
     }
 

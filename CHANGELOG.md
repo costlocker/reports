@@ -5,6 +5,7 @@
 
 * Profitability report
     * `--filter=Developer` - allow filtering persons by their position
+    * add `People` tab with persons that tracked at least in one month
 * Allow caching costlocker responses with `--cache` option
     * `--cache` - in verbose mode (`-vvv`) it also prints if costlocker is called or cached response is used
     * `bin/clear-cache` - clear responses cache
