@@ -28,7 +28,6 @@ class GenerateReportCommand extends Command
                 },
                 'provider' => Profitability\ProfitabilityProvider::class,
                 'exporters' => [
-                    'console' => new Profitability\ProfitabilityToConsole(),
                     'xls' => new Profitability\ProfitabilityToXls($this->spreadsheet),
                 ],
                 'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
@@ -52,7 +51,8 @@ class GenerateReportCommand extends Command
             ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
             ->addOption('cache', null, InputOption::VALUE_NONE, 'If costlocker responses are cached (useful when month report is generate for multiple months)')
-            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, 'Additional filter for reports (e.g. filter profitability by position)');
+            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, 'Additional filter for reports (e.g. filter profitability by position)')
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'xls,console,...', 'xls');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -96,12 +96,19 @@ class GenerateReportCommand extends Command
         $output->writeln('');
         $endApi = microtime(true);
 
-        $exporterType = $settings->email ? 'xls' : 'console';
-        foreach ($reports as $report) {
-            $reporter['exporters'][$exporterType]($report, $settings);
+        $format = $input->getOption('format');
+        if (!array_key_exists($format, $reporter['exporters'])) {
+            $output->writeln([
+                "<error>--format {$format} is not supported</error>",
+                "<comment>Supported formats</comment>:" . implode(', ', array_keys($reporter['exporters'])),
+            ]);
+            exit(1);
         }
-        if (method_exists($reporter['exporters'][$exporterType], 'after')) {
-            $reporter['exporters'][$exporterType]->after();
+        foreach ($reports as $report) {
+            $reporter['exporters'][$format]($report, $settings);
+        }
+        if (method_exists($reporter['exporters'][$format], 'after')) {
+            $reporter['exporters'][$format]->after();
         }
          
         if ($settings->email) {
