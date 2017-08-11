@@ -2,59 +2,11 @@
 
 namespace Costlocker\Reports;
 
-use GuzzleHttp\Client;
-
-class CostlockerClient
+interface CostlockerClient
 {
-    private $client;
+    public function request(array $request);
 
-    public static function build($apiHost, $apiKey)
-    {
-        return new CostlockerClient(new Client([
-            'base_uri' => $apiHost,
-            'http_errors' => true,
-            'headers' => [
-                'Api-Token' => $apiKey,
-            ],
-        ]));
-    }
+    public function map(array $rawData, $id);
 
-    public function __construct(Client $c)
-    {
-        $this->client = $c;
-    }
-
-    public function request(array $request)
-    {
-        $response = $this->client->get(
-            '/api-public/v1/',
-            [
-                'json' => $request,
-            ]
-        );
-        return json_decode($response->getBody(), true);
-    }
-
-    public function map(array $rawData, $id)
-    {
-        $indexedItems = [];
-
-        foreach ($rawData as $item) {
-            $indexedItems[$item[$id]][] = $item;
-        }
-
-        return $indexedItems;
-    }
-
-    public function sum(array $rawData, $attribute)
-    {
-        return array_sum(
-            array_map(
-                function (array $project) use ($attribute) {
-                    return $project[$attribute];
-                },
-                $rawData
-            )
-        );
-    }
+    public function sum(array $rawData, $attribute);
 }

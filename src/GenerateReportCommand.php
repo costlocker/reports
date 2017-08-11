@@ -50,7 +50,8 @@ class GenerateReportCommand extends Command
             ->addOption('host', 'a', InputOption::VALUE_REQUIRED, 'apiUrl|apiKey')
             ->addOption('currency', 'c', InputOption::VALUE_REQUIRED, 'Currency', 'CZK')
             ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
-            ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients');
+            ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
+            ->addOption('cache', null, InputOption::VALUE_NONE, 'If costlocker responses are cached (useful when month report is generate for multiple months)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -61,7 +62,7 @@ class GenerateReportCommand extends Command
         $reporter = $this->providers[$type];
         $interval = $reporter['interval']($monthStart, $monthEnd);
 
-        list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
+        list($client, $apiHost, $apiKey) = $this->buildClient($input, $output);
         $settings = new ReportSettings();
         $settings->output = $output;
         $settings->exportSettings = $exportSettings;
@@ -82,7 +83,6 @@ class GenerateReportCommand extends Command
         $start = microtime(true);
         $progressbar = new ProgressBar($output, count($interval));
         $progressbar->start();
-        $client = CostlockerClient::build($apiHost, $apiKey);
         $provider = new $reporter['provider']($client);
         $reports = [];
         foreach ($interval as $month) {
@@ -109,6 +109,25 @@ class GenerateReportCommand extends Command
             "<info>Export:</info> " . ($endExport - $endApi),
             "<info>Total:</info> " . ($endExport - $start),
         ]);
+    }
+
+    private function buildClient(InputInterface $input, OutputInterface $output)
+    {
+        list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
+        $client = Client\HttpClient::build($apiHost, $apiKey);
+        if ($input->getOption('cache')) {
+            $client = new Client\CachedClient(
+                $client,
+                __DIR__ . '/../var/cache',
+                $input->getOption('host'),
+                function ($text) use ($output) {
+                    if ($output->isVerbose()) {
+                        $output->writeln($text);
+                    }
+                }
+            );
+        }
+        return [$client, $apiHost, $apiKey];
     }
 
     private function sendMail(ReportSettings $settings, $filename)

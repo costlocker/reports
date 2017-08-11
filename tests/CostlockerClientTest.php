@@ -5,6 +5,7 @@ namespace Costlocker\Reports;
 use Mockery as m;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
+use Costlocker\Reports\Client\HttpClient;
 
 class CostlockerClientTest extends \PHPUnit_Framework_TestCase
 {
@@ -15,7 +16,7 @@ class CostlockerClientTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->httpClient = m::mock(Client::class);
-        $this->costlockerClient = new CostlockerClient($this->httpClient);
+        $this->costlockerClient = new HttpClient($this->httpClient);
         $this->profitability = new Profitability\ProfitabilityProvider($this->costlockerClient, 20000);
     }
 
