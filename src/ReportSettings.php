@@ -12,6 +12,7 @@ class ReportSettings
     public $currency;
     public $personsSettings;
     public $exportSettings;
+    public $filter;
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     public $output;
 

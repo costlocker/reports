@@ -65,6 +65,10 @@ class ProfitabilityToXls
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
             $position = $settings->getPosition($person['name']);
+            $isPositionHiddenByFilter = $settings->personsSettings && $settings->filter && $settings->filter != $position;
+            if ($isPositionHiddenByFilter) {
+                continue;
+            }
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
 

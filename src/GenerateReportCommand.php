@@ -51,7 +51,8 @@ class GenerateReportCommand extends Command
             ->addOption('currency', 'c', InputOption::VALUE_REQUIRED, 'Currency', 'CZK')
             ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
-            ->addOption('cache', null, InputOption::VALUE_NONE, 'If costlocker responses are cached (useful when month report is generate for multiple months)');
+            ->addOption('cache', null, InputOption::VALUE_NONE, 'If costlocker responses are cached (useful when month report is generate for multiple months)')
+            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, 'Additional filter for reports (e.g. filter profitability by position)');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -69,6 +70,7 @@ class GenerateReportCommand extends Command
         $settings->email = $input->getOption('email');
         $settings->currency = $input->getOption('currency');
         $settings->personsSettings = $input->getOption('personsSettings');
+        $settings->filter = $input->getOption('filter');
 
         $output->writeln([
             "<comment>Report</comment>",
@@ -76,6 +78,7 @@ class GenerateReportCommand extends Command
             "<info>Months interval:</info> <{$monthStart->format('Y-m')}, {$monthEnd->format('Y-m')}>",
             "<info>API Url:</info> {$apiHost}",
             "<info>API Key:</info> {$apiKey}",
+            "<info>Filter:</info> {$settings->filter}",
             "<info>E-mail Recipients:</info> {$settings->email}",
             '',
         ]);

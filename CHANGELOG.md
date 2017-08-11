@@ -3,6 +3,8 @@
 
 ## v1.1.0 (_WIP_)
 
+* Profitability report
+    * `--filter=Developer` - allow filtering persons by their position
 * Allow caching costlocker responses with `--cache` option
     * `--cache` - in verbose mode (`-vvv`) it also prints if costlocker is called or cached response is used
     * `bin/clear-cache` - clear responses cache
