@@ -1,9 +1,13 @@
 
 # Changelog
 
-## v1.1.0 (_WIP_)
+## v1.1.0 (_2017-08-14_)
 
-* Profitability report
+* **Export/Import**
+    * **_Google Drive_** - upload report to Drive folder, load `--personsSettings` from Drive
+    * Mailer refactoring - move to `Costlocker\Reports\Export`, catch `Swift_Mailer` exceptions, don't unlink sent file
+    * Pretty XLS filename (without `(`, `)` and multiple dashes `--`)
+* **Profitability report**
     * `--filter=Developer` - allow filtering persons by their position
     * add `People` tab with persons that tracked at least in one month
     * remove console exporter (by default `xls` format is used, but you can define your own exporter and enable it via `--format json`)
@@ -12,10 +16,6 @@
 * Allow caching costlocker responses with `--cache` option
     * `--cache` - in verbose mode (`-vvv`) it also prints if costlocker is called or cached response is used
     * `bin/clear-cache` - clear responses cache
-* _Export/Import_
-    * Mailer refactoring - move to `Costlocker\Reports\Export`, catch `Swift_Mailer` exceptions, don't unlink sent file
-    * **Google Drive** - upload report to Drive folder, load `personsSettings` from Drive
-    * Pretty XLS filename (without `(`, `)` and multiple dashes `--`)
 * _Bugfixes_
     * Fix exporting XLS with more than 26 columns
 
