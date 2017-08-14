@@ -14,9 +14,7 @@ class HttpClient implements CostlockerClient
         return new self(new Client([
             'base_uri' => $apiHost,
             'http_errors' => true,
-            'headers' => [
-                'Api-Token' => $apiKey,
-            ],
+            'auth' => ['costlocker/reports', $apiKey],
         ]));
     }
 
