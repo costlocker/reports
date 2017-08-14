@@ -43,6 +43,10 @@ class GenerateReportCommand extends Command
 
     protected function configure()
     {
+        $doc = [
+            'cache' => 'If costlocker responses are cached (useful when month report is generate for multiple months)',
+            'filter' => 'Additional filter for reports (e.g. filter profitability by position)',
+        ];
         $this
             ->setName('report')
             ->addArgument('type', InputArgument::REQUIRED, implode(', ', array_keys($this->providers)))
@@ -53,8 +57,8 @@ class GenerateReportCommand extends Command
             ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
             ->addOption('drive', 'd', InputOption::VALUE_OPTIONAL, 'Local directory with Google Drive configuration')
-            ->addOption('cache', null, InputOption::VALUE_NONE, 'If costlocker responses are cached (useful when month report is generate for multiple months)')
-            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, 'Additional filter for reports (e.g. filter profitability by position)')
+            ->addOption('cache', null, InputOption::VALUE_NONE, $doc['cache'])
+            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, $doc['filter'])
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'xls,console,...', 'xls');
     }
 
@@ -112,7 +116,7 @@ class GenerateReportCommand extends Command
                 "<error>--format {$format} is not supported</error>",
                 "<comment>Supported formats</comment>:" . implode(', ', array_keys($reporter['exporters'])),
             ]);
-            exit(1);
+            return 1;
         }
         foreach ($reports as $report) {
             $reporter['exporters'][$format]($report, $settings);

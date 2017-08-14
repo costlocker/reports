@@ -75,7 +75,10 @@ class ProfitabilityToXls
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
             $position = $settings->getPosition($person['name']);
-            $isPositionHiddenByFilter = $settings->personsSettings && $settings->filter && $settings->filter != $position;
+            $isPositionHiddenByFilter =
+                $settings->personsSettings &&
+                $settings->filter &&
+                $settings->filter != $position;
             if ($isPositionHiddenByFilter) {
                 continue;
             }
@@ -102,9 +105,10 @@ class ProfitabilityToXls
                         '',
                         '',
                         [
-                            $person['is_employee'] ?
-                                ($settings->getHoursSalary($person['name'], "=I{$summaryRow}") ?: $person['salary_hours']) :
-                                "=I{$summaryRow}",
+                            $person['is_employee']
+                                ? ($settings->getHoursSalary($person['name'], "=I{$summaryRow}")
+                                    ?: $person['salary_hours'])
+                                : "=I{$summaryRow}",
                             NumberFormat::FORMAT_NUMBER_00
                         ],
                         [
