@@ -133,13 +133,14 @@ class ProfitabilityToXls
                     'bdd7ee'
                 );
 
-            foreach ($person['projects'] as $project) {
+            foreach ($person['projects'] as $projectId => $project) {
                 $projectRowId = $monthReport->getRowId();
                 $isBillableProject = $project['client_rate'] > 0;
                 $nonBillableMoney = ["=-1*((H{$summaryRow}/G{$summaryRow})*L{$projectRowId})", $currencyFormat];
                 $remainingBillable =
                     "J{$projectRowId}-({$project['hrs_tracked_total']}" .
                     "-{$project['hrs_tracked_after_month']}-I{$projectRowId})";
+                $projectUrl = $settings->generateProjectUrl->__invoke($projectId);
 
                 $monthReport
                     ->setRowVisibility(!$isSummaryMode)
@@ -147,7 +148,7 @@ class ProfitabilityToXls
                         '',
                         $person['name'],
                         $settings->getPosition($person['name']),
-                        $project['name'],
+                        [$project['name'], NumberFormat::FORMAT_GENERAL, [], $projectUrl],
                         implode(', ', $project['tags']),
                         $project['client'],
                         '',

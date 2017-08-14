@@ -11,6 +11,8 @@ class ReportSettings
     public $email;
     /** @var \Costlocker\Reports\Export\GoogleDrive */
     public $googleDrive;
+    /** @var callable projectId => url */
+    public $generateProjectUrl;
 
     public $currency;
     public $personsSettings;

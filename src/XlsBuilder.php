@@ -55,12 +55,15 @@ class XlsBuilder
     {
         foreach ($data as $index => $value) {
             if (is_array($value)) {
-                list($value, $format, $conditionals) = $value + [2 => []];
+                list($value, $format, $conditionals, $url) = $value + [2 => [], 3 => null];
                 $coordinate = "{$this->indexToLetter($index)}{$this->rowId}";
                 $cell = $this->worksheet->setCellValue($coordinate, $value, true);
                 $cell->getStyle()
                     ->setConditionalStyles($conditionals)
                     ->getNumberFormat()->setFormatCode($format);
+                if ($url) {
+                    $cell->getHyperlink()->setUrl($url);
+                }
             } else {
                 $this->worksheet->setCellValue("{$this->indexToLetter($index)}{$this->rowId}", $value);
             }

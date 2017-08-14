@@ -7,7 +7,8 @@
     * `--filter=Developer` - allow filtering persons by their position
     * add `People` tab with persons that tracked at least in one month
     * remove console exporter (by default `xls` format is used, but you can define your own exporter and enable it via `--format json`)
-    * generated file does not contain end date, only start date 
+    * generated file does not contain end date, only start date
+    * add link to Costlocker project
 * Allow caching costlocker responses with `--cache` option
     * `--cache` - in verbose mode (`-vvv`) it also prints if costlocker is called or cached response is used
     * `bin/clear-cache` - clear responses cache

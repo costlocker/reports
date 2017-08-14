@@ -78,6 +78,9 @@ class GenerateReportCommand extends Command
         $settings->currency = $input->getOption('currency');
         $settings->filter = $input->getOption('filter');
         $settings->yearStart = $monthStart->format('Y');
+        $settings->generateProjectUrl = function ($projectId) use ($apiHost) {
+            return "{$apiHost}/projects/detail/{$projectId}/overview";
+        };
 
         $rawFilename = $reporter['filename']($monthStart, $monthEnd);
         $extraFilename = $settings->filter ? "-{$settings->filter}" : '';
