@@ -14,6 +14,7 @@
 * _Export/Import_
     * Mailer refactoring - move to `Costlocker\Reports\Export`, catch `Swift_Mailer` exceptions, don't unlink sent file
     * **Google Drive** - upload report to Drive folder, load `personsSettings` from Drive
+    * Pretty XLS filename (without `(`, `)` and multiple dashes `--`)
 
 ## v1.0.1 (_2017-04-10_)
 

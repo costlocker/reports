@@ -173,8 +173,10 @@ class GenerateReportCommand extends Command
 
     private function spreadsheetToFile($filename)
     {
-        $normalizedName = str_replace(' ', '', $filename);
-        $xlsFile = "var/reports/{$normalizedName}.xlsx";
+        $normalizedName = str_replace([' ', '(', ')'], '-', $filename);
+        $prettyName = str_replace('--', '-', trim($normalizedName, '-'));
+
+        $xlsFile = "var/reports/{$prettyName}.xlsx";
         $writer = IOFactory::createWriter($this->spreadsheet, 'Xlsx');
         $writer->save($xlsFile);
         return $xlsFile;
