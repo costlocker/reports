@@ -9,10 +9,14 @@ class ReportSettings
     const TRACKED_HOURS = 'Tracker';
 
     public $email;
+    /** @var \Costlocker\Reports\Export\GoogleDrive */
+    public $googleDrive;
+
     public $currency;
     public $personsSettings;
     public $exportSettings;
     public $filter;
+    public $yearStart;
     /** @var \Symfony\Component\Console\Output\OutputInterface */
     public $output;
 
@@ -65,7 +69,7 @@ class ReportSettings
             return;
         }
 
-        foreach (CsvParser::fromFile($this->personsSettings, ['encoding' => 'UTF-8']) as $index => $line) {
+        foreach ($this->createCsvParser() as $index => $line) {
             $settings = [
                 'hours' => $line[1],
                 'position' => $line[2],
@@ -76,5 +80,13 @@ class ReportSettings
                 $this->persons[$line[0]] = $settings;
             }
         }
+    }
+
+    private function createCsvParser()
+    {
+        $settings = ['encoding' => 'UTF-8'];
+        return is_file($this->personsSettings)
+            ? CsvParser::fromFile($this->personsSettings, $settings)
+            : CsvParser::fromString($this->personsSettings, $settings);
     }
 }

@@ -27,7 +27,7 @@ class ReportSettingsTest extends \PHPUnit_Framework_TestCase
     public function testGetAllAvailablePositions()
     {
         $settings = new ReportSettings();
-        $settings->personsSettings = __DIR__ . '/fixtures/persons.csv';
+        $settings->personsSettings = file_get_contents(__DIR__ . '/fixtures/persons.csv');
         assertThat($settings->getAvailablePositions(), is(['Employee', 'Manager', 'Developer']));
     }
 }

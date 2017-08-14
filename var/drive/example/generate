@@ -1,0 +1,11 @@
+#!/bin/sh
+
+COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
+
+bin/console report profitability \
+    --monthStart "2017-01" --monthEnd "2017-08" \
+    --host $COSTLOCKER_HOST \
+    --drive var/drive/example \
+    --personsSettings persons-from-google-drive.csv \
+    --filter Employee \
+    -vvv

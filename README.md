@@ -48,10 +48,52 @@ COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
 | `--email` | | Show simplified console report |
 | `--email` | `save` | Report is saved in `var/reports` if e-mail is _invalid_ |
 | `--email` | `john@example.com` | Send report to the email provided |
+| `--drive` | [`var/drive/example`](/var/drive/example) | Local directory with Google Drive configuration |
 | `--monthStart` | `previous month` | First month use for generating report |
 | `--monthEnd` | `current month` | Last month for generating report |
 | `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
 | `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculation, take a look at [example](/tests/fixtures/persons.csv) |
+
+
+##### Google drive configuration
+
+You have to create [an OAuth Client](https://stackoverflow.com/a/19766913) and copy configuration to selected directory.
+
+| File | Description |
+| ---- | ------------|
+| [`client.json`](/var/drive/example/client.json) | Google client registered via [API console](https://stackoverflow.com/a/19766913) |
+| [`files.json`](/var/drive/example/files.json) | Internal database of mapped files, so the report is updated, use `{}` or `[]` in new directory |
+| [`token.json`](/var/drive/example/token.json) | Access token, you can download first token from https://developers.google.com/oauthplayground |
+| [`config.php`](/var/drive/example/config.php) | Definition of drive folder and title for each report type |
+
+Changes are overwritten. If you want to keep e.g. one column for Notes you have to
+download existing file and copy the column.
+
+```php
+$notes = csvToNotes($settings->googleDrive->downloadCsvFile());
+$noteId = 'irrelevant costlocker id (e.g. billing id)';
+echo $notes[$noteId] ?? '';
+
+function csvToNotes($csv)
+{
+    if (!$csv) {
+        return [];
+    }
+    $parser = \KzykHys\CsvParser\CsvParser::fromString($csv, ['encoding' => 'utf-8']);
+    $notes = [];
+    foreach ($parser as $id => $line) {
+        // skip header
+        if ($id <= 1) {
+            continue;
+        }
+        // note is in 15th column, Costlocker id in the following column
+        if ($line[15]) {
+            $notes[$line[16]] = $line[15];
+        }
+    }
+    return $notes;
+}
+```
 
 ### Profitability
 

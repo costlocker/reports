@@ -11,6 +11,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Costlocker\Reports\Export\Mailer;
+use Costlocker\Reports\Export\GoogleDrive;
 
 class GenerateReportCommand extends Command
 {
@@ -32,7 +33,7 @@ class GenerateReportCommand extends Command
                     'xls' => new Profitability\ProfitabilityToXls($this->spreadsheet),
                 ],
                 'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
-                    return "{$monthStart->format('Y-m')} - {$monthEnd->format('Y-m')}";
+                    return "{$monthStart->format('Y-m')}";
                 },
             ],
         ];
@@ -51,6 +52,7 @@ class GenerateReportCommand extends Command
             ->addOption('currency', 'c', InputOption::VALUE_REQUIRED, 'Currency', 'CZK')
             ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
+            ->addOption('drive', 'd', InputOption::VALUE_OPTIONAL, 'Local directory with Google Drive configuration')
             ->addOption('cache', null, InputOption::VALUE_NONE, 'If costlocker responses are cached (useful when month report is generate for multiple months)')
             ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, 'Additional filter for reports (e.g. filter profitability by position)')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'xls,console,...', 'xls');
@@ -70,8 +72,15 @@ class GenerateReportCommand extends Command
         $settings->exportSettings = $exportSettings;
         $settings->email = $input->getOption('email');
         $settings->currency = $input->getOption('currency');
-        $settings->personsSettings = $input->getOption('personsSettings');
         $settings->filter = $input->getOption('filter');
+        $settings->yearStart = $monthStart->format('Y');
+
+        $rawFilename = $reporter['filename']($monthStart, $monthEnd);
+        $extraFilename = $settings->filter ? "-{$settings->filter}" : '';
+        $filename = $rawFilename . $extraFilename;
+        $settings->googleDrive = new GoogleDrive($input->getOption('drive'), $type, $filename);
+        $csvFile = $input->getOption('personsSettings');
+        $settings->personsSettings = $settings->googleDrive->downloadCsvFile($csvFile) ?: $csvFile;
 
         $output->writeln([
             "<comment>Report</comment>",
@@ -113,7 +122,7 @@ class GenerateReportCommand extends Command
         }
          
         if ($format == 'xls') {
-            $this->exportToXls($settings, $reporter['filename']($monthStart, $monthEnd));
+            $this->exportToXls($settings, $filename);
         }
         $endExport = microtime(true);
 
@@ -149,8 +158,12 @@ class GenerateReportCommand extends Command
     {
         $xlsFile = $this->spreadsheetToFile($filename);
         $wasEmailSent = $this->mailer->__invoke($settings->email, $xlsFile, $filename);
+        $wasUploadedToDrive = $settings->googleDrive->upload($xlsFile, $settings);
         $settings->output->writeln([
-            $wasEmailSent ? '<comment>E-mail was sent!</comment>' : '<error>E-mail was not sent!</error>',
+            '',
+            "<comment>XLS export</comment>",
+            $wasEmailSent ? '<info>E-mail was sent!</info>' : '<error>E-mail was not sent!</error>',
+            $wasUploadedToDrive ? '<info>Report uploaded to gdrive</info>' : '<error>No gdrive upload</error>',
         ]);
     }
 
