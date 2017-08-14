@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Costlocker\Reports\Export\Mailer;
 
 class GenerateReportCommand extends Command
 {
@@ -111,8 +112,8 @@ class GenerateReportCommand extends Command
             $reporter['exporters'][$format]->after();
         }
          
-        if ($settings->email) {
-            $this->sendMail($settings, $reporter['filename']($monthStart, $monthEnd));
+        if ($format == 'xls') {
+            $this->exportToXls($settings, $reporter['filename']($monthStart, $monthEnd));
         }
         $endExport = microtime(true);
 
@@ -144,16 +145,13 @@ class GenerateReportCommand extends Command
         return [$client, $apiHost, $apiKey];
     }
 
-    private function sendMail(ReportSettings $settings, $filename)
+    private function exportToXls(ReportSettings $settings, $filename)
     {
         $xlsFile = $this->spreadsheetToFile($filename);
-        $wasSent = $this->mailer->__invoke($settings->email, $xlsFile, $filename);
-        if ($wasSent) {
-            unlink($xlsFile);
-            $settings->output->writeln('<comment>E-mail was sent!</comment>');
-        } else {
-            $settings->output->writeln('<error>E-mail was not sent!</error>');
-        }
+        $wasEmailSent = $this->mailer->__invoke($settings->email, $xlsFile, $filename);
+        $settings->output->writeln([
+            $wasEmailSent ? '<comment>E-mail was sent!</comment>' : '<error>E-mail was not sent!</error>',
+        ]);
     }
 
     private function spreadsheetToFile($filename)
