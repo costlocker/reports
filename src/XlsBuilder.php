@@ -168,7 +168,13 @@ class XlsBuilder
 
     private function indexToLetter($number)
     {
-        return chr(substr("000" . ($number + 65), -3));
+        if ($number > 25) {
+            $prefix = 'A';
+            $number -= 26;
+        } else {
+            $prefix = '';
+        }
+        return $prefix . chr(substr("000" . ($number + 65), -3));
     }
 
     public static function getCurrencyFormat($currency)
