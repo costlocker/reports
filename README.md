@@ -45,15 +45,15 @@ COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
 | CLI option | Value | Description |
 | ---------- | ------------- | ----------- |
 | `--host` | `https://new.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
-| `--email` | | Show simplified console report |
-| `--email` | `save` | Report is saved in `var/reports` if e-mail is _invalid_ |
-| `--email` | `john@example.com` | Send report to the email provided |
+| `--email` | `john@example.com` | Report is saved in `var/reports` and send report to the email provided |
 | `--drive` | [`var/drive/example`](/var/drive/example) | Local directory with Google Drive configuration |
 | `--monthStart` | `previous month` | First month use for generating report |
 | `--monthEnd` | `current month` | Last month for generating report |
 | `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
 | `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculation, take a look at [example](/tests/fixtures/persons.csv) |
-
+| `--filter=Developer` | Position | Filter persons by their position |
+| `--cache` | | Cache Costlocker responses (useful when you generate full Company report and reports filtered by position) |
+| `--format` | `xls` | You could define different export types, by default only `xls` exporter is provided |
 
 ##### Google drive configuration
 
