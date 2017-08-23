@@ -47,6 +47,7 @@ COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
 | `--host` | `https://new.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
 | `--email` | `john@example.com` | Report is saved in `var/reports` and send report to the email provided |
 | `--drive` | [`var/drive/example`](/var/drive/example) | Local directory with Google Drive configuration |
+| `--drive-client` | [`var/drive/example`](/var/drive/example) | Optional (shared) client configuration (`client.json`, `token.json`), `--drive` contains `config.php` and `files.json` |
 | `--monthStart` | `previous month` | First month use for generating report |
 | `--monthEnd` | `current month` | Last month for generating report |
 | `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |

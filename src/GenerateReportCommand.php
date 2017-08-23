@@ -57,6 +57,7 @@ class GenerateReportCommand extends Command
             ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
             ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
             ->addOption('drive', 'd', InputOption::VALUE_OPTIONAL, 'Local directory with Google Drive configuration')
+            ->addOption('drive-client', 'dc', InputOption::VALUE_OPTIONAL, 'Shared client (client.json, token.json)')
             ->addOption('cache', null, InputOption::VALUE_NONE, $doc['cache'])
             ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, $doc['filter'])
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'xls,console,...', 'xls');
@@ -85,7 +86,12 @@ class GenerateReportCommand extends Command
         $rawFilename = $reporter['filename']($monthStart, $monthEnd);
         $extraFilename = $settings->filter ? "-{$settings->filter}" : '';
         $filename = $rawFilename . $extraFilename;
-        $settings->googleDrive = new GoogleDrive($input->getOption('drive'), $type, $filename);
+        $settings->googleDrive = new GoogleDrive(
+            $input->getOption('drive'),
+            $input->getOption('drive-client'),
+            $type,
+            $filename
+        );
         $csvFile = $input->getOption('personsSettings');
         $settings->personsSettings = $settings->googleDrive->downloadCsvFile($csvFile) ?: $csvFile;
 

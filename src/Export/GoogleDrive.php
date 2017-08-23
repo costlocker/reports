@@ -9,13 +9,15 @@ use Costlocker\Reports\ReportSettings;
 
 class GoogleDrive
 {
-    private $configDir;
+    private $reportConfigDir;
+    private $clientConfigDir;
     private $reportType;
     private $filename;
 
-    public function __construct($oauthConfigDir, $reportType, $filename)
+    public function __construct($reportConfigDir, $clientConfigDir, $reportType, $filename)
     {
-        $this->configDir = $oauthConfigDir;
+        $this->reportConfigDir = $reportConfigDir;
+        $this->clientConfigDir = $clientConfigDir ?: $reportConfigDir;
         $this->reportType = $reportType;
         $this->filename = $filename;
     }
@@ -70,7 +72,7 @@ class GoogleDrive
         } else {
             $result = $service->files->create($metadata, $file);
             $database[$filePath] = $result->id;
-            $this->saveJson('files.json', $database);
+            $this->saveJson("{$this->reportConfigDir}/files.json", $database);
         }
         return true;
     }
@@ -80,45 +82,40 @@ class GoogleDrive
         $client = new Google_Client();
         $client->setApplicationName('costlocker/reports');
         $client->setScopes(Google_Service_Drive::DRIVE);
-        $client->setAccessToken(file_get_contents($this->getConfigFile('token.json')));
+        $client->setAccessToken(file_get_contents("{$this->clientConfigDir}/token.json"));
 
-        $oauth = $this->getConfigJson('client.json')['web'];
+        $oauth = $this->getJson("{$this->clientConfigDir}/client.json")['web'];
         $client->setClientId($oauth['client_id']);
         $client->setClientSecret($oauth['client_secret']);
 
         if ($client->isAccessTokenExpired()) {
             $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            $this->saveJson('token.json', $client->getAccessToken());
+            $this->saveJson("{$this->clientConfigDir}/token.json", $client->getAccessToken());
         }
 
-        $database = $this->getConfigJson('files.json');
+        $database = $this->getJson("{$this->reportConfigDir}/files.json");
 
         return [new Google_Service_Drive($client), $database];
     }
 
     private function isDisabled()
     {
-        return !$this->configDir;
+        return !$this->reportConfigDir;
     }
 
     private function getReportConfig()
     {
-        $configs = require $this->getConfigFile('config.php');
+        $configs = require "{$this->reportConfigDir}/config.php";
         return $configs[$this->reportType];
     }
 
-    private function getConfigJson($file)
+    private function getJson($path)
     {
-        return json_decode(file_get_contents($this->getConfigFile($file)), true);
+        return json_decode(file_get_contents($path), true);
     }
 
-    private function saveJson($file, array $json)
+    private function saveJson($path, array $json)
     {
-        file_put_contents($this->getConfigFile($file), json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-    }
-
-    private function getConfigFile($file)
-    {
-        return "{$this->configDir}/{$file}";
+        file_put_contents($path, json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 }
