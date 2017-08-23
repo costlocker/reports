@@ -81,6 +81,9 @@ class ReportSettings
         }
 
         foreach ($this->createCsvParser() as $index => $line) {
+            if (count($line) < 3) {
+                continue;
+            }
             $settings = [
                 'hours' => $line[1],
                 'position' => $line[2],
