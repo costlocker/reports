@@ -75,6 +75,8 @@ class ProfitabilityToXls
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
             $position = $settings->getPosition($person['name'], $report->selectedMonth);
+            $hours = $settings->getHoursSalary($person['name'], null, $report->selectedMonth);
+            $isTracker = $settings->personsSettings && $hours === null;
             $isPositionHiddenByFilter =
                 $settings->personsSettings &&
                 $settings->filter &&
@@ -87,12 +89,23 @@ class ProfitabilityToXls
 
             if (!array_key_exists($person['name'], $this->employees)) {
                 $this->employees[$person['name']] = [
-                    'hours' => $settings->getHoursSalary($person['name'], null, $report->selectedMonth),
+                    'hours' => $hours,
                     'position' => $position,
                     'months' => [],
                 ];
             }
             $this->employees[$person['name']]['months'][] = $report->selectedMonth;
+
+            // historical salary is defined in CS
+            // -> override current salary from API if type salary|hourly is different
+            if ($person['is_employee'] && $isTracker) {
+                $person['is_employee'] = false;
+                $person['hourly_rate'] = $settings->getHourlyRate($person['name'], $report->selectedMonth);
+            } elseif (!$person['is_employee'] && !$isTracker) {
+                $person['is_employee'] = true;
+                $person['salary_amount'] = $hours * $settings->getHourlyRate($person['name'], $report->selectedMonth);
+                $person['salary_hours'] = $hours;
+            }
 
             $profitabilityColumn = $isSummaryMode ? 'Q' : 'O';
             $monthReport
@@ -106,8 +119,7 @@ class ProfitabilityToXls
                         '',
                         [
                             $person['is_employee']
-                                ? ($settings->getHoursSalary($person['name'], "=I{$summaryRow}", $report->selectedMonth)
-                                    ?: $person['salary_hours'])
+                                ? ($isTracker ? "=I{$summaryRow}" : ($hours ?: $person['salary_hours']))
                                 : "=I{$summaryRow}",
                             NumberFormat::FORMAT_NUMBER_00
                         ],

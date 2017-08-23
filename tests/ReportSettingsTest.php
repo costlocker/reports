@@ -15,20 +15,21 @@ class ReportSettingsTest extends \PHPUnit_Framework_TestCase
     }
 
     /** @dataProvider provideDate */
-    public function testPersonCanHaveDifferentSettingPerMonth($month, $expectedHours, $expectedPosition)
+    public function testPersonCanHaveDifferentSettingPerMonth($month, $expectedHours, $expectedPosition, $expectedRate)
     {
         $date = new \DateTime($month);
         $settings = new ReportSettings();
         $settings->personsSettings = __DIR__ . '/fixtures/persons.csv';
         assertThat($settings->getHoursSalary('Uncle Bob', 20, $date), is($expectedHours));
+        assertThat($settings->getHourlyRate('Uncle Bob', $date), is($expectedRate));
         assertThat($settings->getPosition('Uncle Bob', $date), is($expectedPosition));
     }
 
     public function provideDate()
     {
         return [
-            'date <= last month' => ['2017-07-01', 20, 'Developer'],
-            'date > last month' => ['now', 160, 'Manager'],
+            'date <= last month' => ['2017-07-01', 20, 'Developer', 100],
+            'date > last month' => ['now', 160, 'Manager', null],
         ];
     }
 

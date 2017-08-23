@@ -31,6 +31,11 @@ class ReportSettings
         return $hours == ReportSettings::TRACKED_HOURS ? $trackedHours : $hours;
     }
 
+    public function getHourlyRate($person, \DateTime $month = null)
+    {
+        return $this->getPersonField($person, 'hourlyRate', $month);
+    }
+
     public function getPosition($person, \DateTime $month = null)
     {
         return $this->getPersonField($person, 'position', $month);
@@ -67,6 +72,7 @@ class ReportSettings
         $this->defaultPerson = [
             'hours' => 0,
             'position' => null,
+            'hourlyRate' => null,
         ];
         $this->persons = [];
 
@@ -78,6 +84,7 @@ class ReportSettings
             $settings = [
                 'hours' => $line[1],
                 'position' => $line[2],
+                'hourlyRate' => $line[4] ?? null,
             ];
             if ($index == 0) {
                 $this->defaultPerson = $settings;
