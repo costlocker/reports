@@ -74,7 +74,7 @@ class ProfitabilityToXls
             $summaryRow = $monthReport->getRowId();
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
-            $position = $settings->getPosition($person['name']);
+            $position = $settings->getPosition($person['name'], $report->selectedMonth);
             $isPositionHiddenByFilter =
                 $settings->personsSettings &&
                 $settings->filter &&
@@ -87,8 +87,8 @@ class ProfitabilityToXls
 
             if (!array_key_exists($person['name'], $this->employees)) {
                 $this->employees[$person['name']] = [
-                    'hours' => $settings->getHoursSalary($person['name']),
-                    'position' => $settings->getPosition($person['name']),
+                    'hours' => $settings->getHoursSalary($person['name'], null, $report->selectedMonth),
+                    'position' => $position,
                     'months' => [],
                 ];
             }
@@ -106,7 +106,7 @@ class ProfitabilityToXls
                         '',
                         [
                             $person['is_employee']
-                                ? ($settings->getHoursSalary($person['name'], "=I{$summaryRow}")
+                                ? ($settings->getHoursSalary($person['name'], "=I{$summaryRow}", $report->selectedMonth)
                                     ?: $person['salary_hours'])
                                 : "=I{$summaryRow}",
                             NumberFormat::FORMAT_NUMBER_00

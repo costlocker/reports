@@ -10,10 +10,26 @@ class ReportSettingsTest extends \PHPUnit_Framework_TestCase
         $settings->personsSettings = __DIR__ . '/fixtures/persons.csv';
         assertThat($settings->getHoursSalary('Unknown'), is(160));
         assertThat($settings->getHoursSalary('Own TROK EZ5H'), is(120));
-        assertThat($settings->getHoursSalary('Uncle Bob', 20), is(20));
         assertThat($settings->getPosition('Unknown'), is('Employee'));
         assertThat($settings->getPosition('Own TROK EZ5H'), is('Manager'));
-        assertThat($settings->getPosition('Uncle Bob', 20), is('Developer'));
+    }
+
+    /** @dataProvider provideDate */
+    public function testPersonCanHaveDifferentSettingPerMonth($month, $expectedHours, $expectedPosition)
+    {
+        $date = new \DateTime($month);
+        $settings = new ReportSettings();
+        $settings->personsSettings = __DIR__ . '/fixtures/persons.csv';
+        assertThat($settings->getHoursSalary('Uncle Bob', 20, $date), is($expectedHours));
+        assertThat($settings->getPosition('Uncle Bob', $date), is($expectedPosition));
+    }
+
+    public function provideDate()
+    {
+        return [
+            'date <= last month' => ['2017-07-01', 20, 'Developer'],
+            'date > last month' => ['now', 160, 'Manager'],
+        ];
     }
 
     public function testByDefaultNoHoursAreLoaded()

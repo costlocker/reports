@@ -25,15 +25,15 @@ class ReportSettings
     private $persons;
     private $defaultPerson;
 
-    public function getHoursSalary($person, $trackedHours = null)
+    public function getHoursSalary($person, $trackedHours = null, \DateTime $month = null)
     {
-        $hours = $this->getPersonField($person, 'hours');
+        $hours = $this->getPersonField($person, 'hours', $month);
         return $hours == ReportSettings::TRACKED_HOURS ? $trackedHours : $hours;
     }
 
-    public function getPosition($person)
+    public function getPosition($person, \DateTime $month = null)
     {
-        return $this->getPersonField($person, 'position');
+        return $this->getPersonField($person, 'position', $month);
     }
 
     public function getAvailablePositions()
@@ -41,16 +41,19 @@ class ReportSettings
         $this->parseCsvFile();
         $positions = [$this->defaultPerson['position']];
         foreach ($this->persons as $person) {
-            $positions[] = $person['position'];
+            foreach ($person['positions'] as $position) {
+                $positions[] = $position;
+            }
         }
         return array_values(array_unique(array_filter($positions)));
     }
 
-    private function getPersonField($person, $field)
+    private function getPersonField($person, $field, \DateTime $month = null)
     {
         if ($this->personsSettings) {
             $this->parseCsvFile();
-            return $this->persons[$person][$field] ?? $this->defaultPerson[$field];
+            $settings = $this->getPersonSettings($person, $month);
+            return $settings[$field];
         }
         return null;
     }
@@ -79,9 +82,40 @@ class ReportSettings
             if ($index == 0) {
                 $this->defaultPerson = $settings;
             } else {
-                $this->persons[$line[0]] = $settings;
+                $person = $line[0];
+                if (!array_key_exists($person, $this->persons)) {
+                    $this->persons[$person] = [
+                        'current' => null,
+                        'months' => [],
+                        'positions' => [],
+                    ];
+                }
+                if (isset($line[3]) && $line[3]) {
+                    $date = new \DateTime($line[3]);
+                    $this->persons[$person]['months'][$date->format('Ym')] = $settings;
+                } else {
+                    $this->persons[$person]['current'] = $settings;
+                }
+                $this->persons[$person]['positions'][] = $settings['position'];
             }
         }
+    }
+
+    private function getPersonSettings($person, \DateTime $reportMonth = null)
+    {
+        if (!array_key_exists($person, $this->persons)) {
+            return $this->defaultPerson;
+        }
+        $settings = $this->persons[$person];
+        if (!$reportMonth) {
+            return $settings['current'];
+        }
+        foreach ($settings['months'] as $personMonth => $monthSettings) {
+            if ($reportMonth->format('Ym') <= $personMonth) {
+                return $monthSettings;
+            }
+        }
+        return $settings['current'];
     }
 
     private function createCsvParser()
