@@ -102,13 +102,15 @@ class ProfitabilityToXls
 
             // historical salary is defined in CS
             // -> override current salary from API if type salary|hourly is different
-            if ($person['is_employee'] && $isTracker) {
-                $person['is_employee'] = false;
-                $person['hourly_rate'] = $personSettings['hourlyRate'];
-            } elseif (!$person['is_employee'] && !$isTracker) {
-                $person['is_employee'] = true;
-                $person['salary_amount'] = $hours * $personSettings['hourlyRate'];
-                $person['salary_hours'] = $hours;
+            if ($personSettings['hourlyRate']) {
+                if ($isTracker) {
+                    $person['is_employee'] = false;
+                    $person['hourly_rate'] = $personSettings['hourlyRate'];
+                } else {
+                    $person['is_employee'] = true;
+                    $person['salary_amount'] = $hours * $personSettings['hourlyRate'];
+                    $person['salary_hours'] = $hours;
+                }
             }
 
             $profitabilityColumn = $isSummaryMode ? 'Q' : 'O';
