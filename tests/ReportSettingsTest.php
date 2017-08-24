@@ -28,6 +28,7 @@ class ReportSettingsTest extends \PHPUnit_Framework_TestCase
     public function provideDate()
     {
         return [
+            'the closest month' => ['2016-02-01', 20, 'Developer', 80],
             'date <= last month' => ['2017-07-01', 20, 'Developer', 100],
             'date > last month' => ['now', 160, 'Manager', null],
         ];

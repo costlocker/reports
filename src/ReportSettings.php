@@ -120,6 +120,7 @@ class ReportSettings
         if (!$reportMonth) {
             return $settings['current'];
         }
+        ksort($settings['months']);
         foreach ($settings['months'] as $personMonth => $monthSettings) {
             if ($reportMonth->format('Ym') <= $personMonth) {
                 return $monthSettings;
