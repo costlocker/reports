@@ -215,18 +215,19 @@ class ProfitabilityToXls
             ['Tracked months', 'ffd966', 'count'],
         ]);
 
-        foreach ($this->employees as $data) {
-            $lastMonth = end($data['months']);
+
+        foreach ($this->getPersonsSortedByName() as $person) {
+            $lastMonth = end($person['months']);
             $monthsStrings = array_map(
                 function (\DateTime $month) {
                     return "\"{$month->format('Y-m')}\"";
                 },
-                $data['months']
+                $person['months']
             );
             $this->people->addRow([
-                $data['name'],
-                $data['position'],
-                [$data['hours'], NumberFormat::FORMAT_NUMBER],
+                $person['name'],
+                $person['position'],
+                [$person['hours'], NumberFormat::FORMAT_NUMBER],
                 [
                     "=DATE({$lastMonth->format('Y, m, d')})",
                     'MMMM YYYY',
@@ -237,6 +238,17 @@ class ProfitabilityToXls
                 ]
             ]);
         }
+    }
+
+    private function getPersonsSortedByName()
+    {
+        uasort(
+            $this->employees,
+            function ($a, $b) {
+                return strcasecmp($a['name'], $b['name']);
+            }
+        );
+        return $this->employees;
     }
 
     private function addAggregations(ProfitabilityReport $report, ReportSettings $settings, array $positions)
