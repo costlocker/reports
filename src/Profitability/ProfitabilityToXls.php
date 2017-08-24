@@ -87,14 +87,16 @@ class ProfitabilityToXls
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
 
-            if (!array_key_exists($person['name'], $this->employees)) {
-                $this->employees[$person['name']] = [
+            $personId = json_encode([$person['name'], $hours, $position]); // month from csv should be also used
+            if (!array_key_exists($personId, $this->employees)) {
+                $this->employees[$personId] = [
+                    'name' => $person['name'],
                     'hours' => $hours,
                     'position' => $position,
                     'months' => [],
                 ];
             }
-            $this->employees[$person['name']]['months'][] = $report->selectedMonth;
+            $this->employees[$personId]['months'][] = $report->selectedMonth;
 
             // historical salary is defined in CS
             // -> override current salary from API if type salary|hourly is different
@@ -209,7 +211,7 @@ class ProfitabilityToXls
             ['Tracked months', 'ffd966', 'count'],
         ]);
 
-        foreach ($this->employees as $person => $data) {
+        foreach ($this->employees as $data) {
             $lastMonth = end($data['months']);
             $monthsStrings = array_map(
                 function (\DateTime $month) {
@@ -218,7 +220,7 @@ class ProfitabilityToXls
                 $data['months']
             );
             $this->people->addRow([
-                $person,
+                $data['name'],
                 $data['position'],
                 [$data['hours'], NumberFormat::FORMAT_NUMBER],
                 [
