@@ -27,18 +27,17 @@ class ReportSettings
 
     public function getHoursSalary($person, $trackedHours = null, \DateTime $month = null)
     {
-        $hours = $this->getPersonField($person, 'hours', $month);
-        return $hours == ReportSettings::TRACKED_HOURS ? $trackedHours : $hours;
+        return $this->getPerson($person, $month, $trackedHours)['hours'];
     }
 
     public function getHourlyRate($person, \DateTime $month = null)
     {
-        return $this->getPersonField($person, 'hourlyRate', $month);
+        return $this->getPerson($person, $month)['hourlyRate'];
     }
 
     public function getPosition($person, \DateTime $month = null)
     {
-        return $this->getPersonField($person, 'position', $month);
+        return $this->getPerson($person, $month)['position'];
     }
 
     public function getAvailablePositions()
@@ -53,12 +52,25 @@ class ReportSettings
         return array_values(array_unique(array_filter($positions)));
     }
 
-    private function getPersonField($person, $field, \DateTime $month = null)
+    public function getPerson($person, \DateTime $month = null, $trackedHours = null)
+    {
+        if (!$this->personsSettings) {
+            return null;
+        }
+        $settings = $this->findPersonSettings($person, $month);
+        return [
+            'id' => $settings['id'],
+            'position' => $settings['position'],
+            'hours' => $settings['hours'] == ReportSettings::TRACKED_HOURS ? $trackedHours : $settings['hours'],
+            'hourlyRate' => $settings['hourlyRate'],
+        ];
+    }
+
+    private function findPersonSettings($person, \DateTime $month = null)
     {
         if ($this->personsSettings) {
             $this->parseCsvFile();
-            $settings = $this->getPersonSettings($person, $month);
-            return $settings[$field];
+            return $this->getPersonSettings($person, $month);
         }
         return null;
     }
@@ -85,6 +97,7 @@ class ReportSettings
                 continue;
             }
             $settings = [
+                'id' => $index,
                 'hours' => $line[1],
                 'position' => $line[2],
                 'hourlyRate' => $line[4] ?? null,

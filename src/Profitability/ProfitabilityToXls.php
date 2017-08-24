@@ -74,9 +74,12 @@ class ProfitabilityToXls
             $summaryRow = $monthReport->getRowId();
             $firstProjectRow = $monthReport->getRowId(1);
             $lastProjectRow = $monthReport->getRowId(count($person['projects']));
-            $position = $settings->getPosition($person['name'], $report->selectedMonth);
-            $hours = $settings->getHoursSalary($person['name'], null, $report->selectedMonth);
+
+            $personSettings = $settings->getPerson($person['name'], $report->selectedMonth, null);
+            $position = $personSettings['position'];
+            $hours = $personSettings['hours'];
             $isTracker = $settings->personsSettings && $hours === null;
+
             $isPositionHiddenByFilter =
                 $settings->personsSettings &&
                 $settings->filter &&
@@ -87,25 +90,24 @@ class ProfitabilityToXls
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
 
-            $personId = json_encode([$person['name'], $hours, $position]); // month from csv should be also used
-            if (!array_key_exists($personId, $this->employees)) {
-                $this->employees[$personId] = [
+            if (!array_key_exists($personSettings['id'], $this->employees)) {
+                $this->employees[$personSettings['id']] = [
                     'name' => $person['name'],
                     'hours' => $hours,
                     'position' => $position,
                     'months' => [],
                 ];
             }
-            $this->employees[$personId]['months'][] = $report->selectedMonth;
+            $this->employees[$personSettings['id']]['months'][] = $report->selectedMonth;
 
             // historical salary is defined in CS
             // -> override current salary from API if type salary|hourly is different
             if ($person['is_employee'] && $isTracker) {
                 $person['is_employee'] = false;
-                $person['hourly_rate'] = $settings->getHourlyRate($person['name'], $report->selectedMonth);
+                $person['hourly_rate'] = $personSettings['hourlyRate'];
             } elseif (!$person['is_employee'] && !$isTracker) {
                 $person['is_employee'] = true;
-                $person['salary_amount'] = $hours * $settings->getHourlyRate($person['name'], $report->selectedMonth);
+                $person['salary_amount'] = $hours * $personSettings['hourlyRate'];
                 $person['salary_hours'] = $hours;
             }
 
