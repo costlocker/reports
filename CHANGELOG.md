@@ -1,6 +1,10 @@
 
 # Changelog
 
+## v1.1.1 (_2017-08-31_)
+
+* `--drive-client` - allow separating Google Drive client configuration (`client.json`, `token.json`)
+
 ## v1.1.0 (_2017-08-14_)
 
 * **Export/Import**
