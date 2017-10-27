@@ -32,8 +32,9 @@ class GenerateReportCommand extends Command
                 'exporters' => [
                     'xls' => new Profitability\ProfitabilityToXls($this->spreadsheet),
                 ],
-                'filename' => function (\DateTime $monthStart, \DateTime $monthEnd) {
-                    return "{$monthStart->format('Y-m')}";
+                'filename' => function (\DateTime $monthStart, \DateTime $monthEnd, ReportSettings $settings) {
+                    $company = str_replace(' ', '-', strtolower($settings->company));
+                    return "{$company}-{$monthStart->format('Y-m')}";
                 },
             ],
         ];
@@ -80,12 +81,13 @@ class GenerateReportCommand extends Command
         $settings->filter = $input->getOption('filter');
         $settings->yearStart = $monthStart->format('Y');
         $company = $client->restApi('/me')['data']['company'] ?? ['id' => null, 'name' => null];
+        $settings->company = $company['name'];
         $settings->generateProjectUrl = function ($projectId) use ($apiHost, $company) {
             $apiHost .= $company['id'] ? "/p/{$company['id']}" : '';
             return "{$apiHost}/projects/detail/{$projectId}/overview";
         };
 
-        $rawFilename = $reporter['filename']($monthStart, $monthEnd);
+        $rawFilename = $reporter['filename']($monthStart, $monthEnd, $settings);
         $extraFilename = $settings->filter ? "-{$settings->filter}" : '';
         $filename = $rawFilename . $extraFilename;
         $settings->googleDrive = new GoogleDrive(

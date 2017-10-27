@@ -13,6 +13,7 @@ class ReportSettings
     public $googleDrive;
     /** @var callable projectId => url */
     public $generateProjectUrl;
+    public $company;
 
     public $currency;
     public $personsSettings;

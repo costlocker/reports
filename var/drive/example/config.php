@@ -6,8 +6,9 @@ return [
     'profitability' => [
         'folders' => ['folderId'],
         'title' => function (ReportSettings $settings) {
-            $title = $settings->filter ?: 'Company';
-            return "{$title} {$settings->yearStart}";
+            $company = $settings->company ? "{$settings->company} - " : '';
+            $title = $settings->filter ?: 'Firma';
+            return "{$company}{$title} {$settings->yearStart}";
         }
     ],
 ];
