@@ -79,7 +79,9 @@ class GenerateReportCommand extends Command
         $settings->currency = $input->getOption('currency');
         $settings->filter = $input->getOption('filter');
         $settings->yearStart = $monthStart->format('Y');
-        $settings->generateProjectUrl = function ($projectId) use ($apiHost) {
+        $company = $client->restApi('/me')['data']['company'] ?? ['id' => null, 'name' => null];
+        $settings->generateProjectUrl = function ($projectId) use ($apiHost, $company) {
+            $apiHost .= $company['id'] ? "/p/{$company['id']}" : '';
             return "{$apiHost}/projects/detail/{$projectId}/overview";
         };
 

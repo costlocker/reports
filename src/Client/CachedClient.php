@@ -33,6 +33,11 @@ class CachedClient implements CostlockerClient
         return json_decode(file_get_contents($path), true);
     }
 
+    public function restApi($endpoint)
+    {
+        return $this->client->restApi($endpoint);
+    }
+
     public function map(array $rawData, $id)
     {
         return $this->client->map($rawData, $id);

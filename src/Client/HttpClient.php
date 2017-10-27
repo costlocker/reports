@@ -23,6 +23,14 @@ class HttpClient implements CostlockerClient
         $this->client = $c;
     }
 
+    public function restApi($endpoint)
+    {
+        $response = $this->client->get(
+            "/api-public/v2{$endpoint}"
+        );
+        return json_decode($response->getBody(), true);
+    }
+
     public function request(array $request)
     {
         $response = $this->client->get(
