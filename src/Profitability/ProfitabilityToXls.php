@@ -384,6 +384,11 @@ class ProfitabilityToXls
                 ['', 'ff0000', $settings->currency],
             ]);
 
+        if (!$aggregatedPositions) {
+            $xls->skipRows(3);
+            return;
+        }
+
         $firstPosition = $xls->getRowId();
         $summaryRow = $xls->getRowId(count($aggregatedPositions));
         foreach ($aggregatedPositions as $position => $personCells) {
