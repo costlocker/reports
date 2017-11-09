@@ -202,7 +202,7 @@ class GenerateReportCommand extends Command
 
     private function spreadsheetToFile($filename)
     {
-        $normalizedName = str_replace([' ', '(', ')'], '-', $filename);
+        $normalizedName = str_replace([' ', '(', ')', '/'], '-', $filename);
         $prettyName = str_replace('--', '-', trim($normalizedName, '-'));
 
         $xlsFile = "var/reports/{$prettyName}.xlsx";
