@@ -163,7 +163,7 @@ class GenerateReportCommand extends Command
                 $tenantClient = new Client\CachedClient(
                     $tenantClient,
                     __DIR__ . '/../var/cache',
-                    $input->getOption('host'),
+                    $apiHost . '|' . sha1($apiKey),
                     function ($text) use ($output) {
                         if ($output->isVerbose()) {
                             $output->writeln($text);

@@ -24,11 +24,11 @@ class CachedClient implements CostlockerClient
         $filename = md5($this->auth) . '-' . md5(json_encode($request)) . '.json';
         $path = "{$this->cacheDir}/{$filename}";
         if (!is_file($path)) {
-            $this->output->__invoke("Download request: " . json_encode($request));
+            $this->output->__invoke("Download request ({$this->auth}): " . json_encode($request));
             $response = $this->client->request($request);
             file_put_contents($path, json_encode($response));
         } else {
-            $this->output->__invoke("Load from cache: " . json_encode($request));
+            $this->output->__invoke("Load from cache ({$this->auth}): " . json_encode($request));
         }
         return json_decode(file_get_contents($path), true);
     }
