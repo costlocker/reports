@@ -37,7 +37,8 @@ class CompositeClient implements CostlockerClient
     {
         $response = [];
         foreach ($this->clients as $c) {
-            $companyResponse = $c['client']->request($request);
+            $filteredRequest = $this->filterProjects($request, $c['company']);
+            $companyResponse = $c['client']->request($filteredRequest);
             $response = array_merge_recursive($response, $companyResponse);
             $this->savePojects($companyResponse['Simple_Projects'] ?? [], $c['company']);
         }
@@ -49,6 +50,23 @@ class CompositeClient implements CostlockerClient
         foreach ($projects as $project) {
             $this->projectsMapping[$project['id']] = $company['id'];
         }
+    }
+
+    private function filterProjects(array $request, array $company)
+    {
+        foreach ($request as $resource => $filters) {
+            foreach ($filters as $key => $filter) {
+                if ($key == 'project') {
+                    $request[$resource][$key] = array_values(array_filter(
+                        $filter,
+                        function ($id) use ($company) {
+                            return $this->getCompanyId($id) == $company['id'];
+                        }
+                    ));
+                }
+            }
+        }
+        return $request;
     }
 
     public function getCompanyId($projectId)
