@@ -167,7 +167,7 @@ class ProfitabilityToXls
                     ->addRow([
                         '',
                         $person['name'],
-                        $settings->getPosition($person['name']),
+                        $position,
                         [$project['name'], NumberFormat::FORMAT_GENERAL, [], $projectUrl],
                         implode(', ', $project['tags']),
                         $project['client'],
