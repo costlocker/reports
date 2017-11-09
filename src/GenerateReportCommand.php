@@ -80,10 +80,10 @@ class GenerateReportCommand extends Command
         $settings->currency = $input->getOption('currency');
         $settings->filter = $input->getOption('filter');
         $settings->yearStart = $monthStart->format('Y');
-        $company = $client->restApi('/me')['data']['company'] ?? ['id' => null, 'name' => null];
-        $settings->company = $company['name'];
-        $settings->generateProjectUrl = function ($projectId) use ($apiHost, $company) {
-            $apiHost .= $company['id'] ? "/p/{$company['id']}" : '';
+        $settings->company = $client->getFirstCompanyName();
+        $settings->generateProjectUrl = function ($projectId) use ($apiHost, $client) {
+            $companyId = $client->getCompanyId($projectId);
+            $apiHost .= $companyId ? "/p/{$companyId}" : '';
             return "{$apiHost}/projects/detail/{$projectId}/overview";
         };
 
@@ -104,7 +104,7 @@ class GenerateReportCommand extends Command
             "<info>Months count:</info> " . count($interval),
             "<info>Months interval:</info> <{$monthStart->format('Y-m')}, {$monthEnd->format('Y-m')}>",
             "<info>API Url:</info> {$apiHost}",
-            "<info>API Key:</info> {$apiKey}",
+            "<info>API Key(s):</info> {$apiKey}",
             "<info>Filter:</info> {$settings->filter}",
             "<info>E-mail Recipients:</info> {$settings->email}",
             '',
@@ -154,21 +154,26 @@ class GenerateReportCommand extends Command
 
     private function buildClient(InputInterface $input, OutputInterface $output)
     {
-        list($apiHost, $apiKey) = explode('|', $input->getOption('host'));
-        $client = Client\HttpClient::build($apiHost, $apiKey);
-        if ($input->getOption('cache')) {
-            $client = new Client\CachedClient(
-                $client,
-                __DIR__ . '/../var/cache',
-                $input->getOption('host'),
-                function ($text) use ($output) {
-                    if ($output->isVerbose()) {
-                        $output->writeln($text);
+        list($apiHost, $apiKeysSeparated) = explode('|', $input->getOption('host'), 2);
+        $apiKeys = explode('|', $apiKeysSeparated);
+        $clients = [];
+        foreach ($apiKeys as $apiKey) {
+            $tenantClient = Client\HttpClient::build($apiHost, $apiKey);
+            if ($input->getOption('cache')) {
+                $tenantClient = new Client\CachedClient(
+                    $tenantClient,
+                    __DIR__ . '/../var/cache',
+                    $input->getOption('host'),
+                    function ($text) use ($output) {
+                        if ($output->isVerbose()) {
+                            $output->writeln($text);
+                        }
                     }
-                }
-            );
+                );
+            }
+            $clients[] = $tenantClient;
         }
-        return [$client, $apiHost, $apiKey];
+        return [new Client\CompositeClient($clients), $apiHost, $apiKeysSeparated];
     }
 
     private function exportToXls(ReportSettings $settings, $filename)
