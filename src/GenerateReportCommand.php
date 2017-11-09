@@ -82,9 +82,12 @@ class GenerateReportCommand extends Command
         $settings->yearStart = $monthStart->format('Y');
         $settings->company = $client->getFirstCompanyName();
         $settings->generateProjectUrl = function ($projectId) use ($apiHost, $client) {
-            $companyId = $client->getCompanyId($projectId);
+            $companyId = $client->getCompany($projectId)['id'];
             $apiHost .= $companyId ? "/p/{$companyId}" : '';
             return "{$apiHost}/projects/detail/{$projectId}/overview";
+        };
+        $settings->getCompanyForProject = function ($projectId) use ($client) {
+            return $client->getCompany($projectId)['name'];
         };
 
         $rawFilename = $reporter['filename']($monthStart, $monthEnd, $settings);

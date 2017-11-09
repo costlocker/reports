@@ -114,13 +114,14 @@ class ProfitabilityToXls
             }
 
             $profitabilityColumn = $isSummaryMode ? 'Q' : 'O';
+            $firstProjectId = array_keys($person['projects'])[0] ?? null;
             $monthReport
                 ->addRow(
                     [
                         "=IF({$profitabilityColumn}{$summaryRow}>0, \"YES\", \"NO\")",
                         $person['name'],
                         $position,
-                        '',
+                        $firstProjectId ? $settings->getCompanyForProject->__invoke($firstProjectId) : '',
                         '',
                         '',
                         [

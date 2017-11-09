@@ -60,7 +60,7 @@ class CompositeClient implements CostlockerClient
                     $request[$resource][$key] = array_values(array_filter(
                         $filter,
                         function ($id) use ($company) {
-                            return $this->getCompanyId($id) == $company['id'];
+                            return $this->getCompany($id)['id'] == $company['id'];
                         }
                     ));
                 }
@@ -69,9 +69,10 @@ class CompositeClient implements CostlockerClient
         return $request;
     }
 
-    public function getCompanyId($projectId)
+    public function getCompany($projectId)
     {
-        return $this->projectsMapping[$projectId] ?? null;
+        $companyId = $this->projectsMapping[$projectId] ?? null;
+        return $this->clients[$companyId]['company'] ?? ['id' => null, 'name' => null];
     }
 
     public function restApi($endpoint)
