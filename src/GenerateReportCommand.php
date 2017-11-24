@@ -81,10 +81,18 @@ class GenerateReportCommand extends Command
         $settings->filter = $input->getOption('filter');
         $settings->yearStart = $monthStart->format('Y');
         $settings->company = $client->getFirstCompanyName();
-        $settings->generateProjectUrl = function ($projectId) use ($apiHost, $client) {
-            $companyId = $client->getCompany($projectId)['id'];
+        $settings->generateProjectUrl = function ($input) use ($apiHost, $client) {
+            $config = is_array($input) ? $input : [
+                'path' => "/projects/detail/{$input}/overview",
+                'project_id' => $input,
+                'query' => [],
+            ];
+            if (!$config['project_id'] && !$config['query']) {
+                return null;
+            }
+            $companyId = $client->getCompany($config['project_id'])['id'];
             $apiHost .= $companyId ? "/p/{$companyId}" : '';
-            return "{$apiHost}/projects/detail/{$projectId}/overview";
+            return "{$apiHost}{$config['path']}?" . http_build_query($config['query']);
         };
         $settings->getCompanyForProject = function ($projectId) use ($client) {
             return $client->getCompany($projectId)['name'];
