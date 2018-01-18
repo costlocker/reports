@@ -11,6 +11,8 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class XlsBuilder
 {
+    const HIGHLIGHT_STYLE = 'HIGHLIGHT_STYLE';
+
     private $worksheet;
     private $rowId = 1;
 
@@ -53,14 +55,21 @@ class XlsBuilder
 
     public function addRow(array $data, $backgroundColor = null, $alignment = null)
     {
+        $highlightedCells = [];
         foreach ($data as $index => $value) {
             if (is_array($value)) {
                 list($value, $format, $conditionals, $url) = $value + [2 => [], 3 => null];
                 $coordinate = "{$this->indexToLetter($index)}{$this->rowId}";
                 $cell = $this->worksheet->setCellValue($coordinate, $value, true);
-                $cell->getStyle()
-                    ->setConditionalStyles($conditionals)
-                    ->getNumberFormat()->setFormatCode($format);
+                if ($conditionals == self::HIGHLIGHT_STYLE) {
+                    $highlightedCells[] = $coordinate;
+                    $cell->getStyle()
+                        ->getNumberFormat()->setFormatCode($format);
+                } else {
+                    $cell->getStyle()
+                        ->setConditionalStyles($conditionals)
+                        ->getNumberFormat()->setFormatCode($format);
+                }
                 if ($url) {
                     $cell->getHyperlink()->setUrl($url);
                 }
@@ -69,7 +78,15 @@ class XlsBuilder
             }
         }
         reset($data);
-        return $this->addStyle(key($data), count($data), $backgroundColor, $alignment);
+        $this->addStyle(key($data), count($data), $backgroundColor, $alignment);
+        $this->highlightCells($highlightedCells); // condition formatting for background doesn't work
+        return $this;
+    }
+
+    public function setCell($column, $rowIndex, $value)
+    {
+        $this->worksheet->setCellValue("{$column}{$rowIndex}", $value);
+        return $this;
     }
 
     private function addStyle($firstColumnIndex, $columnsCount, $backgroundColor = null, $alignment = null)
@@ -152,7 +169,40 @@ class XlsBuilder
         return "'{$this->worksheet->getTitle()}'!";
     }
 
-    public function compareToZero($operator, $color)
+    public function evaluateNumber()
+    {
+        return [
+            $this->compareToZero(Conditional::OPERATOR_LESSTHAN, 'ff0000'),
+            $this->compareToZero(Conditional::OPERATOR_GREATERTHAN, '0000ff'),
+        ];
+    }
+
+    public function highlightCell()
+    {
+        return self::HIGHLIGHT_STYLE;
+    }
+
+    private function highlightCells(array $coordinates)
+    {
+        foreach ($coordinates as $coordinate) {
+            $this->worksheet->getStyle($coordinate)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => [
+                        'rgb' => 'ff0000'
+                    ]
+                ],
+                'fill' => [
+                    'type' => Fill::FILL_SOLID,
+                    'startcolor' => [
+                        'rgb' => 'ffff00'
+                    ],
+                ],
+            ]);
+        }
+    }
+
+    private function compareToZero($operator, $color)
     {
         $conditional = new Conditional();
         $conditional

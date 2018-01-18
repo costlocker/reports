@@ -142,7 +142,7 @@ class ProfitabilityToXls
                         ["=SUM(L{$firstProjectRow}:L{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                         '',
                         ["=SUM(N{$firstProjectRow}:N{$lastProjectRow})", $currencyFormat],
-                        ["=SUM(O{$firstProjectRow}:O{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00],
+                        ["=SUM(O{$firstProjectRow}:O{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00, $monthReport->highlightCell()],
                         ["=1-O{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                         ["=N{$summaryRow}-H{$summaryRow}", $currencyFormat],
                         ["=SUM(R{$firstProjectRow}:R{$lastProjectRow})", $currencyFormat],
@@ -347,11 +347,6 @@ class ProfitabilityToXls
             $xls->skipRows(2);
         }
 
-        $evaluateNumber = [
-            $xls->compareToZero(Conditional::OPERATOR_LESSTHAN, 'ff0000'),
-            $xls->compareToZero(Conditional::OPERATOR_GREATERTHAN, '0000ff'),
-        ];
-
         $xls
             ->mergeCells('A', 'Q')
             ->addRow(
@@ -431,7 +426,7 @@ class ProfitabilityToXls
                     ["=(B{$groupHours}*L{$positionRowId})*B2/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
                     ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
                     ["=D{$positionRowId}", $currencyFormat],
-                    ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00, $evaluateNumber],
+                    ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00, $xls->evaluateNumber()],
                     ["=O{$positionRowId}-M{$positionRowId}", $currencyFormat],
                 ]);
         }
@@ -469,11 +464,11 @@ class ProfitabilityToXls
                     [
                         "=M{$this->previousAggregations[$xls->getWorksheetReference()]}+P{$xls->getRowId()}",
                         $currencyFormat,
-                        $evaluateNumber
+                        $xls->evaluateNumber()
                     ],
                     '',
                     'Ztráta za měsíc',
-                    ["=O{$summaryRow}-M{$summaryRow}", $currencyFormat, $evaluateNumber],
+                    ["=O{$summaryRow}-M{$summaryRow}", $currencyFormat, $xls->evaluateNumber()],
                 ],
                 'ffccff'
             )
