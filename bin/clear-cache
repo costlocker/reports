@@ -1,5 +1,3 @@
 #!/bin/sh
 
-rm -rf var/cache
-mkdir var/cache
-touch var/cache/.gitkeep
+rm var/cache/*.json

@@ -36,6 +36,7 @@ nano app/config.php
 ```bash
 docker build --file .docker/Dockerfile --tag reports-costlocker ./
 docker run --rm -it \
+    --volume "./var/cache:/app/var/cache" \
     reports-costlocker bin/console
 ```
 
