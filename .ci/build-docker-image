@@ -1,0 +1,74 @@
+#!/usr/bin/env sh
+
+# DOCKER_TOKEN defined in variables
+# DOCKER_APP, DOCKER_SERVICE, DOCKER_FILE defined in in .gitlab-ci.yml (multiple images + monorepo)
+
+DOCKER_USER="gitlab-ci-token"
+DOCKER_TAG=""
+
+APP_DIR="$(realpath $(dirname $(realpath $0))/..)"
+
+run () {
+    check_required_variables
+    load_docker_variables
+    build_docker_image
+}
+
+check_required_variables () {
+    check_required_variable "DOCKER_TOKEN" ${DOCKER_TOKEN:-}
+    check_required_variable "DOCKER_FILE" ${DOCKER_FILE:-}
+    check_required_variable "DOCKER_APP" ${DOCKER_APP:-}
+    check_required_variable "DOCKER_SERVICE" ${DOCKER_SERVICE:-}
+    check_required_variable "CI_COMMIT_SHA" ${CI_COMMIT_SHA:-}
+    check_required_variable "CI_REGISTRY" ${CI_REGISTRY:-}
+    check_required_variable "CI_REGISTRY_IMAGE" ${CI_REGISTRY_IMAGE:-}
+    check_required_variable "CI_COMMIT_REF_NAME" ${CI_COMMIT_REF_NAME:-}
+}
+
+check_required_variable () {
+    VARIABLE_NAME=$1
+    VARIABLE_VALUE=$2
+    if [ -z "${VARIABLE_VALUE}" ]; then
+        echo "$VARIABLE_NAME is required,  $VARIABLE_NAME=something .ci/build-docker-image"
+        exit 1
+    fi
+}
+
+load_docker_variables () {
+    if is_monorepo; then
+        SERVICE=$(normalize_string "$DOCKER_APP/$DOCKER_SERVICE")
+        APP_DIR="$APP_DIR/$DOCKER_APP"
+    else
+        SERVICE=$(normalize_string $DOCKER_SERVICE)
+    fi
+    BRANCH=$(normalize_string $CI_COMMIT_REF_NAME)
+
+    check_required_variable "SERVICE", ${SERVICE:-}
+    check_required_variable "BRANCH", ${BRANCH:-}
+
+    DOCKER_TAG="$CI_REGISTRY_IMAGE/$SERVICE/$BRANCH:${CI_COMMIT_SHA:0:7}"
+
+    echo "Dockefile: $DOCKER_FILE"
+    echo "Build context: $APP_DIR"
+    echo "Publish image: $DOCKER_TAG"
+    echo
+}
+
+is_monorepo () {
+    echo "$CI_REGISTRY_IMAGE" | grep -v "$DOCKER_APP"
+}
+
+normalize_string () {
+    RAW_VALUE=$1
+    NORMALIZED=${RAW_VALUE//[-\/\\]/_}
+    echo $NORMALIZED
+}
+
+build_docker_image () {
+    set -e
+    docker login --username $DOCKER_USER --password $DOCKER_TOKEN $CI_REGISTRY
+    time docker build --file $DOCKER_FILE --tag $DOCKER_TAG $APP_DIR
+    time docker push $DOCKER_TAG
+}
+
+run

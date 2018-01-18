@@ -1,0 +1,17 @@
+stages:
+  - build
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+build-docker:
+  stage: build
+  image: docker:latest
+  tags:
+    - docker
+  services:
+    - docker:dind
+  script:
+    - 'DOCKER_APP="reports" DOCKER_SERVICE="console" DOCKER_FILE=".docker/Dockerfile" .ci/build-docker-image'
+  only:
+    - /^report.*$/
