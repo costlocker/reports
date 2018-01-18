@@ -127,7 +127,7 @@ class GenerateReportCommand extends Command
         $provider = new $reporter['provider']($client);
         $reports = [];
         foreach ($interval as $month) {
-            $reports[] = $provider($month);
+            $reports[] = $provider($month, $settings);
             $progressbar->advance();
         }
         $progressbar->finish();
