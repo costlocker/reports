@@ -90,15 +90,16 @@ class ProfitabilityToXls
             $aggregatedPositionsInMonth[$position][$person['name']][] =
                 [$monthReport->getWorksheetReference(), $summaryRow];
 
-            if (!array_key_exists($personSettings['id'], $this->employees)) {
-                $this->employees[$personSettings['id']] = [
+            $employeeId = $personSettings['id'] ?: $person['name'];
+            if (!array_key_exists($employeeId, $this->employees)) {
+                $this->employees[$employeeId] = [
                     'name' => $person['name'],
                     'hours' => $hours,
                     'position' => $position,
                     'months' => [],
                 ];
             }
-            $this->employees[$personSettings['id']]['months'][] = $report->selectedMonth;
+            $this->employees[$employeeId]['months'][] = $report->selectedMonth;
 
             // historical salary is defined in CS
             // -> override current salary from API if type salary|hourly is different
