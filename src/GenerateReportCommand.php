@@ -81,23 +81,7 @@ class GenerateReportCommand extends Command
         $settings->currency = $input->getOption('currency');
         $settings->filter = $input->getOption('filter');
         $settings->yearStart = $monthStart->format('Y');
-        $settings->company = $client->getFirstCompanyName();
-        $settings->generateProjectUrl = function ($input) use ($apiHost, $client) {
-            $config = is_array($input) ? $input : [
-                'path' => "/projects/detail/{$input}/overview",
-                'project_id' => $input,
-                'query' => [],
-            ];
-            if (!$config['project_id'] && !$config['query']) {
-                return null;
-            }
-            $companyId = $client->getCompany($config['project_id'])['id'];
-            $apiHost .= $companyId ? "/p/{$companyId}" : '';
-            return "{$apiHost}{$config['path']}?" . http_build_query($config['query']);
-        };
-        $settings->getCompanyForProject = function ($projectId) use ($client) {
-            return $client->getCompany($projectId)['name'];
-        };
+        $this->loadCompany($settings, $client, $apiHost);
 
         $rawFilename = $reporter['filename']($monthStart, $monthEnd, $settings);
         $extraFilename = $settings->filter ? "-{$settings->filter}" : '';
@@ -186,6 +170,27 @@ class GenerateReportCommand extends Command
             $clients[] = $tenantClient;
         }
         return [new Client\CompositeClient($clients), $apiHost, $apiKeysSeparated];
+    }
+
+    private function loadCompany(ReportSettings $settings, CostlockerClient $client, $apiHost)
+    {
+        $settings->company = $client->getFirstCompanyName();
+        $settings->generateProjectUrl = function ($input) use ($apiHost, $client) {
+            $config = is_array($input) ? $input : [
+                'path' => "/projects/detail/{$input}/overview",
+                'project_id' => $input,
+                'query' => [],
+            ];
+            if (!$config['project_id'] && !$config['query']) {
+                return null;
+            }
+            $companyId = $client->getCompany($config['project_id'])['id'];
+            $apiHost .= $companyId ? "/p/{$companyId}" : '';
+            return "{$apiHost}{$config['path']}?" . http_build_query($config['query']);
+        };
+        $settings->getCompanyForProject = function ($projectId) use ($client) {
+            return $client->getCompany($projectId)['name'];
+        };
     }
 
     private function exportToXls(ReportSettings $settings, $filename)

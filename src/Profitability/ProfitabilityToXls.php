@@ -142,7 +142,11 @@ class ProfitabilityToXls
                         ["=SUM(L{$firstProjectRow}:L{$lastProjectRow})", NumberFormat::FORMAT_NUMBER_00],
                         '',
                         ["=SUM(N{$firstProjectRow}:N{$lastProjectRow})", $currencyFormat],
-                        ["=SUM(O{$firstProjectRow}:O{$lastProjectRow})", NumberFormat::FORMAT_PERCENTAGE_00, $monthReport->highlightCell()],
+                        [
+                            "=SUM(O{$firstProjectRow}:O{$lastProjectRow})",
+                            NumberFormat::FORMAT_PERCENTAGE_00,
+                            $monthReport->highlightCell()
+                        ],
                         ["=1-O{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                         ["=N{$summaryRow}-H{$summaryRow}", $currencyFormat],
                         ["=SUM(R{$firstProjectRow}:R{$lastProjectRow})", $currencyFormat],
@@ -426,7 +430,11 @@ class ProfitabilityToXls
                     ["=(B{$groupHours}*L{$positionRowId})*B2/B{$summaryRow}*B{$positionRowId}", $currencyFormat],
                     ["=C{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00],
                     ["=D{$positionRowId}", $currencyFormat],
-                    ["=N{$positionRowId}-L{$positionRowId}", NumberFormat::FORMAT_PERCENTAGE_00, $xls->evaluateNumber()],
+                    [
+                        "=N{$positionRowId}-L{$positionRowId}",
+                        NumberFormat::FORMAT_PERCENTAGE_00,
+                        $xls->evaluateNumber()
+                    ],
                     ["=O{$positionRowId}-M{$positionRowId}", $currencyFormat],
                 ]);
         }
