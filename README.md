@@ -31,6 +31,14 @@ cp app/config.default.php app/config.php
 nano app/config.php
 ```
 
+##### Docker
+
+```bash
+docker build --file .docker/Dockerfile --tag reports-costlocker ./
+docker run --rm -it \
+    reports-costlocker bin/console
+```
+
 ## Available reports
 
 All examples are using environment variable with url and 

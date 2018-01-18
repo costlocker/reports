@@ -1,0 +1,6 @@
+.git
+tests/
+vendor/
+var/cache/
+var/drive/.client/
+var/drive/2fresh/files.json
