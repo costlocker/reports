@@ -12,11 +12,18 @@ if (file_exists(__DIR__ . '/../app/config.php')) {
 } else {
     $config = require __DIR__ . '/../app/config.default.php';
 }
+$config += [
+    'mailer' => \Swift_MailTransport::newInstance(),
+    'customReports' => function () {
+        return [];
+    },
+];
 
 $application = new Symfony\Component\Console\Application();
 $application->addCommands([
     new \Costlocker\Reports\GenerateReportCommand(
-        new \Costlocker\Reports\Export\Mailer(Swift_Mailer::newInstance($config['mailer']))
+        new \Costlocker\Reports\Export\Mailer(Swift_Mailer::newInstance($config['mailer'])),
+        $config['customReports']
     ),
 ]);
 $application->run();

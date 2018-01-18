@@ -19,10 +19,11 @@ class GenerateReportCommand extends Command
     private $mailer;
     private $spreadsheet;
 
-    public function __construct(Mailer $mailer)
+    public function __construct(Mailer $mailer, $customReportsBuilder = null)
     {
         $this->spreadsheet = new Spreadsheet();
         $this->spreadsheet->removeSheetByIndex(0);
+        $customReports = is_callable($customReportsBuilder) ? $customReportsBuilder($this->spreadsheet) : [];
         $this->providers = [
             'profitability' => [
                 'interval' => function (\DateTime $monthStart, \DateTime $monthEnd) {
@@ -37,7 +38,7 @@ class GenerateReportCommand extends Command
                     return "{$company}-{$monthStart->format('Y-m')}";
                 },
             ],
-        ];
+        ] + $customReports;
         $this->mailer = $mailer;
         parent::__construct();
     }
