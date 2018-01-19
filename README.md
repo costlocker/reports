@@ -130,5 +130,5 @@ Contributions from others would be very much appreciated! Send
 
 ## License
 
-Copyright (c) 2017 Costlocker SE. MIT Licensed,
+Copyright (c) 2017, 2018 Costlocker SE. MIT Licensed,
 see [LICENSE](/LICENSE) for details.
