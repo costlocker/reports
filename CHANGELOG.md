@@ -1,6 +1,14 @@
 
 # Changelog
 
+## v1.2.0 (_2018-01-19_)
+
+* person can have different settings per month in [`--personsSettings`](/tests/fixtures/persons.csv#L4)
+* load data from multiple companies - `--host "https://new.costlocker.com|firstCompany|secondCompany"`
+* define custom reports in [app/config.php](/app/config.default.php#L6)
+* smaller improvements and bugfixes in Profitability report
+* add [Dockerfile](/.docker/Dockerfile)
+
 ## v1.1.1 (_2017-08-31_)
 
 * `--drive-client` - allow separating Google Drive client configuration (`client.json`, `token.json`)
