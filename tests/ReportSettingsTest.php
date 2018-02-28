@@ -2,7 +2,7 @@
 
 namespace Costlocker\Reports;
 
-class ReportSettingsTest extends \PHPUnit_Framework_TestCase
+class ReportSettingsTest extends \PHPUnit\Framework\TestCase
 {
     public function testLoadPersonHoursFromCsvFile()
     {

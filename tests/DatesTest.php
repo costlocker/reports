@@ -2,7 +2,7 @@
 
 namespace Costlocker\Reports;
 
-class DatesTest extends \PHPUnit_Framework_TestCase
+class DatesTest extends \PHPUnit\Framework\TestCase
 {
     /** @dataProvider provideMonth */
     public function testGetNextMonth($currentMonth, $expectedMonth)

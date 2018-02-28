@@ -2,7 +2,7 @@
 
 namespace Costlocker\Reports\Profitability;
 
-class ProfitabilityReportTest extends \PHPUnit_Framework_TestCase
+class ProfitabilityReportTest extends \PHPUnit\Framework\TestCase
 {
     public function testFilterOnlyPeopleAndProjectsWithTrackedTime()
     {

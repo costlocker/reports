@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use Costlocker\Reports\Client\HttpClient;
 
-class CostlockerClientTest extends \PHPUnit_Framework_TestCase
+class CostlockerClientTest extends \PHPUnit\Framework\TestCase
 {
     private $httpClient;
     private $costlockerClient;
