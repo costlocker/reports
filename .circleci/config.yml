@@ -13,16 +13,7 @@ jobs:
     - checkout
 
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_RESULTS
-    - restore_cache:
-        keys:
-        - v1-dep-{{ .Branch }}-
-        - v1-dep-master-
-        - v1-dep-
     - run: composer install --no-interaction
-    - save_cache:
-        key: v1-dep-{{ .Branch }}-{{ epoch }}
-        paths:
-        - ~/.composer/cache
 
     - run: bin/qa
     - run: cp ./var/QA/log-junit.xml $CIRCLE_TEST_RESULTS
