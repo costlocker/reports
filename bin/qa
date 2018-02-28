@@ -1,7 +1,7 @@
 #!/bin/sh
 
 phpqa --report --verbose \
-    --tools phpcs:0,phpmd:5,phpcpd:0,phpmetrics,phploc,pdepend \
+    --tools phpcs:0,phpmd:5,phpcpd:0,phpmetrics,phploc,pdepend,phpunit:0 \
     --buildDir var/QA \
     --analyzedDir ./ \
     --ignoredDirs vendor

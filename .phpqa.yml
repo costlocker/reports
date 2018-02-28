@@ -1,0 +1,6 @@
+phpunit:
+    binary: vendor/bin/phpunit
+    reports:
+        file:
+            log: [junit]
+            testdox: [html, text]

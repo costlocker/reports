@@ -6,7 +6,7 @@ jobs:
     shell: /bin/bash --login
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
-      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      CIRCLE_TEST_RESULTS: /tmp/circleci-test-results
     docker:
     - image: zdenekdrahos/phpqa:v1.18.0
     steps:
@@ -24,14 +24,11 @@ jobs:
         paths:
         - ~/.composer/cache
 
-    - run: vendor/bin/phpunit --testdox-html ./var/tests/testdox.html --testdox-text ./var/tests/testdox.txt
     - run: bin/qa
+    - run: cp ./var/QA/log-junit.xml $CIRCLE_TEST_RESULTS
     - run: cp -r ./var/QA $CIRCLE_ARTIFACTS
-    - run: cp -r ./var/tests $CIRCLE_ARTIFACTS
 
     - store_test_results:
         path: /tmp/circleci-test-results
     - store_artifacts:
         path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
