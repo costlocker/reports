@@ -62,7 +62,6 @@ class ProfitabilityProvider
 
         $people = [];
         list($currentTimesheet, $activeProjects) = $this->groupTimesheetByPersonAndProject($month, $month, true);
-        $nextTimesheet = $this->groupTimesheetByPersonAndProject(Dates::getNextMonth($month));
         $personnelCosts = $this->personnelCosts($activeProjects);
 
         foreach ($rawData['Simple_People'] as $person) {
@@ -74,15 +73,15 @@ class ProfitabilityProvider
             ];
 
             $projects = array_map(
-                function (array $projects) use ($currentTimesheet, $nextTimesheet, $person) {
+                function (array $projects) use ($currentTimesheet, $person) {
                     $project = reset($projects);
-
+                    list($trackedHours, $billableHours) =
+                        $currentTimesheet[$person['id']][$project['project_id']] ?? [0, 0];
                     return [
                         'client_rate' => $project['client_rate'],
                         'hrs_budget' => $this->client->sum($projects, 'hrs_budget'),
-                        'hrs_tracked_total' => $this->client->sum($projects, 'hrs_tracked'),
-                        'hrs_tracked_month' => $currentTimesheet[$person['id']][$project['project_id']] ?? 0,
-                        'hrs_tracked_after_month' => $nextTimesheet[$person['id']][$project['project_id']] ?? 0,
+                        'hrs_tracked_month' => $trackedHours,
+                        'hrs_billable_month' => $billableHours,
                     ];
                 },
                 $this->client->map($personnelCosts[$person['id']] ?? [], 'project_id')
@@ -121,15 +120,13 @@ class ProfitabilityProvider
         return $this->client->map($rawData['Simple_Projects_Ce'], 'person_id');
     }
 
-    private function groupTimesheetByPersonAndProject(
-        \DateTime $monthStart,
-        \DateTime $monthEnd = null,
-        $withProjects = false
-    ) {
+    private function groupTimesheetByPersonAndProject(\DateTime $monthStart, \DateTime $monthEnd)
+    {
         $rawData = $this->client->request([
             'Simple_Timesheet' => [
                 'datef' => $monthStart->format('Y-m-01'),
-                'datet' => $monthEnd ? $monthEnd->format('Y-m-t') : null,
+                'datet' => $monthEnd->format('Y-m-t'),
+                'withBillable' => true,
             ],
         ]);
         $projects = [];
@@ -142,8 +139,9 @@ class ProfitabilityProvider
                             array_keys($this->client->map($projectSheet, 'project'))
                         );
                         $trackedSeconds = $this->client->sum($projectSheet, 'interval');
+                        $billableSeconds = $this->client->sum($projectSheet, 'billable');
 
-                        return $trackedSeconds / 3600;
+                        return [$trackedSeconds / 3600, $billableSeconds / 3600];
                     },
                     $this->client->map($personSheet, 'project')
                 );
@@ -151,6 +149,6 @@ class ProfitabilityProvider
             $this->client->map($rawData['Simple_Timesheet'], 'person')
         );
 
-        return $withProjects ? [$timesheet, array_unique($projects)] : $timesheet;
+        return [$timesheet, array_unique($projects)];
     }
 }

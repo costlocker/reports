@@ -161,9 +161,6 @@ class ProfitabilityToXls
                 $projectRowId = $monthReport->getRowId();
                 $isBillableProject = $project['client_rate'] > 0;
                 $nonBillableMoney = ["=-1*((H{$summaryRow}/G{$summaryRow})*L{$projectRowId})", $currencyFormat];
-                $remainingBillable =
-                    "J{$projectRowId}-({$project['hrs_tracked_total']}" .
-                    "-{$project['hrs_tracked_after_month']}-I{$projectRowId})";
                 $projectUrl = $settings->generateProjectUrl->__invoke($projectId);
 
                 $monthReport
@@ -179,10 +176,7 @@ class ProfitabilityToXls
                         '',
                         [$project['hrs_tracked_month'], NumberFormat::FORMAT_NUMBER_00],
                         [$project['hrs_budget'], NumberFormat::FORMAT_NUMBER_00],
-                        [
-                            "=MIN(I{$projectRowId}, MAX(0, {$remainingBillable}))",
-                            NumberFormat::FORMAT_NUMBER_00
-                        ],
+                        [$project['hrs_billable_month'], NumberFormat::FORMAT_NUMBER_00],
                         ["=MAX(0, I{$projectRowId}-K{$projectRowId})", NumberFormat::FORMAT_NUMBER_00],
                         [$project['client_rate'], $currencyFormat],
                         ["=K{$projectRowId}*M{$projectRowId}", $currencyFormat],

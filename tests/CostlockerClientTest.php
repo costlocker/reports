@@ -42,7 +42,7 @@ class CostlockerClientTest extends \PHPUnit\Framework\TestCase
 
     public function testGroupPeopleByProject()
     {
-        $this->whenApiReturns('people.json', 'timesheet-february.json', 'timesheet-march.json', 'personnel-costs.json');
+        $this->whenApiReturns('people.json', 'timesheet-february.json', 'personnel-costs.json');
         $this->assertEquals(
             [
                 1 => [
@@ -55,16 +55,14 @@ class CostlockerClientTest extends \PHPUnit\Framework\TestCase
                         33 => [
                             'client_rate' => 20,
                             'hrs_budget' => 10 + 2,
-                            'hrs_tracked_total' => 1.0858333333333401,
                             'hrs_tracked_month' => 1800 / 3600,
-                            'hrs_tracked_after_month' => 0,
+                            'hrs_billable_month' => 1800 / 3600,
                         ],
                         1 => [
                             'client_rate' => 800,
                             'hrs_budget' => 70 + 1,
-                            'hrs_tracked_total' => 2.611944444444422,
                             'hrs_tracked_month' => (9823 + 2000) / 3600,
-                            'hrs_tracked_after_month' => 6423 / 3600,
+                            'hrs_billable_month' => (0 + 2000) / 3600,
                         ],
                     ],
                 ],
@@ -78,16 +76,14 @@ class CostlockerClientTest extends \PHPUnit\Framework\TestCase
                         33 => [
                             'client_rate' => 50,
                             'hrs_budget' => 10 + 20,
-                            'hrs_tracked_total' => 0,
                             'hrs_tracked_month' => 0,
-                            'hrs_tracked_after_month' => 0,
+                            'hrs_billable_month' => 0,
                         ],
                         1 => [
                             'client_rate' => 500,
                             'hrs_budget' => 100,
-                            'hrs_tracked_total' => 71.95,
                             'hrs_tracked_month' => 1823 / 3600,
-                            'hrs_tracked_after_month' => 0,
+                            'hrs_billable_month' => 1800 / 3600,
                         ],
                     ],
                 ],
