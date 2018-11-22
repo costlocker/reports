@@ -179,7 +179,7 @@ class ProfitabilityToXls
                         [$project['hrs_billable_month'], NumberFormat::FORMAT_NUMBER_00],
                         ["=MAX(0, I{$projectRowId}-K{$projectRowId})", NumberFormat::FORMAT_NUMBER_00],
                         [$project['client_rate'], $currencyFormat],
-                        ["=K{$projectRowId}*M{$projectRowId}", $currencyFormat],
+                        [$project['revenue'], $currencyFormat],
                         ["=K{$projectRowId}/G{$summaryRow}", NumberFormat::FORMAT_PERCENTAGE_00],
                         '',
                         '',

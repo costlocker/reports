@@ -9,6 +9,9 @@
             "task": "1",
             "interval": 1800,
             "billable": 1800,
+            "client_rate": 20,
+            "person_rate": 0,
+            "person_overhead": 0,
             "description": "API v2 documentation",
             "task_name": "Documentation"
         },
@@ -21,6 +24,9 @@
             "task": "2",
             "interval": 9823,
             "billable": 0,
+            "client_rate": 800,
+            "person_rate": 0,
+            "person_overhead": 0,
             "description": "API v3 documentation",
             "task_name": "Documentation"
         },
@@ -33,6 +39,9 @@
             "task": "2",
             "interval": 2000,
             "billable": 2000,
+            "client_rate": 800,
+            "person_rate": 0,
+            "person_overhead": 0,
             "description": "API v3 documentation",
             "task_name": "Documentation"
         },
@@ -45,6 +54,9 @@
             "task": "2",
             "interval": 1823,
             "billable": 1800,
+            "client_rate": 500,
+            "person_rate": 0,
+            "person_overhead": 0,
             "description": "API v3 documentation",
             "task_name": "Documentation"
         }

@@ -75,10 +75,11 @@ class ProfitabilityProvider
             $projects = array_map(
                 function (array $projects) use ($currentTimesheet, $person) {
                     $project = reset($projects);
-                    list($trackedHours, $billableHours) =
-                        $currentTimesheet[$person['id']][$project['project_id']] ?? [0, 0];
+                    list($trackedHours, $billableHours, $revenue) =
+                        $currentTimesheet[$person['id']][$project['project_id']] ?? [0, 0, 0];
                     return [
-                        'client_rate' => $project['client_rate'],
+                        'client_rate' => $billableHours ? $revenue / $billableHours : 0,
+                        'revenue' => $revenue,
                         'hrs_budget' => $this->client->sum($projects, 'hrs_budget'),
                         'hrs_tracked_month' => $trackedHours,
                         'hrs_billable_month' => $billableHours,
@@ -127,6 +128,7 @@ class ProfitabilityProvider
                 'datef' => $monthStart->format('Y-m-01'),
                 'datet' => $monthEnd->format('Y-m-t'),
                 'withBillable' => true,
+                'withRates' => true,
             ],
         ]);
         $projects = [];
@@ -139,9 +141,14 @@ class ProfitabilityProvider
                             array_keys($this->client->map($projectSheet, 'project'))
                         );
                         $trackedSeconds = $this->client->sum($projectSheet, 'interval');
-                        $billableSeconds = $this->client->sum($projectSheet, 'billable');
+                        $billableSeconds = 0;
+                        $revenue = 0;
+                        foreach ($projectSheet as $entry) {
+                            $billableSeconds += $entry['billable'];
+                            $revenue += ($entry['billable']  / 3600) * $entry['client_rate'];
+                        }
 
-                        return [$trackedSeconds / 3600, $billableSeconds / 3600];
+                        return [$trackedSeconds / 3600, $billableSeconds / 3600, $revenue];
                     },
                     $this->client->map($personSheet, 'project')
                 );
