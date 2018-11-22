@@ -1,6 +1,12 @@
 
 # Changelog
 
+## v2.0.0 (_2018-11-22_)
+
+* **Profitability report loads [billable hours](https://costlocker.docs.apiary.io/#introduction/changelog/september-2018) from API!**
+    * BC - estimates are no longer shared between person activities, [new budgets](https://blog.costlocker.com/try-out-new-ways-to-budget-projects-in-costlocker-e926bfaa7bd6) are supported _(client rate is dynamic)_
+    * _Costlocker_ - report can be replaced by [new business reports](https://blog.costlocker.com/new-business-perspectives-for-your-company-60cfb1287118), billable/non-billable hours are visible in [timesheet](https://blog.costlocker.cz/placené-vs-neplacené-hodiny-v-timesheetu-2e71a6b15c67)
+
 ## v1.2.0 (_2018-01-19_)
 
 * person can have different settings per month in [`--personsSettings`](/tests/fixtures/persons.csv#L4)
