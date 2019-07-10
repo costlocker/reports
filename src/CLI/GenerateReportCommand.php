@@ -11,7 +11,6 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Costlocker\Reports\GenerateReport;
 use Costlocker\Reports\GenerateReportPresenter;
 use Costlocker\Reports\ReportsRegistry;
-use Costlocker\Reports\Config\Enum;
 
 class GenerateReportCommand extends Command implements GenerateReportPresenter
 {
@@ -33,54 +32,46 @@ class GenerateReportCommand extends Command implements GenerateReportPresenter
     protected function configure()
     {
         $doc = [
-            'filter' => 'Additional filter for reports (e.g. filter profitability by position)',
-            'type' => 'Available reports: ' . implode(', ', $this->registry->getAvailableTypes()),
-            'dateRange' => '"' . implode('", "', [
-                Enum::DATE_RANGE_ALLTIME,
-                Enum::DATE_RANGE_WEEK,
-                Enum::DATE_RANGE_MONTHS,
-                Enum::DATE_RANGE_YEAR,
-            ]) . '"',
-            'date' => 'Meaning depends on selected dateRange',
+            'type' => '<comment>Available reports: </comment>' . implode(', ', $this->registry->getAvailableTypes()),
+            'deprecated' => 'Deprecated option from v2',
+            'schema' => realpath(__DIR__ . '/../Reports/Config/schema.json'),
         ];
         $this
             ->setName('report')
+            ->setDescription(
+                "Generate report <comment>bin/console report --config report.json</comment>, " .
+                "config file is created if <comment>--config</comment> is missing"
+            )
+            ->setHelp(<<<TXT
+Use JSON file
+<comment>\$ bin/console report --config Projects.Overview.json</comment>
+
+You can check JSON schema for supported fields and values - '{$doc['schema']}'.
+Generate JSON template by using other CLI options.
+<comment>\$ bin/console report Projects.Overview --host "https://new.costlocker.com|<YOUR_API_KEY>"</comment>
+TXT
+            )
             ->addOption('config', null, InputOption::VALUE_REQUIRED, 'Path to json config file')
             // deprecated configuration
             ->addArgument('type', InputArgument::OPTIONAL, $doc['type'])
-            ->addOption(
-                'dateRange',
-                'dr',
-                InputOption::VALUE_REQUIRED,
-                $doc['dateRange'],
-                Enum::DATE_RANGE_MONTHS
-            )
-            ->addOption('dateStart', 'ds', InputOption::VALUE_REQUIRED, $doc['date'], 'previous month')
-            ->addOption('dateEnd', 'de', InputOption::VALUE_REQUIRED, $doc['date'], 'previous month')
-            ->addOption('host', 'a', InputOption::VALUE_REQUIRED, 'apiUrl|apiKey')
-            ->addOption('currency', 'c', InputOption::VALUE_REQUIRED, 'Currency', Enum::CURRENCY_CZK)
-            ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, 'Person salary hours and position')
-            ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, 'Report recipients')
-            ->addOption('drive', 'd', InputOption::VALUE_OPTIONAL, 'Local directory with Google Drive configuration')
-            ->addOption('drive-client', 'dc', InputOption::VALUE_OPTIONAL, 'Shared client (client.json, token.json)')
-            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, $doc['filter'])
-            ->addOption('format', null, InputOption::VALUE_REQUIRED, 'xls,console,...', Enum::FORMAT_XLS);
+            ->addOption('monthStart', 'ms', InputOption::VALUE_REQUIRED, $doc['deprecated'])
+            ->addOption('monthEnd', 'me', InputOption::VALUE_REQUIRED, $doc['deprecated'])
+            ->addOption('host', 'a', InputOption::VALUE_REQUIRED, "{$doc['deprecated']} - apiUrl|apiKey")
+            ->addOption('currency', 'c', InputOption::VALUE_REQUIRED, $doc['deprecated'])
+            ->addOption('personsSettings', 'hh', InputOption::VALUE_REQUIRED, $doc['deprecated'])
+            ->addOption('email', 'e', InputOption::VALUE_OPTIONAL, "{$doc['deprecated']} - E-mail recipient")
+            ->addOption('drive', 'd', InputOption::VALUE_OPTIONAL, $doc['deprecated'])
+            ->addOption('drive-client', 'dc', InputOption::VALUE_OPTIONAL, $doc['deprecated'])
+            ->addOption('cache', null, InputOption::VALUE_NONE, $doc['deprecated'])
+            ->addOption('filter', 'f', InputOption::VALUE_OPTIONAL, $doc['deprecated'])
+            ->addOption('format', null, InputOption::VALUE_REQUIRED, $doc['deprecated']);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->output = $output;
         if (!$input->getOption('config')) {
-            $cliConfig = $this->buildConfig($input);
-            $newConfig = "config-{$cliConfig['reportType']}.json";
-            file_put_contents($newConfig, json_encode($cliConfig, JSON_PRETTY_PRINT));
-            return $this->error(
-                "<error>You are using legacy CLI options, please use --config</error>",
-                [
-                    "New config file created: {$newConfig}",
-                    "bin/console --config {$newConfig}",
-                ]
-            );
+            return $this->noConfigHelp($input);
         }
 
         $this->configFile = $input->getOption('config');
@@ -88,37 +79,66 @@ class GenerateReportCommand extends Command implements GenerateReportPresenter
         $this->generateReport->__invoke($this->currentConfig, $this);
     }
 
+    private function noConfigHelp(InputInterface $input)
+    {
+        $cliConfig = $this->buildConfig($input);
+        if (!$cliConfig) {
+            return $this->error(
+                "Report '{$input->getArgument('type')}' not found, please use one of available reporty types",
+                [
+                    'Available report types' => $this->registry->getAvailableTypes(),
+                    'Help' => 'bin/console report --help'
+                ]
+            );
+        }
+        $newConfig = "config-{$cliConfig['reportType']}.json";
+        file_put_contents($newConfig, json_encode($cliConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return $this->error(
+            "<info>You are using deprecated CLI options, use --config for generating report</info>",
+            [
+                "New config file created: {$newConfig}",
+                "bin/console --config {$newConfig}",
+            ]
+        );
+    }
+
     private function buildConfig(InputInterface $input)
     {
         list($type, $exportSettings) = explode(':', $input->getArgument('type')) + [1 => null];
-        list($apiHost, $apiKeysSeparated) = explode('|', $input->getOption('host'), 2) + [
-            1 => 'https://new.costlocker.com',
-            2 => 'token from https://new.costlocker.com/api-token',
+        if (!in_array($type, $this->registry->getAvailableTypes())) {
+            return null;
+        }
+        list($apiHost, $apiKeysSeparated) = array_filter(explode('|', $input->getOption('host'), 2)) + [
+            0 => 'https://new.costlocker.com',
+            1 => 'token from https://new.costlocker.com/api-token',
         ];
         $apiKeys = explode('|', $apiKeysSeparated);
         $defaultReport = $this->registry->getDefaultReport($type);
+        $oldOptionToCustomConfig = function ($key, $value) {
+            return $value ? ['key' => $key, 'format' => 'text', 'value' => $value] : [];
+        };
         return [
             'costlocker' => [
                 'host' => $apiHost,
                 'tokens' => $apiKeys,
             ],
             'reportType' => $type,
-            'config' => [
+            'config' => array_filter([
                 'title' => "{$type} report",
                 'currency' => $input->getOption('currency'),
-                'format' => $this->registry->getDefaultFormat($type),
                 'dateRange' => $defaultReport['config']['dateRange'],
                 'customDates' => array_values(array_filter([
-                    $this->convertDate($input->getOption('dateStart')),
-                    $this->convertDate($input->getOption('dateEnd')),
+                    $this->convertDate($input->getOption('monthStart')),
+                    $this->convertDate($input->getOption('monthEnd')),
                 ])),
-            ],
+                'format' => $this->registry->getDefaultFormat($type),
+            ]),
             'customConfig' => array_merge(
                 $defaultReport['customConfig'],
-                [
-                    ['key' => 'exportSettings', 'format' => 'text', 'value' => $exportSettings ?: ''],
-                    ['key' => 'filter', 'format' => 'text', 'value' => $input->getOption('filter') ?: ''],
-                ]
+                array_filter([
+                    $oldOptionToCustomConfig('exportSettings', $exportSettings),
+                    $oldOptionToCustomConfig('filter', $input->getOption('filter')),
+                ])
             ),
             'export' => [
                 'filename' => "report-{$type}",
