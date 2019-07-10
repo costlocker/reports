@@ -1,0 +1,75 @@
+#!/usr/bin/env sh
+
+# DOCKER_USER, DOCKER_TOKEN defined in secret env variables, other variables are loaded from default env vars
+## https://circleci.com/docs/2.0/env-vars/#built-in-environment-variables
+## https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+## Local test (docker image is not published if DOCKER_USER and DOCKER_TOKEN are not defined)
+## CI_COMMIT_SHA=$(git rev-parse HEAD) CI_COMMIT_REF_NAME=$(git rev-parse --abbrev-ref HEAD) .circleci/build-docker-image
+
+DOCKER_USER=${DOCKER_USER:-}
+DOCKER_TOKEN=${DOCKER_TOKEN:-}
+DOCKER_FILE=${DOCKER_FILE:-".circleci/Dockerfile"}
+DOCKER_TAG=""
+
+# Circle.ci adapter
+CI_COMMIT_SHA=${CI_COMMIT_SHA:-$CIRCLE_SHA1}
+CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME:-$CIRCLE_BRANCH}
+
+# Github package registry
+CI_REGISTRY=${CI_REGISTRY:-"docker.pkg.github.com"}
+CI_REGISTRY_IMAGE=${CI_REGISTRY_IMAGE:-"$CI_REGISTRY/costlocker/reports"}
+
+APP_DIR="$(realpath $(dirname $(realpath $0))/..)"
+
+run () {
+    check_required_variables
+    load_docker_variables
+    build_docker_image
+}
+
+check_required_variables () {
+    check_required_variable "DOCKER_FILE" ${DOCKER_FILE:-}
+    check_required_variable "CI_COMMIT_SHA" ${CI_COMMIT_SHA:-}
+    check_required_variable "CI_COMMIT_REF_NAME" ${CI_COMMIT_REF_NAME:-}
+    check_required_variable "CI_REGISTRY" ${CI_REGISTRY:-}
+    check_required_variable "CI_REGISTRY_IMAGE" ${CI_REGISTRY_IMAGE:-}
+}
+
+check_required_variable () {
+    VARIABLE_NAME=$1
+    VARIABLE_VALUE=$2
+    if [ -z "${VARIABLE_VALUE}" ]; then
+        echo "$VARIABLE_NAME is required,  $VARIABLE_NAME=something .ci/build-docker-image"
+        exit 1
+    fi
+}
+
+load_docker_variables () {
+    BRANCH=$(normalize_string $CI_COMMIT_REF_NAME)
+    check_required_variable "BRANCH", ${BRANCH:-}
+
+    DOCKER_TAG="$CI_REGISTRY_IMAGE/$BRANCH:${CI_COMMIT_SHA:0:7}"
+
+    echo "Dockefile: $DOCKER_FILE"
+    echo "Build context: $APP_DIR"
+    echo "Publish image: $DOCKER_TAG"
+    echo
+}
+
+normalize_string () {
+    RAW_VALUE=$1
+    NORMALIZED=${RAW_VALUE//[-\/\\]/_}
+    echo $NORMALIZED
+}
+
+build_docker_image () {
+    set -e
+    time docker build --file $DOCKER_FILE --tag $DOCKER_TAG $APP_DIR
+
+    check_required_variable "DOCKER_USER" ${DOCKER_USER:-}
+    check_required_variable "DOCKER_TOKEN" ${DOCKER_TOKEN:-}
+    docker login --username $DOCKER_USER --password $DOCKER_TOKEN $CI_REGISTRY
+    time docker push $DOCKER_TAG
+}
+
+run

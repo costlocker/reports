@@ -1,7 +1,7 @@
 FROM php:7.0-cli-alpine
 RUN apk update \
-    && apk add zlib-dev \
-    && docker-php-ext-install zip
+    && apk add zlib-dev libpng-dev \
+    && docker-php-ext-install zip gd
 RUN curl -sS https://getcomposer.org/installer | \
     php -- --install-dir=/usr/local/bin/ --filename=composer
 COPY ./composer.json ./composer.lock /app/

@@ -1,6 +1,8 @@
 .git
+.circleci
 tests/
 vendor/
-var/cache/
-var/drive/.client/
-var/drive/2fresh/files.json
+var/exports/*.xlsx
+var/exports/*.html
+var/googleDrive/*.json
+var/logs/*.log

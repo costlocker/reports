@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  qa:
     working_directory: ~/costlocker/reports
     parallelism: 1
     shell: /bin/bash --login
@@ -23,3 +23,22 @@ jobs:
         path: /tmp/circleci-test-results
     - store_artifacts:
         path: /tmp/circleci-artifacts
+
+  docker:
+    working_directory: ~/costlocker/reports
+    parallelism: 1
+    docker:
+    - image: docker:17.05.0-ce-git
+    steps:
+    - checkout
+    - setup_remote_docker
+    - run: .circleci/build-docker-image
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - qa
+      - docker:
+          requires:
+            - qa
