@@ -1,0 +1,17 @@
+{
+    "id": "Timesheet.Week",
+    "config": {
+        "title": "Weekly timesheet for groups",
+        "dateRange": "week"
+    },
+    "customConfig": [
+        {
+            "key": "groupNames",
+            "format": "json",
+            "value": []
+        }
+    ],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Timesheet.Week.png?v=20190702"
+    }
+}

@@ -7,23 +7,50 @@ require __DIR__ . '/../vendor/autoload.php';
 
 \Symfony\Component\Debug\ErrorHandler::register();
 
-if (file_exists(__DIR__ . '/../app/config.php')) {
-    $config = require __DIR__ . '/../app/config.php';
-} else {
-    $config = require __DIR__ . '/../app/config.default.php';
-}
-$config += [
-    'mailer' => \Swift_MailTransport::newInstance(),
-    'customReports' => function () {
-        return [];
-    },
-];
+$varDir = __DIR__ . '/../var';
 
-$application = new Symfony\Component\Console\Application();
-$application->addCommands([
-    new \Costlocker\Reports\GenerateReportCommand(
-        new \Costlocker\Reports\Export\Mailer(Swift_Mailer::newInstance($config['mailer'])),
-        $config['customReports']
-    ),
+$loaders = [
+    'email' =>
+        new \Costlocker\Reports\Load\Mailer(
+            new \Swift_Mailer(
+                (new \Swift_SmtpTransport(getenv('MAILER_HOST'), getenv('MAILER_PORT')))
+                    ->setUsername(getenv('MAILER_USERNAME'))
+                    ->setPassword(getenv('MAILER_PASSWORD'))
+            ),
+            getenv('MAILER_SENDER')
+        ),
+    'googleDrive' =>
+        new \Costlocker\Reports\Load\GoogleDrive("{$varDir}/googleDrive")
+];
+$reportsRegistry = new Costlocker\Reports\ReportsRegistry(
+    [
+        Costlocker\Reports\Custom\Projects\BillingAndTagsExtractor::class,
+        Costlocker\Reports\Custom\Projects\ProjectsOverviewExtractor::class,
+        Costlocker\Reports\Custom\Company\CompanyOverviewExtractor::class,
+        Costlocker\Reports\Custom\Timesheet\GroupedRecurringTimesheetExtractor::class,
+        Costlocker\Reports\Custom\Timesheet\TrackedHoursExtractor::class,
+        Costlocker\Reports\Custom\Timesheet\WeeklyTimesheetExtractor::class,
+    ],
+    $loaders
+);
+if (getenv('REPORTS_AUTOLOAD') === 'true') {
+    $reportsRegistry = Costlocker\Reports\ReportsRegistry::autoload($loaders);
+}
+
+$logger = new Monolog\Logger(
+    'costlocker/reports',
+    [
+        new \Monolog\Handler\StreamHandler("{$varDir}/logs/cli.log")
+    ]
+);
+
+$generateReport = new Costlocker\Reports\GenerateReport(
+    new \Costlocker\Reports\Config\ParseConfig($reportsRegistry, "{$varDir}/exports"),
+    $logger
+);
+
+$console = new Symfony\Component\Console\Application();
+$console->addCommands([
+    new \Costlocker\Reports\CLI\GenerateReportCommand($generateReport, $reportsRegistry),
 ]);
-$application->run();
+$console->run();

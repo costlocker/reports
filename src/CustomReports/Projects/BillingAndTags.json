@@ -1,0 +1,11 @@
+{
+    "id": "Projects.BillingAndTags",
+    "config": {
+        "title": "Projects Billing & Tags",
+        "dateRange": "alltime"
+    },
+    "customConfig": [],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Projects.BillingAndTags.png?v=20190702"
+    }
+}

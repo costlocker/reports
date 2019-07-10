@@ -1,5 +1,4 @@
 !.gitkeep
-/app/config.php
+.env
 /var/
 /vendor/
-/qa/

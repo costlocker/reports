@@ -1,0 +1,21 @@
+{
+    "id": "Timesheet.TrackedHours",
+    "config": {
+        "title": "Yearly tracked hours",
+        "dateRange": "year"
+    },
+    "customConfig": [
+        {
+            "key": "extraColumns",
+            "format": "json",
+            "value": [
+                "project_id",
+                "activity",
+                "person_bonus_id"
+            ]
+        }
+    ],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Timesheet.TrackedHours.png?v=20190702"
+    }
+}

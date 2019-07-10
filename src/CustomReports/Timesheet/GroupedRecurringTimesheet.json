@@ -1,0 +1,25 @@
+{
+    "id": "Timesheet.RecurringProject",
+    "config": {
+        "title": "Grouped timesheet for recurring project",
+        "dateRange": "year"
+    },
+    "customConfig": [
+        {
+            "key": "recurringProjectId",
+            "format": "text",
+            "value": "123456"
+        },
+        {
+            "key": "allocatedActivityHours",
+            "format": "json",
+            "value": {
+                "123456": 8,
+                "123457": 10
+            }
+        }
+    ],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Timesheet.RecurringProject.png?v=20190702"
+    }
+}

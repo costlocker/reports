@@ -1,0 +1,37 @@
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1>{{ settings.title }}</h1>
+                {% for report in reports %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Projekt</th>
+                            <th>Klient</th>
+                            <th>Osoba</th>
+                            <th>Aktivita</th>
+                            <th>Natrackováno</th>
+                            <th>Tým</th>
+                        </tr>
+                    </thead>
+                    {% for entry in report.entries %}
+                        <tr>
+                            <td>{{ entry.date | date('d.m.Y') }}</td>
+                            <td>{{ entry.project | default('[Nepřiřazený projekt]') }}</td>
+                            <td>{{ entry.client | default('[Nepřiřazený klient]') }}</td>
+                            <td>{{ entry.person }}</td>
+                            <td>{{ entry.activity | default('[Nepřiřazená činnost]') }}</td>
+                            <td>{{ (entry.scs_tracked / 3600.0) | number_format(2) }}h</td>
+                            <td>{{ entry.team }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>

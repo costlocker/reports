@@ -1,0 +1,11 @@
+{
+    "id": "Projects.Overview",
+    "config": {
+        "title": "Projects Overview",
+        "dateRange": "alltime"
+    },
+    "customConfig": [],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Projects.Overview.png?v=20190702"
+    }
+}

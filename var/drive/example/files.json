@@ -1,5 +1,0 @@
-{
-    "persons-from-google-drive.csv": "you can load persons from drive --personsSettings persons-from-google-drive.csv",
-    "var/reports/2016-01.xlsx": "fileId from google drive",
-    "var/reports/2017-01.xlsx": "..."
-}

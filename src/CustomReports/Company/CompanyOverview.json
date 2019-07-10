@@ -1,0 +1,27 @@
+{
+    "id": "Company.Overview",
+    "config": {
+        "title": "Company Overview",
+        "dateRange": "alltime"
+    },
+    "customConfig": [
+        {
+            "key": "internalClientName",
+            "format": "text",
+            "value": "My Company"
+        },
+        {
+            "key": "extraTakeout",
+            "format": "text",
+            "value": ["Simple_Projects_Ce"]
+        },
+        {
+            "key": "isXlsPrecalculated",
+            "format": "text",
+            "value": true
+        }
+    ],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Company.Overview.png?v=20190702"
+    }
+}

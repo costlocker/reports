@@ -1,0 +1,190 @@
+{
+    "type": "object",
+    "required": [
+        "reportType",
+        "costlocker",
+        "config",
+        "export"
+    ],
+    "properties": {
+        "reportType": {
+            "$ref": "#/definitions/reportTypes"
+        },
+        "costlocker": {
+            "type": "object",
+            "required": [
+                "host",
+                "tokens"
+            ],
+            "properties": {
+                "host": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "tokens": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "minLength": 40,
+                        "maxLength": 40
+                    }
+                }
+            }
+        },
+        "config": {
+            "type": "object",
+            "required": [
+                "title",
+                "dateRange"
+            ],
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "dateRange": { 
+                    "$ref": "#/definitions/dateRangeTypes"
+                },
+                "customDates": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "items": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                },
+                "currency": { 
+                    "$ref": "#/definitions/currencies"
+                },
+                "format": { 
+                    "$ref": "#/definitions/formats"
+                }
+            }
+        },
+        "customConfig": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "key",
+                    "format",
+                    "value"
+                ],
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "format": {
+                        "type": "string",
+                        "enum": [
+                            "json",
+                            "text"
+                        ]
+                    },
+                    "value": {
+                        "oneOf": [
+                            { "type": "boolean" },
+                            { "type": "string" },
+                            { "type": "object" },
+                            { "type": "array" }
+                        ]
+                    }
+                }
+            }
+        },
+        "export": {
+            "type": "object",
+            "required": [
+                "filename"
+            ],
+            "properties": {
+                "filename": {
+                    "type": "string",
+                    "pattern": "^[^.]+$"
+                },
+                "email": {
+                    "oneOf": [
+                        {"type": "null"},
+                        {
+                            "type": "string",
+                            "format": "email"
+                        }
+                    ]
+                },
+                "googleDrive": {
+                    "oneOf": [
+                        {"type": "null"},
+                        {
+                            "type": "object",
+                            "required": [
+                                "folderId",
+                                "files"
+                            ],
+                            "properties": {
+                                "folderId": {
+                                    "oneOf": [
+                                        {"type": "null"},
+                                        {
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "files": {
+                                    "oneOf": [
+                                        { "type": "object" },
+                                        {
+                                            "type": "array",
+                                            "minItems": 0,
+                                            "maxItems": 0
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "preview": {
+            "type": "object",
+            "required": [
+                "image"
+            ],
+            "properties": {
+                "image": {
+                    "type": "string",
+                    "format": "uri"
+                }
+            }
+        }
+    },
+    "definitions": {
+        "reportTypes": {
+            "type": "string",
+            "enum": "{DYNAMIC_REPORTS_ENUM}"
+        },
+        "dateRangeTypes": {
+            "type": "string",
+            "enum": [
+                "week",
+                "months",
+                "year",
+                "alltime"
+            ]
+        },
+        "currencies": {
+            "type": "string",
+            "enum": [
+                "CZK",
+                "EUR"
+            ]
+        },
+        "formats": {
+            "type": "string",
+            "enum": [
+                "xls",
+                "html"
+            ]
+        }
+    }
+}
