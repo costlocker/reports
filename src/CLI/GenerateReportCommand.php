@@ -171,14 +171,14 @@ TXT
             "<info>Months count:</info> " . count($dates),
             "<info>Months interval:</info> {$interval}",
             "<info>Custom config:</info> " . json_encode($runtimeConfig['customConfig']),
-            "<info>Uploaders:</info> " . implode(', ', array_keys(array_filter($runtimeConfig['export']))),
+            "<info>Exporters:</info> " . implode(', ', array_keys(array_filter($runtimeConfig['export']))),
             '',
         ]);
         $this->progressbar = new ProgressBar($this->output, count($dates));
         if ($dates) {
             $this->progressbar->start();
         }
-        $this->durations['apiStart'] = microtime(true);
+        $this->durations['extractStart'] = microtime(true);
     }
 
     public function finishExtracting(\DateTime $date)
@@ -194,12 +194,12 @@ TXT
     {
         $this->progressbar->finish();
         $this->output->writeln('');
-        $this->durations['exportStart'] = microtime(true);
+        $this->durations['transformStart'] = microtime(true);
     }
 
     public function startLoading()
     {
-        $this->durations['uploadStart'] = microtime(true);
+        $this->durations['loadStart'] = microtime(true);
     }
 
     public function finish(array $exports)
@@ -242,12 +242,15 @@ TXT
 
     private function calculateDurations()
     {
-        $end = microtime(true);
+        $this->durations['end'] = microtime(true);
+        $calcDuration = function ($start, $end) {
+            return round($this->durations[$end] - $this->durations[$start], 3);
+        };
         return [
-            'total' => $end - $this->durations['exportStart'],
-            'api' => $this->durations['exportStart'] - $this->durations['apiStart'],
-            'export' => $this->durations['uploadStart'] - $this->durations['exportStart'],
-            'upload' => $end - $this->durations['uploadStart'],
+            'total' => $calcDuration('extractStart', 'end'),
+            'extract (api)' => $calcDuration('extractStart', 'transformStart'),
+            'transform (xls|html)' => $calcDuration('transformStart', 'loadStart'),
+            'load (export)' => $calcDuration('loadStart', 'end'),
         ];
     }
 }
