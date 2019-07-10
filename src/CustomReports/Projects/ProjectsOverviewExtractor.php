@@ -41,9 +41,14 @@ class ProjectsOverviewExtractor extends Extractor
                         'state' => $project['state'],
                         'client_id' => $project['client_id'],
                         'project_id' => $project['jobid'],
-                        'budget_type' => $project['budget']['progress_type']
-                            ? "{$project['budget']['type']} ({$project['budget']['progress_type']})"
-                            : $project['budget']['type'],
+                        'budget' => [
+                            'type' => $project['budget']['type'],
+                            'progress_type' => $project['budget']['progress_type'],
+                            'bill_exceeded_estimates' => $project['budget']['bill_exceeded_estimates'],
+                            'total' => $project['budget']['progress_type']
+                                ? "{$project['budget']['type']} ({$project['budget']['progress_type']})"
+                                : $project['budget']['type'],
+                        ],
                         'dates' => [
                             'start' => \DateTime::createFromFormat('Y-m-d', $project['da_start']),
                             'end' => \DateTime::createFromFormat('Y-m-d', $project['da_end']),
@@ -73,7 +78,10 @@ class ProjectsOverviewExtractor extends Extractor
                         $project['financialMetrics']['revenue'] +
                         $project['financialMetrics']['discount'] -
                         $expenses[$project['id']]['billed'],
-                    'peopleCosts' => $people[$project['id']]['costs'],
+                    'peopleCosts' => $people[$project['id']]['costs_people'],
+                    'overheadCosts' => $people[$project['id']]['costs_overheads'],
+                    'peopleRevenueGain' => $people[$project['id']]['gain'],
+                    'peopleRevenueLoss' => $people[$project['id']]['loss'],
                     'expensesRevenue' => $expenses[$project['id']]['billed'],
                     'expensesCosts' => $expenses[$project['id']]['purchased'],
                     'billingBilled' => $billing[$project['id']]['billed'],
@@ -90,23 +98,47 @@ class ProjectsOverviewExtractor extends Extractor
 
     private function loadPeople(array $projectIds)
     {
+        $projectActivities = [];
         $people = $this->bulkProjects([
             'Simple_Projects_Ce' => [
                 'params' => [
                     'project' => $projectIds,
+                    'withLossGain' => true,
                 ],
-                'convert' => function (array $cost) {
+                'convert' => function (array $cost) use (&$projectActivities) {
+                    if (!array_key_exists($cost['project_id'], $projectActivities)) {
+                        $projectActivities[$cost['project_id']] = [];
+                    }
+                    $activityKey = "{$cost['project_id']}_{$cost['activity_id']}";
+                    if (!array_key_exists($activityKey, $projectActivities)) {
+                        $projectActivities[$cost['project_id']][$activityKey] = [
+                            'loss' => $cost['budget_activity']['revenue_loss'],
+                            'gain' => $cost['budget_activity']['revenue_gain'],
+                        ];
+                    }
                     return [
                         'project_id' => $cost['project_id'],
-                        'costs' => $cost['hrs_tracked'] * ($cost['person_rate'] + $cost['person_overhead']),
+                        'costs_people' => $cost['hrs_tracked'] * $cost['person_rate'],
+                        'costs_overheads' => $cost['hrs_tracked'] * $cost['person_overhead'],
                         'estimated' => $cost['hrs_budget'],
                         'tracked' => $cost['hrs_tracked'],
                         'billable' => $cost['hrs_billable'],
+                        // revenue loss/gain aggregated at activity level because of time_estimates.activity
+                        'loss' => 0,
+                        'gain' => 0,
                     ];
                 },
             ],
         ]);
-        return $this->aggregateByProjects($projectIds, $people, ['costs', 'estimated', 'tracked', 'billable']);
+        $fields = ['costs_people', 'costs_overheads', 'estimated', 'tracked', 'billable', 'loss', 'gain'];
+        $projects = $this->aggregateByProjects($projectIds, $people, $fields);
+        foreach ($projectActivities as $projectId => $activities) {
+            foreach ($activities as $activity) {
+                $projects[$projectId]['loss'] += $activity['loss'];
+                $projects[$projectId]['gain'] += $activity['gain'];
+            }
+        }
+        return $projects;
     }
 
     private function loadProjectExpenses(array $projectIds)
@@ -155,11 +187,11 @@ class ProjectsOverviewExtractor extends Extractor
         foreach (array_chunk($config['params']['project'], $bulkProjects) as $projectIds) {
             $response = $this->request([
                 $endpoint => [
-                    'params' => ['project' => $projectIds],
+                    'params' => ['project' => $projectIds] + $config['params'],
                     'convert' => $config['convert'],
                 ],
             ]);
-            $result += $response[$endpoint];
+            $result = array_merge($result, $response[$endpoint]);
         }
         return $result;
     }

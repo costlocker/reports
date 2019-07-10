@@ -8,27 +8,31 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class ProjectsOverviewToXls extends TransformToXls
 {
+    /** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
     public function __invoke(array $projects, ReportSettings $settings)
     {
         $xls = $this->createWorksheet('COSTLOCKER');
+        if ($settings->customConfig['hasInfoHeaders'] ?? true) {
+            $xls
+                ->mergeColumnsInRow('A', 'E')
+                ->mergeColumnsInRow('F', 'G')
+                ->mergeColumnsInRow('H', 'J')
+                ->mergeColumnsInRow('K', 'T')
+                ->addRow([
+                    $this->headerCell('Projekt', '0000ff'),
+                    '',
+                    '',
+                    '',
+                    '',
+                    $this->headerCell('Fakturace', 'ffa500'),
+                    '',
+                    $this->headerCell('Projektové náklady', 'ffff00'),
+                    '',
+                    '',
+                    $this->headerCell('Lidé', '00ff00'),
+                ]);
+        }
         $xls
-            ->mergeColumnsInRow('A', 'E')
-            ->mergeColumnsInRow('F', 'G')
-            ->mergeColumnsInRow('H', 'J')
-            ->mergeColumnsInRow('K', 'T')
-            ->addRow([
-                $this->headerCell('Projekt', '0000ff'),
-                '',
-                '',
-                '',
-                '',
-                $this->headerCell('Fakturace', 'ffa500'),
-                '',
-                $this->headerCell('Projektové náklady', 'ffff00'),
-                '',
-                '',
-                $this->headerCell('Lidé', '00ff00'),
-            ])
             ->addRow([
                 $this->headerCell('ID', '0000ff'),
                 $this->headerCell('Status', '0000ff'),
@@ -44,12 +48,17 @@ class ProjectsOverviewToXls extends TransformToXls
                 $this->headerCell('Sleva', '00ff00'),
                 $this->headerCell('Příjmy', '00ff00'),
                 $this->headerCell('Náklady', '00ff00'),
+                $this->headerCell('Náklady na lidi', '00ff00'),
+                $this->headerCell('Náklady na režijní náklady', '00ff00'),
                 $this->headerCell('Zisk', '00ff00'),
                 $this->headerCell('Odhadované hodiny', 'c4ffc4'),
                 $this->headerCell('Placené hodiny (natrackované i zbývající odhad)', 'c4ffc4'),
                 $this->headerCell('Natrackované hodiny', 'c4ffc4'),
                 $this->headerCell('Natrackované / Placené', 'c4ffc4'),
-                $this->headerCell('Typ rozpočtu', 'c4ffc4'),
+                $this->headerCell('Typ rozpočtu', '4eff4e'),
+                $this->headerCell('Revenue gain ("neodpracovaný" příjem)', '4eff4e'),
+                $this->headerCell('Revenue loss (ušlý příjem)', '4eff4e'),
+                $this->headerCell('Revenue gain + loss (zbývající rozpočet)', '4eff4e'),
             ])
             ->autosizeColumnsInCurrentRow();
 
@@ -58,7 +67,8 @@ class ProjectsOverviewToXls extends TransformToXls
                 $project['project_id'],
                 $project['state'],
                 $this->cell($project['client']),
-                $project['name'],
+                $this->cell($project['name'])
+                    ->url($settings->costlocker->projectUrl($project['id'])),
                 [
                     "=DATE({$project['dates']['start']->format('Y, m, d')})",
                     'YYYY',
@@ -78,7 +88,10 @@ class ProjectsOverviewToXls extends TransformToXls
                 $this->cell($project['financialMetrics']['peopleDiscount'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 ["=K{$xls->getRowId()}-L{$xls->getRowId()}", NumberFormat::FORMAT_NUMBER_00],
+                ["=O{$xls->getRowId()}+P{$xls->getRowId()}", NumberFormat::FORMAT_NUMBER_00],
                 $this->cell($project['financialMetrics']['peopleCosts'])
+                    ->format(NumberFormat::FORMAT_NUMBER_00),
+                $this->cell($project['financialMetrics']['overheadCosts'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 $this->cell("=M{$xls->getRowId()}-N{$xls->getRowId()}")
                     ->format(NumberFormat::FORMAT_NUMBER_00),
@@ -88,9 +101,14 @@ class ProjectsOverviewToXls extends TransformToXls
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 $this->cell($project['hours']['tracked'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
-                $this->cell("=IF(Q{$xls->getRowId()} <> 0, R{$xls->getRowId()}/Q{$xls->getRowId()}, \"\")")
+                $this->cell("=IF(S{$xls->getRowId()} <> 0, T{$xls->getRowId()}/S{$xls->getRowId()}, \"\")")
                     ->format(NumberFormat::FORMAT_PERCENTAGE_00),
-                $project['budget_type'],
+                $project['budget']['total'],
+                $this->cell($project['financialMetrics']['peopleRevenueGain'])
+                    ->format(NumberFormat::FORMAT_NUMBER_00),
+                $this->cell($project['financialMetrics']['peopleRevenueLoss'])
+                    ->format(NumberFormat::FORMAT_NUMBER_00),
+                ["=W{$xls->getRowId()}+X{$xls->getRowId()}", NumberFormat::FORMAT_NUMBER_00],
             ]);
         }
     }

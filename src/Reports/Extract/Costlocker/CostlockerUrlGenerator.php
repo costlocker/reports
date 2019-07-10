@@ -29,7 +29,7 @@ class CostlockerUrlGenerator
         }
         $companyId = isset($config['project_id']) ? $this->projectToCompanyId($config['project_id']) : null;
         $baseUrl = $this->apiHost . ($companyId ? "/p/{$companyId}" : '');
-        $queryString = isset($config['query']) ? ('?' . http_build_query($config['query'])) : '';
+        $queryString = $config['query'] ?? false ? ('?' . http_build_query($config['query'])) : '';
         return "{$baseUrl}{$config['path']}{$queryString}";
     }
 

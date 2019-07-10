@@ -4,7 +4,18 @@
         "title": "Projects Overview",
         "dateRange": "alltime"
     },
-    "customConfig": [],
+    "customConfig": [
+        {
+            "key": "clientIds",
+            "format": "json",
+            "value": []
+        },
+        {
+            "key": "hasInfoHeaders",
+            "format": "text",
+            "value": true
+        }
+    ],
     "preview": {
         "image": "https://assets.costlocker.com/reports/Projects.Overview.png?v=20190702"
     }

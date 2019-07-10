@@ -258,11 +258,11 @@ class CompanyOverviewExtractor extends Extractor
         foreach (array_chunk($config['params']['project'], $bulkProjects) as $projectIds) {
             $response = $this->request([
                 $endpoint => [
-                    'params' => ['project' => $projectIds],
+                    'params' => ['project' => $projectIds] + $config['params'],
                     'convert' => $config['convert'],
                 ],
             ]);
-            $result += $response[$endpoint];
+            $result = array_merge($result, $response[$endpoint]);
         }
         return $result;
     }
