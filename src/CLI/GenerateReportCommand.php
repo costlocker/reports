@@ -214,11 +214,15 @@ TXT
         }
         $this->output->writeln([
             '',
-            "<comment>XLS export</comment>",
-            "<info>File:</info> {$exports['filesystem']}",
-            $exports['email'] ? '<info>E-mail was sent!</info>' : '<error>E-mail was not sent!</error>',
-            $exports['googleDrive'] ? '<info>Report uploaded to gdrive</info>' : '<error>No gdrive upload</error>',
+            "<comment>Export</comment>",
         ]);
+        foreach ($exports as $type => $data) {
+            $result = $data ? '<comment>OK</comment>' : '<error>Error</error>';
+            if ($type == 'filesystem') {
+                $result = $data;
+            }
+            $this->output->writeln("<info>{$type}:</info> {$result}");
+        }
         $this->output->writeln([
             '',
             "<comment>Durations [s]</comment>",
