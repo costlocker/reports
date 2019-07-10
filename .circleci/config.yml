@@ -32,7 +32,13 @@ jobs:
     steps:
     - checkout
     - setup_remote_docker
-    - run: .circleci/build-docker-image
+    # TODO: use Github Docker Registry when it's public or beta inviation is accepted
+    # 1) Create token for pushing docker image (https://help.github.com/en/articles/configuring-docker-for-use-with-github-package-registry)
+    # 2) Add DOCKER_USER, DOCKER_TOKEN env vars (https://circleci.com/gh/costlocker/reports/edit#env-vars)
+    # 3) Check that build works and docker image is published (https://circleci.com/gh/costlocker/reports/29)
+    #    $ docker run --rm -it docker.pkg.github.com/costlocker/reports/master:commit bin/console report --help
+    # 4) Update Docker help in README.md
+    - run: .circleci/build-docker-image || echo "Skipped publish (Github Docker Registry not available)"
 
 workflows:
   version: 2

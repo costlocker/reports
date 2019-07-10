@@ -33,8 +33,6 @@ nano app/config.php
 
 ##### Docker
 
-**_Custom build_**
-
 ```bash
 docker build --file .circleci/Dockerfile --tag reports-costlocker ./
 docker run --rm -it \
@@ -44,13 +42,6 @@ docker run --rm -it \
     --volume "$(realpath ./var/googleDrive):/app/var/googleDrive" \
     reports-costlocker \
     bin/console report --help
-```
-
-**_TODO: github docker registry_**
-
-```bash
-# Circle.ci builds an image and publish it github docker registry
-docker run --rm -it docker.pkg.github.com/costlocker/reports/master:commit bin/console report --help
 ```
 
 ## Available reports
