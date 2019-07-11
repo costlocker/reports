@@ -1,6 +1,36 @@
 
 # Changelog
 
+## v3.0.0 (_2019-07-??_)
+
+Big rewrite because of https://reports.costlocker.com ([source code](https://gitlab.com/costlocker/integrations/tree/master/reports)).
+There are a lot of BC. We might not mention them all. **Let us know if have troubles with migration from v2!**
+
+### Available reports
+
+* Profitability reports is removed in favor of [Business Reports](https://new.costlocker.com/dashboard/workload?peopleInactive=false)
+* We've added [6 projects/company/timesheet reports](/README.md#available-reports) that we've generated for our customers
+
+### Config
+
+| Breaking change | Before | After |
+| --------------- | ------ | ----- |
+| Generating report | [Passing CLI options](https://github.com/costlocker/reports/tree/v2.0.0#available-reports) | [bin/console report --config report.json](/README.md#usage) |
+| E-mail configuration | [/app/config.php](https://github.com/costlocker/reports/blob/v2.0.0/app/config.default.php) | [.env](/README.md#e-mail) |
+| Google Drive configuration | [/var/drive](https://github.com/costlocker/reports/tree/v2.0.0/var/drive) | Client configuration in [/var/googleDrive](/README.md#google-drive), files.json and config.php are now part of [JSON config](/README.md#usage) |
+
+### Code
+
+New code uses [ETL terminology](/README.md#new-report). Previously you could do whatever you want in `Provider`/`ToXls`. Now it's restricted by [Extractor](src/Reports/Extract/Extractor.php), [Transformer](src/Reports/Transform/Transformer.php) and [JSON schema](/src/Reports/Config/schema.json).
+
+| Breaking change | Before | After |
+| --------------- | ------ | ----- |
+| Generate url | `ReportSettings->generateProjectUrl->__invoke($id)` | `ReportSettings->costlocker->projectUrl($id)` |
+| Advanced CLI options | `ReportSettings->filter`<br />`ReportSettings->personsSettings`<br />`ReportSettings->exportSettings`  | Any custom config from [json file](/src/Reports/Config/schema.json#L64) is available in `ReportSettings->customConfig['...']` |
+| Custom title | `ReportSettings->yearStart` | [Title is configured in json `config.title`](https://github.com/costlocker/reports/blob/v3/tests/Reports/ParseConfigTest.php#L76) |
+
+_Check how we migrated Timesheet reports: [Timesheet.RecurringProject](https://gitlab.com/costlocker/integrations/commit/cd27552), [Timesheet.Week](https://gitlab.com/costlocker/integrations/commit/bf1c5f8), [Timesheet.TrackedHours](https://gitlab.com/costlocker/integrations/commit/47a2e95)_
+
 ## v2.0.0 (_2018-11-22_)
 
 * **Profitability report loads [billable hours](https://costlocker.docs.apiary.io/#introduction/changelog/september-2018) from API!**
