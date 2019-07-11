@@ -141,7 +141,7 @@ TXT
                 ])
             ),
             'export' => [
-                'filename' => "report-{$type}",
+                'filename' => 'report-' . str_replace('.', '', $type),
                 'email' => $input->getOption('email'),
                 'googleDrive' => [
                     'folderId' => null,
