@@ -7,6 +7,11 @@ require __DIR__ . '/../vendor/autoload.php';
 
 \Symfony\Component\Debug\ErrorHandler::register();
 
+$envDir = __DIR__ . '/../';
+$envFile = file_exists("{$envDir}/.env") ? '.env' : '.env.example';
+$dotenv = new Dotenv\Dotenv($envDir, $envFile);
+$dotenv->load();
+
 $varDir = __DIR__ . '/../var';
 
 $loaders = [

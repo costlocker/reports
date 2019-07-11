@@ -20,15 +20,13 @@ composer install
 bin/console report --help
 ```
 
-##### Custom mailer (gmail, ...)
+#### E-mail configuration
 
-By default [`mail()`](http://swiftmailer.org/docs/sending.html#using-the-mail-transport)
-is used for sending e-mails. But you can define custom 
-[`Swift_MailTransport`](http://swiftmailer.org/docs/sending.html#) in `app/config.php`.
+Configure [SMTP](https://swiftmailer.symfony.com/docs/sending.html#smtp-with-a-username-and-password) in [.env](/.env.example).
 
 ```bash
-cp app/config.default.php app/config.php
-nano app/config.php
+cp .env.example .env
+nano .env
 ```
 
 ##### Docker
