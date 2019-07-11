@@ -4,3 +4,8 @@ phpunit:
         file:
             log: [junit]
             testdox: [html, text]
+
+phpcs:
+    reports:
+        file:
+            info: phpcs-info.txt
