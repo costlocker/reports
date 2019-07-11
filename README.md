@@ -3,7 +3,8 @@
 
 [![CircleCI](https://circleci.com/gh/costlocker/reports/tree/master.svg?style=svg&circle-token=6a72d2fe098452b9b7113b830c035045e58e65d7)](https://circleci.com/gh/costlocker/reports/tree/master)
 
-Generate XLSX reports from [Costlocker API](http://docs.costlocker.apiary.io/).
+Generate XLSX/HTML reports from [Costlocker API](http://docs.costlocker.apiary.io/).
+UI version is available at https://reports.costlocker.com ([source code](https://gitlab.com/costlocker/integrations/tree/master/reports)).
 
 ## Installation
 
@@ -61,48 +62,52 @@ mv ~/Downloads/client.json var/googleDrive/client.json
 mv ~/Downloads/token.json var/googleDrive/token.json
 ```
 
-## Available reports
+## Reports
 
-All examples are using environment variable with url and 
-[api key](http://docs.costlocker.apiary.io/#reference/0/authentication/personal-access-token).
+### Usage
 
-```
-COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
-```
-
-##### Options
-
-| CLI option | Value | Description |
-| ---------- | ------------- | ----------- |
-| `--host` | `https://new.costlocker.com\|<YOUR_API_KEY>` | Costlocker API url and API key of your organization |
-| `--email` | `john@example.com` | Report is saved in `var/reports` and send report to the email provided |
-| `--drive` | [`var/drive/example`](/var/drive/example) | Local directory with Google Drive configuration |
-| `--drive-client` | [`var/drive/example`](/var/drive/example) | Optional (shared) client configuration (`client.json`, `token.json`), `--drive` contains `config.php` and `files.json` |
-| `--monthStart` | `previous month` | First month use for generating report |
-| `--monthEnd` | `current month` | Last month for generating report |
-| `--currency` | `CZK` | Currency used in XLSX report, supported currencies: CZK, EUR |
-| `--personsSettings` | `<PATH_TO_CSV_FILE>` | Person positions and hours used for calculation, take a look at [example](/tests/fixtures/persons.csv) |
-| `--filter=Developer` | Position | Filter persons by their position |
-| `--cache` | | Cache Costlocker responses (useful when you generate full Company report and reports filtered by position) |
-| `--format` | `xls` | You could define different export types, by default only `xls` exporter is provided |
-
-### Profitability
-
-Are your employees profitable? 
-
-![Detailed report](https://cloud.githubusercontent.com/assets/7994022/24850859/f8818d2a-1dd1-11e7-91fa-9af4006e22e7.png)
+Previous versions used [CLI options](https://github.com/costlocker/reports/tree/v2.0.0#options) for generating reports.
+Since v3 report is completely configued in JSON file ([JSON schema](/src/Reports/Config/schema.json)).
 
 ```bash
-# monthly report for January and February 2017 saved in var/reports
-bin/console report profitability --monthStart "2017-01" --monthEnd "2017-03" --host $COSTLOCKER_HOST --email "save"
+# 0) Info about reports
+bin/console report --help
+
+# 1) Prepare config
+## 1a) Create default config + manual edit
+bin/console report Projects.Overview
+nano config-Projects.Overview.json
+## 1b) You can pass config in options
+bin/console report Projects.Overviews --host "https://new.costlocker.com|<YOUR_API_KEY>" --email "john@example.com"
+
+# 2) Generate report
+bin/console report --config config-Projects.Overview.json
+ls -lAh var/exports
 ```
 
-![Summary report](https://cloud.githubusercontent.com/assets/7994022/23854171/807855a8-07f0-11e7-98b1-32ec70ca4d02.png)
+### Available reports
 
-```bash
-# summary report for year 2016 sent to mail
-bin/console report profitability:summary --monthStart "2016-01" --monthEnd "2016-12" --host $COSTLOCKER_HOST --personsSettings tests/fixtures/persons.csv --email "john@example.com"
-```
+| Title | Report type | Preview | 
+| ----- | ----------- | ------- |
+| [Projects Billing & Tags](https://assets.costlocker.com/reports/Projects.BillingAndTags.png) | [Projects.BillingAndTags](/src/CustomReports/Projects/BillingAndTagsExtractor.php) |
+| [Projects Overview](https://assets.costlocker.com/reports/Projects.Overview.png) | [Projects.Overview](/src/CustomReports/Projects/ProjectsOverviewExtractor.php) |
+| [Company Overview](https://assets.costlocker.com/reports/Company.Overview.png) | [Company.Overview](/src/CustomReports/Company/CompanyOverviewExtractor.php) |
+| [Grouped timesheet for recurring project](https://assets.costlocker.com/reports/Timesheet.RecurringProject.png) | [Timesheet.RecurringProject](/src/CustomReports/Timesheet/GroupedRecurringTimesheetExtractor.php) |
+| [Yearly tracked hours](https://assets.costlocker.com/reports/Timesheet.TrackedHours.png) | [Timesheet.TrackedHours](/src/CustomReports/Timesheet/TrackedHoursExtractor.php) |
+| [Weekly timesheet for groups](https://assets.costlocker.com/reports/Timesheet.Week.png) | [Timesheet.Week](/src/CustomReports/Timesheet/WeeklyTimesheetExtractor.php) |
+
+![Available reports from https://reports.costlocker.com/reports/available](https://trello-attachments.s3.amazonaws.com/5cfe127e9fdd6084611ce4f4/1150x572/7258ed0a02e8fdc17ca95f0e440f06bc/available-reports-2019-07-11.png)
+
+### New report
+
+Reports are using [ETL terminology](https://en.wikipedia.org/wiki/Extract,_transform,_load):
+
+* **Extract** data from Costlocker API
+* **Transform** data to XLS or HTML
+* **Load** data to your system _(filesystem, Google Drive, e-mail)_
+
+New report must implement [Extractor](src/Reports/Extract/Extractor.php) and [Transformer](src/Reports/Transform/Transformer.php).
+Take a look at [available reports](#available-reports). For example check [ProjectsOverviewExtractor](src/CustomReports/Projects/ProjectsOverviewExtractor.php) and [ProjectsOverviewToXls](src/CustomReports/Projects/ProjectsOverviewToXls.php). Let us know if it's still unclear!
 
 ## Contributing
 
