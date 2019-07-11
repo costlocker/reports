@@ -1,6 +1,7 @@
 #!/bin/sh
 
 phpqa --report --tools phpcs:0,phpmd:0,phpcpd:0,phpmetrics,phploc,pdepend,phpunit:0,security-checker:0 \
+    --config .circleci \
     --buildDir var/QA \
     --analyzedDirs ./ \
     --ignoredDirs var,vendor

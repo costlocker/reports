@@ -1,5 +1,5 @@
 phpunit:
-    binary: vendor/bin/phpunit
+    binary: ../vendor/bin/phpunit
     reports:
         file:
             log: [junit]
