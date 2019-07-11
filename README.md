@@ -5,22 +5,40 @@
 
 Generate XLSX reports from [Costlocker API](http://docs.costlocker.apiary.io/).
 
-## Requirements
-
-- PHP >= 7.0
-- composer
-- `curl` extension
-
 ## Installation
+
+### Clone + composer
+
+* requires `PHP >= 7.0`, `curl` and `gd` extension
 
 ```bash
 git clone https://github.com/costlocker/reports.git
 cd reports
-composer install
+composer install --no-dev
 bin/console report --help
 ```
 
-#### E-mail configuration
+### Docker
+
+```bash
+docker build --file .circleci/Dockerfile --tag reports-costlocker ./
+docker run --rm -it \
+    --volume "$(realpath ./my-report.json):/app/my-report.json" \
+    --volume "$(realpath ./var/logs):/app/var/logs" \
+    --volume "$(realpath ./var/exports):/app/var/exports" \
+    --volume "$(realpath ./var/googleDrive):/app/var/googleDrive" \
+    reports-costlocker \
+    bin/console report --help
+```
+
+## Export configuration
+
+Report is created in [/var/exports](/var/exports). Optionally you can:
+
+* [Send report to e-mail](#e-mail)
+* [Upload report to Google Drive](#google-drive)
+
+### E-mail
 
 Configure [SMTP](https://swiftmailer.symfony.com/docs/sending.html#smtp-with-a-username-and-password) in [.env](/.env.example).
 
@@ -29,7 +47,7 @@ cp .env.example .env
 nano .env
 ```
 
-#### Google drive configuration
+### Google Drive
 
 You have to create [an OAuth Client](https://stackoverflow.com/a/19766913) and copy configuration to [/var/googleDrive](/var/googleDrive).
 
@@ -41,19 +59,6 @@ You have to create [an OAuth Client](https://stackoverflow.com/a/19766913) and c
 ```bash
 mv ~/Downloads/client.json var/googleDrive/client.json
 mv ~/Downloads/token.json var/googleDrive/token.json
-```
-
-##### Docker
-
-```bash
-docker build --file .circleci/Dockerfile --tag reports-costlocker ./
-docker run --rm -it \
-    --volume "$(realpath ./my-report.json):/app/my-report.json" \
-    --volume "$(realpath ./var/logs):/app/var/logs" \
-    --volume "$(realpath ./var/exports):/app/var/exports" \
-    --volume "$(realpath ./var/googleDrive):/app/var/googleDrive" \
-    reports-costlocker \
-    bin/console report --help
 ```
 
 ## Available reports
