@@ -29,6 +29,20 @@ cp .env.example .env
 nano .env
 ```
 
+#### Google drive configuration
+
+You have to create [an OAuth Client](https://stackoverflow.com/a/19766913) and copy configuration to [/var/googleDrive](/var/googleDrive).
+
+| File | Description |
+| ---- | ------------|
+| [`client.json`](https://github.com/costlocker/reports/blob/v2.0.0/var/drive/example/client.json) | Google client registered via [API console](https://stackoverflow.com/a/19766913) |
+| [`token.json`](https://github.com/costlocker/reports/blob/v2.0.0/var/drive/example/token.json) | Access token, you can download first token from https://developers.google.com/oauthplayground |
+
+```bash
+mv ~/Downloads/client.json var/googleDrive/client.json
+mv ~/Downloads/token.json var/googleDrive/token.json
+```
+
 ##### Docker
 
 ```bash
@@ -66,46 +80,6 @@ COSTLOCKER_HOST="https://new.costlocker.com|<YOUR_API_KEY>"
 | `--filter=Developer` | Position | Filter persons by their position |
 | `--cache` | | Cache Costlocker responses (useful when you generate full Company report and reports filtered by position) |
 | `--format` | `xls` | You could define different export types, by default only `xls` exporter is provided |
-
-##### Google drive configuration
-
-You have to create [an OAuth Client](https://stackoverflow.com/a/19766913) and copy configuration to selected directory.
-
-| File | Description |
-| ---- | ------------|
-| [`client.json`](/var/drive/example/client.json) | Google client registered via [API console](https://stackoverflow.com/a/19766913) |
-| [`files.json`](/var/drive/example/files.json) | Internal database of mapped files, so the report is updated, use `{}` or `[]` in new directory |
-| [`token.json`](/var/drive/example/token.json) | Access token, you can download first token from https://developers.google.com/oauthplayground |
-| [`config.php`](/var/drive/example/config.php) | Definition of drive folder and title for each report type |
-
-Changes are overwritten. If you want to keep e.g. one column for Notes you have to
-download existing file and copy the column.
-
-```php
-$notes = csvToNotes($settings->googleDrive->downloadCsvFile());
-$noteId = 'irrelevant costlocker id (e.g. billing id)';
-echo $notes[$noteId] ?? '';
-
-function csvToNotes($csv)
-{
-    if (!$csv) {
-        return [];
-    }
-    $parser = \KzykHys\CsvParser\CsvParser::fromString($csv, ['encoding' => 'utf-8']);
-    $notes = [];
-    foreach ($parser as $id => $line) {
-        // skip header
-        if ($id <= 1) {
-            continue;
-        }
-        // note is in 15th column, Costlocker id in the following column
-        if ($line[15]) {
-            $notes[$line[16]] = $line[15];
-        }
-    }
-    return $notes;
-}
-```
 
 ### Profitability
 
