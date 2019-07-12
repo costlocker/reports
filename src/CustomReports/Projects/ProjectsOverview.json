@@ -11,9 +11,10 @@
             "value": []
         },
         {
-            "key": "hasInfoHeaders",
+            "note": "Simple XLS has one-line header and link in last column",
+            "key": "isSimpleXls",
             "format": "text",
-            "value": true
+            "value": false
         }
     ],
     "preview": {

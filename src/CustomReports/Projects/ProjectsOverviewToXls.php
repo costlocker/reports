@@ -11,13 +11,14 @@ class ProjectsOverviewToXls extends TransformToXls
     /** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
     public function __invoke(array $projects, ReportSettings $settings)
     {
+        $isNotSimpleXls = !$settings->customConfig['isSimpleXls'] ?? true;
         $xls = $this->createWorksheet('COSTLOCKER');
-        if ($settings->customConfig['hasInfoHeaders'] ?? true) {
+        if ($isNotSimpleXls) {
             $xls
                 ->mergeColumnsInRow('A', 'E')
                 ->mergeColumnsInRow('F', 'G')
                 ->mergeColumnsInRow('H', 'J')
-                ->mergeColumnsInRow('K', 'T')
+                ->mergeColumnsInRow('K', 'Y')
                 ->addRow([
                     $this->headerCell('Projekt', '0000ff'),
                     '',
@@ -30,6 +31,21 @@ class ProjectsOverviewToXls extends TransformToXls
                     '',
                     '',
                     $this->headerCell('Lidé', '00ff00'),
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    $this->headerCell('Projekt', '0000ff'),
                 ]);
         }
         $xls
@@ -59,6 +75,7 @@ class ProjectsOverviewToXls extends TransformToXls
                 $this->headerCell('Revenue gain ("neodpracovaný" příjem)', '4eff4e'),
                 $this->headerCell('Revenue loss (ušlý příjem)', '4eff4e'),
                 $this->headerCell('Revenue gain + loss (zbývající rozpočet)', '4eff4e'),
+                $this->headerCell('Odkaz na projekt', '0000ff'),
             ])
             ->autosizeColumnsInCurrentRow();
 
@@ -109,7 +126,10 @@ class ProjectsOverviewToXls extends TransformToXls
                 $this->cell($project['financialMetrics']['peopleRevenueLoss'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 ["=W{$xls->getRowId()}+X{$xls->getRowId()}", NumberFormat::FORMAT_NUMBER_00],
+                $settings->costlocker->projectUrl($project['id'])
             ]);
         }
+
+        $xls->removeColumnIf('Z', $isNotSimpleXls);
     }
 }
