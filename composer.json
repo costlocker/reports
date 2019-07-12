@@ -16,11 +16,17 @@
     "config": {
         "optimize-autoloader": true
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/costlocker/PhpSpreadsheet"
+        }
+    ],
     "require": {
         "php": ">=7.0",
         "symfony/console": "~3",
         "guzzlehttp/guzzle": "~6",
-        "phpoffice/phpspreadsheet": "dev-master#fd675da02ddaff929a3866dcf18abf14a60205ab",
+        "phpoffice/phpspreadsheet": "dev-issue-1056-maxifs-minifs-countifs",
         "swiftmailer/swiftmailer": "~6",
         "google/apiclient": "^2.2",
         "opis/json-schema": "~1",

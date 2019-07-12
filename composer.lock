@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b1938d17ce1482e292ff6df15022683",
+    "content-hash": "a5823805dccb0f373570560561baa888",
     "packages": [
         {
             "name": "doctrine/lexer",
@@ -811,16 +811,16 @@
         },
         {
             "name": "phpoffice/phpspreadsheet",
-            "version": "dev-master",
+            "version": "dev-issue-1056-maxifs-minifs-countifs",
             "source": {
                 "type": "git",
-                "url": "https://github.com/PHPOffice/PhpSpreadsheet.git",
-                "reference": "fd675da02ddaff929a3866dcf18abf14a60205ab"
+                "url": "https://github.com/costlocker/PhpSpreadsheet.git",
+                "reference": "60a0c3fd0271c54d4986e57c49f4c5f1e904cd1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPOffice/PhpSpreadsheet/zipball/fd675da02ddaff929a3866dcf18abf14a60205ab",
-                "reference": "fd675da02ddaff929a3866dcf18abf14a60205ab",
+                "url": "https://api.github.com/repos/costlocker/PhpSpreadsheet/zipball/60a0c3fd0271c54d4986e57c49f4c5f1e904cd1a",
+                "reference": "60a0c3fd0271c54d4986e57c49f4c5f1e904cd1a",
                 "shasum": ""
             },
             "require": {
@@ -865,17 +865,28 @@
                     "PhpOffice\\PhpSpreadsheet\\": "src/PhpSpreadsheet"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "PhpOffice\\PhpSpreadsheetTests\\": "tests/PhpSpreadsheetTests"
+                }
+            },
+            "scripts": {
+                "check": [
+                    "php-cs-fixer fix --ansi --dry-run --diff",
+                    "phpcs --report-width=200 samples/ src/ tests/ --ignore=samples/Header.php --standard=PSR2 -n",
+                    "phpunit --color=always"
+                ],
+                "fix": [
+                    "php-cs-fixer fix --ansi"
+                ],
+                "versions": [
+                    "phpcs --report-width=200 samples/ src/ tests/ --ignore=samples/Header.php --standard=PHPCompatibility --runtime-set testVersion 5.6- -n"
+                ]
+            },
             "license": [
                 "LGPL-2.1-or-later"
             ],
             "authors": [
-                {
-                    "name": "Erik Tilt"
-                },
-                {
-                    "name": "Adrien Crivelli"
-                },
                 {
                     "name": "Maarten Balliauw",
                     "homepage": "https://blog.maartenballiauw.be"
@@ -887,21 +898,30 @@
                 {
                     "name": "Franck Lefevre",
                     "homepage": "https://rootslabs.net"
+                },
+                {
+                    "name": "Erik Tilt"
+                },
+                {
+                    "name": "Adrien Crivelli"
                 }
             ],
             "description": "PHPSpreadsheet - Read, Create and Write Spreadsheet documents in PHP - Spreadsheet engine",
             "homepage": "https://github.com/PHPOffice/PhpSpreadsheet",
             "keywords": [
+                "Excel",
                 "OpenXML",
-                "excel",
+                "PHP",
                 "gnumeric",
                 "ods",
-                "php",
                 "spreadsheet",
                 "xls",
                 "xlsx"
             ],
-            "time": "2019-07-09T17:39:12+00:00"
+            "support": {
+                "source": "https://github.com/costlocker/PhpSpreadsheet/tree/issue-1056-maxifs-minifs-countifs"
+            },
+            "time": "2019-07-12T06:09:26+00:00"
         },
         {
             "name": "phpseclib/phpseclib",
