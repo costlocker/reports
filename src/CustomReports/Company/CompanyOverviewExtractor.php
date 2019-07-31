@@ -23,16 +23,44 @@ class CompanyOverviewExtractor extends Extractor
             $endpoints = $s->customConfig['extraTakeout'] ?? [];
             return !in_array($endpoint, $endpoints);
         };
+        list($dateIntervals, $minDate, $maxDate) = $this->buildDateIntervals($s);
         $data = $this->loadMainEntities($buildUrl);
         return [
+            'dateIntervals' => $dateIntervals,
             'people' => $data['Simple_People'],
             'clients' => $data['Simple_Clients'],
             'projects' => $data['Simple_Projects'],
             'expenses' => $this->loadProjectExpenses(array_keys($data['Simple_Projects']), $buildUrl),
             'billing' => $this->loadProjectBilling(array_keys($data['Simple_Projects']), $buildUrl),
             'projectPeople' => $this->loadProjectPeople(array_keys($data['Simple_Projects']), $isEndpointIgnored),
-            'timesheet' => $this->loadTimesheet(new \DateTime('now - 1 year'), new \DateTime('now')),
+            'timesheet' => $this->loadTimesheet($minDate, $maxDate),
         ];
+    }
+
+    private function buildDateIntervals(ReportSettings $s)
+    {
+        $dateIntervals = array_map(
+            function (array $interval) {
+                $min = new \DateTime($interval['min']);
+                $max = new \DateTime($interval['max']);
+                return [
+                    'title' => $interval['title'],
+                    'min' => \DateTime::createFromFormat('Y-m-d H:i:s', "{$min->format('Y-m-01')} 00:00:00"),
+                    'max' => \DateTime::createFromFormat('Y-m-d H:i:s', "{$max->format('Y-m-t')} 23:59:59"),
+                ];
+            },
+            ($s->customConfig['dateIntervals'] ?? null) ?: [[
+                'title' => date('Y'),
+                'min' => 'last year 1st January',
+                'max' => 'last year 31st December',
+            ]]
+        );
+        usort($dateIntervals, function (array $a, array $b) {
+            return $a['min']->getTimestamp() - $b['min']->getTimestamp();
+        });
+        $first = reset($dateIntervals);
+        $last = end($dateIntervals);
+        return [$dateIntervals, $first['min'], $last['max']];
     }
 
     private function loadMainEntities($buildUrl)
@@ -220,14 +248,17 @@ class CompanyOverviewExtractor extends Extractor
         $data = $this->request([
             'Simple_Timesheet_Month' => [
                 'params' => [
-                    'datef' => $dateStart->format('Y-m-d'),
-                    'datet' => $dateEnd->format('Y-m-d'),
+                    'datef' => $dateStart->format('Y-m-01'),
+                    'datet' => $dateEnd->format('Y-m-t'),
                     'nonproject' => true,
                 ],
                 'convert' => function (array $month) {
+                    if (!$month['interval']) {
+                        return null;
+                    }
                     return [
                         'dates' => [
-                            'month' => $month['da_month'],
+                            'month' => \DateTime::createFromFormat('Y-m-d H:i:s', "{$month['da_month']} 00:00:00"),
                         ],
                         'project_id' => $month['project'],
                         'person_id' => $month['person'],
@@ -240,13 +271,7 @@ class CompanyOverviewExtractor extends Extractor
                 },
             ],
         ]);
-        return [
-            'filterDates' => [
-                'start' => $dateStart,
-                'end' => $dateEnd,
-            ],
-            'data' => $data['Simple_Timesheet_Month']
-        ];
+        return $data['Simple_Timesheet_Month'];
     }
 
     private function bulkProjects(array $endpoints)
@@ -282,7 +307,11 @@ class CompanyOverviewExtractor extends Extractor
             $result[$endpoint] = [];
             foreach ($rows as $index => $row) {
                 $id = isset($row['id']) ? $row['id'] : $index;
-                $result[$endpoint][$id] = $endpoints[$endpoint]['convert']($row);
+                $converted = $endpoints[$endpoint]['convert']($row);
+                if ($converted === null) {
+                    continue;
+                }
+                $result[$endpoint][$id] = $converted;
             }
         }
         return $result;

@@ -7,345 +7,264 @@ use Costlocker\Reports\ReportSettings;
 use Costlocker\Reports\Transform\XlsBuilder;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
+/** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
 class CompanyOverviewToXls extends TransformToXls
 {
-    private $worksheets = [];
+    private $dateIntervals;
+    private $worksheets = [
+        'topClients' => [],
+        'clientMonths' => [],
+        'hoursTracked' => null,
+        'hoursBillable' => null,
+        'billingTotal' => null,
+        'billingPercentage' => null,
+        'billingHistory' => null,
+    ];
 
     public function __invoke(array $report, ReportSettings $settings)
     {
-        // XlsCellBuilder isn't immutable, so highlighting cell in first table would affect second table
-        $buildYearsCells = function () {
-            return array_map(
-                function ($text) {
-                    return $this->dateToCell(new \DateTime($text), NumberFormat::FORMAT_DATE_YYYYMMDD2);
-                },
-                [1 => 'now - 1 year', 2 => 'now - 2 years', 3 => 'now - 3 years']
-            );
-        };
-        $this->addSourceData($report, $buildYearsCells());
         $xls = $this->createWorksheet('Overview');
-        $this->analyzePeople($xls, $buildYearsCells());
-        $this->analyzeClients($xls, $buildYearsCells());
-        $this->analyzeProjects($xls, $buildYearsCells());
-        $this->analyzeProjectExpenses($xls);
-        $this->analyzeProjectBilling($xls);
-        $this->analyzeTimesheet($xls, $report['timesheet']['filterDates'], $settings);
+        $this->loadDateIntervals($xls, $report['dateIntervals']);
+        $this->addSourceData($report, $settings);
+        $this->analyze($xls);
     }
 
-    private function analyzePeople(XlsBuilder $xls, array $yearsCells)
+    private function loadDateIntervals(XlsBuilder $xls, array $dateIntervals)
     {
-        $expectsPeople = function ($expectedType = null) {
-            $activePeople = ['C' => $this->escape('YES')];
-            if (!$expectedType) {
-                return $activePeople;
-            }
-            return $activePeople + ['E' => $this->escape($expectedType)];
-        };
-
         $xls
-            ->addRow(['People', ''], 'b6ef8f')
+            ->addRow(['Date range'], 'b6ef8f')
+            ->addRow(['Min'], 'eeeeee')
+            ->addRow(['Max'], 'eeeeee');
+        foreach ($dateIntervals as $index => $interval) {
+            $column = $xls->indexToLetter($index + 1);
+            $xls
+                ->setCell($column, $xls->getRowId(-3), $this->headerCell($interval['title'], 'b6ef8f'))
+                ->setCell($column, $xls->getRowId(-2), $this->dateToCell($interval['min']->format('Y-m-d')))
+                ->setCell($column, $xls->getRowId(-1), $this->dateToCell($interval['max']->format('Y-m-d')));
+            $cells = [
+                'title' => "{$xls->getWorksheetReference()}{$column}{$xls->getRowId(-3)}",
+                'min' => "{$xls->getWorksheetReference()}{$column}{$xls->getRowId(-2)}",
+                'max' => "{$xls->getWorksheetReference()}{$column}{$xls->getRowId(-1)}",
+            ];
+            $this->dateIntervals[] = $cells + [
+                'filter' => ["{$this->escape('>=')}&{$cells['min']}", "{$this->escape('<=')}&{$cells['max']}"],
+                'getColumn' => function ($previousColumnsCount) use ($xls, $index) {
+                    return $xls->indexToLetter($previousColumnsCount + $index);
+                },
+                'saveLinkedCell' => function ($type, $id = null) use ($xls) {
+                    if (is_array($this->worksheets[$type])) {
+                        $this->worksheets[$type][$id] = $xls->getRowId();
+                    } else {
+                        $this->worksheets[$type] = $xls->getRowId();
+                    }
+                },
+                'getLinkedCell' => function ($type, $id = null) use ($column) {
+                    $value = is_array($this->worksheets[$type])
+                        ? $this->worksheets[$type][$id] : $this->worksheets[$type];
+                    return "{$column}{$value}";
+                },
+            ];
+        }
+        $xls
             ->autosizeColumnsInCurrentRow()
-            ->addRow([
-                'Active people',
-                $this->aggregate('People', $expectsPeople()),
-            ])
-            ->addRow([
-                'Salary',
-                $this->aggregate('People', $expectsPeople(CostlockerEnum::SALARY_TYPE)),
-            ])
-            ->addRow([
-                'Hourly rate',
-                $this->aggregate('People', $expectsPeople(CostlockerEnum::HOURLY_RATE_TYPE)),
-            ])
-            ->addRow([
-                'Zero hourly rate',
-                $this->aggregate('People', $expectsPeople() + ['F' => 0]),
-            ])
-            ->addRow([
-                'Average Salary Rate',
-                $this->aggregate('People', $expectsPeople(CostlockerEnum::SALARY_TYPE), 'AVERAGE', 'F'),
-            ])
-            ->addRow([
-                'Average Hourly Rate',
-                $this->aggregate('People', $expectsPeople(CostlockerEnum::HOURLY_RATE_TYPE), 'AVERAGE', 'F'),
-            ])
-            ->addRow(['Timesheet...', ''], 'cccccc')
-            ->addRow([
-                'Billable ratio = %0',
-                $this->aggregate('People', $expectsPeople() + ['H' => $this->escape('=0')]),
-            ])
-            ->addRow([
-                'Billable ratio < %50',
-                $this->aggregate(
-                    'People',
-                    $expectsPeople() + ['I' => [$this->escape('>0'), $this->escape('<=50')]]
-                ),
-            ])
-            ->addRow([
-                'Billable ratio > %75',
-                $this->aggregate('People', $expectsPeople() + ['I' => $this->escape('>=75')]),
-            ])
-            ->addRow(['Created before...', ''], 'cccccc')
-            ->addRow([
-                $yearsCells[1],
-                $this->aggregate('People', $expectsPeople() + ['D' => "{$this->escape('<')}&A{$xls->getRowId()}"]),
-            ])
-            ->addRow([
-                $yearsCells[2],
-                $this->aggregate('People', $expectsPeople() + ['D' => "{$this->escape('<')}&A{$xls->getRowId()}"]),
-            ])
-            ->addRow([
-                $yearsCells[3],
-                $this->aggregate('People', $expectsPeople() + ['D' => "{$this->escape('<')}&A{$xls->getRowId()}"]),
-            ])
             ->skipRows(1);
     }
 
-    private function analyzeClients(XlsBuilder $xls, array $yearsCells)
+    private function analyze(XlsBuilder $xls)
     {
-        $activeClients = ['B' => $this->escape('YES')];
-        $xls
-            ->addRow(['Clients', ''], 'b6ef8f')
-            ->addRow([
-                'Active clients',
-                $this->aggregate('Clients', $activeClients),
-            ])
-            ->addRow([
-                'Lost clients',
-                $this->aggregate('Clients', ['I' => $this->escape('>0'), 'J' => $this->escape('=0')]),
-            ])
-            ->addRow(['Created before...', ''], 'cccccc')
-            ->addRow([
-                $yearsCells[1],
-                $this->aggregate('Clients', $activeClients + ['C' => "{$this->escape('<')}&A{$xls->getRowId()}"]),
-            ])
-            ->addRow([
-                $yearsCells[2],
-                $this->aggregate('Clients', $activeClients + ['C' => "{$this->escape('<')}&A{$xls->getRowId()}"]),
-            ])
-            ->addRow([
-                $yearsCells[3],
-                $this->aggregate('Clients', $activeClients + ['C' => "{$this->escape('<')}&A{$xls->getRowId()}"]),
-            ])
-            ->skipRows(1);
-    }
-
-    private function analyzeProjects(XlsBuilder $xls, array $yearsCells)
-    {
-        $dateCondition = ['D' => "{$this->escape('>')}&B{$xls->getRowId(3)}"];
-
-        $expectsProjects = function ($state) {
-            return ['C' => $this->escape($state)];
+        $helperRow = function ($formula) {
+            return [
+                'isVisible' => false,
+                'formula' => $formula,
+            ];
         };
+        $columnsCount = count($this->dateIntervals);
         $xls
-            ->addRow(['Projects', ''], 'b6ef8f')
-            ->addRow([
-                'Running projects',
-                $this->aggregate('Projects', $expectsProjects(CostlockerEnum::RUNNING_PROJECT)),
-            ])
-            ->addRow([
-                'Finished projects',
-                $this->aggregate('Projects', $expectsProjects(CostlockerEnum::FINISHED_PROJECT)),
-            ])
-            ->addRow(['Created after', $yearsCells[3]->defaultStyle('cccccc')], 'cccccc')
-            ->addRow([
-                'All projects',
-                $this->aggregate('Projects', $dateCondition),
-            ])
-            ->addRow([
-                'Running projects',
-                $this->aggregate('Projects', $expectsProjects(CostlockerEnum::RUNNING_PROJECT) + $dateCondition),
-            ])
-            ->addRow([
-                'Finished projects',
-                $this->aggregate(
-                    'Projects',
-                    $expectsProjects(CostlockerEnum::FINISHED_PROJECT) + $dateCondition
-                ),
-            ])
-            ->skipRows(1);
-    }
-
-    private function analyzeProjectExpenses(XlsBuilder $xls)
-    {
-        $dateStart = (new \DateTime('first day of previous month'))->modify('- 10 months');
-        $dateEnd = (new \DateTime('last day of this month'));
-        $cellStart = "B{$xls->getRowId(1)}";
-        $cellEnd = "B{$xls->getRowId(2)}";
-        $xls
-            ->addRow(['Projects Expenses', ''], 'b6ef8f')
-            ->addRow(
-                [
-                    'Compared: Purchased date start',
-                    $this->dateToCell($dateStart, NumberFormat::FORMAT_DATE_YYYYMMDD2)->defaultStyle('cccccc'),
-                ],
-                'cccccc'
-            )
-            ->addRow(
-                [
-                    'Compared: Purchased date end',
-                    $this->dateToCell($dateEnd, NumberFormat::FORMAT_DATE_YYYYMMDD2)->defaultStyle('cccccc'),
-                ],
-                'cccccc'
-            )
-            ->addRow([
-                'Purchased amount',
-                $this->aggregate(
-                    'Expenses',
-                    [
-                        'E' => ["{$this->escape('>=')}&{$cellStart}", "{$this->escape('<=')}&{$cellEnd}"],
-                    ],
-                    'SUM',
-                    'F'
-                ),
-            ])
-            ->addRow([
-                'Billed amount',
-                $this->aggregate(
-                    'Expenses',
-                    [
-                        'E' => ["{$this->escape('>=')}&{$cellStart}", "{$this->escape('<=')}&{$cellEnd}"],
-                    ],
-                    'SUM',
-                    'G'
-                ),
-            ])
-            ->addRow([
-                'Profit',
-                ["=B{$xls->getRowId(-1)}-B{$xls->getRowId(-2)}", NumberFormat::FORMAT_NUMBER_00],
-            ])
-            ->addRow([
-                'Profit margin',
-                [
-                    "=IF(B{$xls->getRowId(-2)} <> 0, B{$xls->getRowId(-1)}/B{$xls->getRowId(-2)}, {$this->escape('')})",
-                    NumberFormat::FORMAT_PERCENTAGE_00
-                ],
-            ])
-            ->skipRows(1);
-    }
-
-    private function analyzeProjectBilling(XlsBuilder $xls)
-    {
-        $dateStart = (new \DateTime('first day of previous month'))->modify('- 10 months');
-        $dateEnd = (new \DateTime('last day of this month'));
-        $cellStart = "B{$xls->getRowId(1)}";
-        $cellEnd = "B{$xls->getRowId(2)}";
-        $xls
-            ->addRow(['Projects Billing', ''], 'b6ef8f')
-            ->addRow(
-                [
-                    'Compared: Billed date start',
-                    $this->dateToCell($dateStart, NumberFormat::FORMAT_DATE_YYYYMMDD2)->defaultStyle('cccccc'),
-                ],
-                'cccccc'
-            )
-            ->addRow(
-                [
-                    'Compared: Billed date end',
-                    $this->dateToCell($dateEnd, NumberFormat::FORMAT_DATE_YYYYMMDD2)->defaultStyle('cccccc'),
-                ],
-                'cccccc'
-            )
-            ->addRow([
-                'Billed planned amount',
-                $this->aggregate(
-                    'Billing',
-                    [
-                        'D' => $this->escape(CostlockerEnum::BILLING_DRAFT),
-                        'C' => ["{$this->escape('>=')}&{$cellStart}", "{$this->escape('<=')}&{$cellEnd}"],
-                    ],
-                    'SUM',
-                    'E'
-                ),
-            ])
-            ->addRow([
-                'Billed amount',
-                $this->aggregate(
-                    'Billing',
-                    [
-                        'D' => $this->escape(CostlockerEnum::BILLING_SENT),
-                        'C' => ["{$this->escape('>=')}&{$cellStart}", "{$this->escape('<=')}&{$cellEnd}"],
-                    ],
-                    'SUM',
-                    'E'
-                ),
-            ])
-            ->skipRows(1);
-    }
-
-    private function analyzeTimesheet(XlsBuilder $xls, array $dates, ReportSettings $settings)
-    {
-        $xls
-            ->addRow(['Timesheet', ''], 'b6ef8f')
-            ->addRow(
-                [
-                    'Min date',
-                    $this->dateToCell($dates['start'], NumberFormat::FORMAT_DATE_YYYYMMDD2)->defaultStyle('cccccc'),
-                ],
-                'cccccc'
-            )
-            ->addRow(
-                [
-                    'Max date',
-                    $this->dateToCell($dates['end'], NumberFormat::FORMAT_DATE_YYYYMMDD2)->defaultStyle('cccccc'),
-                ],
-                'cccccc'
-            )
-            ->addRow([
-                'Tracked hours',
-                $this->aggregate('Timesheet', [], 'SUM', 'F'),
-            ])
-            ->addRow([
-                'Billable hours',
-                $this->aggregate('Timesheet', [], 'SUM', 'G'),
-                ["=B{$xls->getRowId()}/B{$xls->getRowId(-1)}", NumberFormat::FORMAT_PERCENTAGE_00],
-            ])
-            ->addRow(
-                [
-                    "Internal client",
-                    $settings->customConfig['internalClientName']
-                ],
-                'cccccc'
-            )
-            ->addRow([
-                'Tracked hours',
-                $this->aggregate('Timesheet', ['B' => "B{$xls->getRowId(-1)}"], 'SUM', 'F'),
-                ["=B{$xls->getRowId()}/B{$xls->getRowId(-3)}", NumberFormat::FORMAT_PERCENTAGE_00],
-            ])
-            ->addRow([
-                'Billable hours',
-                $this->aggregate('Timesheet', ['B' => "B{$xls->getRowId(-1)}"], 'SUM', 'G'),
-            ])
-            ->skipRows(1);
-    }
-
-    /** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
-    private function addSourceData(array $report, array $yearsCells)
-    {
-        $this->entitiesToWorksheet(
-            'Projects',
-            [
-                'Project',
-                'Client',
-                'State',
-                'Date start',
-                'Date end',
-                'Budget type',
-                'Tags'
-            ],
-            $report['projects'],
-            function (array $project) use ($report) {
-                return [
-                    [$project['name'], NumberFormat::FORMAT_GENERAL, [], $project['url']],
-                    $report['clients'][$project['client_id']]['name'],
-                    $project['state'],
-                    $this->dateToCell($project['dates']['start']),
-                    $this->dateToCell($project['dates']['end']),
-                    $project['budget_type'],
-                    implode(', ', $project['tags']),
-                ];
+            ->addRow(['Metrics'], 'b6ef8f')
+            ->mergeCells("A{$xls->getRowId(-1)}:{$xls->indexToLetter($columnsCount)}{$xls->getRowId(-1)}");
+        foreach ($this->getMetrics($helperRow) as $title => $formula) {
+            $definition = is_array($formula) ? $formula : [
+                'isVisible' => true,
+                'formula' => $formula,
+            ];
+            $row = [
+                $this->cell($title, $definition['isVisible'] ? 'eeeeee' : 'ffffff')
+            ];
+            foreach ($this->dateIntervals as $interval) {
+                $row[] = $definition['formula']($interval);
             }
-        );
+            $xls
+                ->setRowVisibility($definition['isVisible'])
+                ->addRow($row);
+        }
+    }
+
+    private function getMetrics($helperRow)
+    {
+        $clientBilling = function ($rank) use ($helperRow) {
+            return $helperRow(function (array $interval) use ($rank) {
+                $interval['saveLinkedCell']('topClients', $rank);
+                return $this->aggregate('Clients', [$interval['getColumn'](8) => $rank], 'LARGE');
+            });
+        };
+        $percentage = function ($a, $b) {
+            return ["=IF({$b} <> 0, {$a}/{$b}, \"\")", NumberFormat::FORMAT_PERCENTAGE_00];
+        };
+        $clientPercentage = function ($rank) use ($percentage) {
+            return function (array $interval) use ($rank, $percentage) {
+                return $percentage(
+                    $interval['getLinkedCell']('topClients', $rank),
+                    $interval['getLinkedCell']('billingTotal')
+                );
+            };
+        };
+        $clientColumn = function ($rank, $extractedColumn, $format) use ($helperRow) {
+            return $helperRow(function (array $interval) use ($rank, $extractedColumn, $format) {
+                if ($extractedColumn == 'D') {
+                    $interval['saveLinkedCell']('clientMonths', $rank);
+                }
+                $range = $this->worksheets['Clients']($interval['getColumn'](8), 'MATCH');
+                $billedAmount = $interval['getLinkedCell']('topClients', $rank);
+                $rowId = "MATCH({$billedAmount}, {$range}, 0)";
+                return ["=INDIRECT(\"Clients!{$extractedColumn}\"&{$rowId})", $format];
+            });
+        };
+        $clientMonths = function ($rank) {
+            return function (array $interval) use ($rank) {
+                $clientMonth = $interval['getLinkedCell']('clientMonths', $rank);
+                return [
+                    "=DATEDIF({$clientMonth}, {$interval['max']}, {$this->escape('M')})",
+                    NumberFormat::FORMAT_NUMBER
+                ];
+            };
+        };
+        return [
+            'Billing' => function (array $interval) {
+                $interval['saveLinkedCell']('billingTotal');
+                return $this->aggregate(
+                    'Billing',
+                    ['D' => $this->escape(CostlockerEnum::BILLING_SENT), 'C' => $interval['filter']],
+                    'SUM',
+                    'E'
+                );
+            },
+            'Billing 10%' => $helperRow(function (array $interval) {
+                $interval['saveLinkedCell']('billingPercentage');
+                return ["={$interval['getLinkedCell']('billingTotal')}/10", NumberFormat::FORMAT_NUMBER_00];
+            }),
+            'Billing history' => $helperRow(function (array $interval) {
+                $interval['saveLinkedCell']('billingHistory');
+                return [
+                    "=DATE(YEAR({$interval['max']})-2, MONTH({$interval['max']}), DAY({$interval['max']}))",
+                    NumberFormat::FORMAT_DATE_YYYYMMDD2
+                ];
+            }),
+            'Expenses - purchased' => function (array $interval) {
+                return $this->aggregate('Expenses', ['E' => $interval['filter']], 'SUM', 'F');
+            },
+            'Expenses - billed' => function (array $interval) {
+                return $this->aggregate('Expenses', ['E' => $interval['filter']], 'SUM', 'G');
+            },
+            'Timesheet - tracked hours' => function (array $interval) {
+                $interval['saveLinkedCell']('hoursTracked');
+                return $this->aggregate('Timesheet', ['E' => $interval['filter']], 'SUM', 'F');
+            },
+            'Timesheet - billable hours' => function (array $interval) {
+                $interval['saveLinkedCell']('hoursBillable');
+                return $this->aggregate('Timesheet', ['E' => $interval['filter']], 'SUM', 'G');
+            },
+            'Timesheet - billable ratio' => function (array $interval) use ($percentage) {
+                return $percentage(
+                    $interval['getLinkedCell']('hoursBillable'),
+                    $interval['getLinkedCell']('hoursTracked')
+                );
+            },
+            'People - has salary' => function (array $interval) {
+                return $this->aggregate('People', [$interval['getColumn'](9) => $this->escape(">0")], 'COUNT');
+            },
+            'People - has salary > 2 years' => function (array $interval) {
+                $historicalDate = $interval['getLinkedCell']('billingHistory');
+                $monthsCount = "DATEDIF({$historicalDate}, {$interval['max']}, {$this->escape('M')})";
+                return $this->aggregate(
+                    'People',
+                    [$interval['getColumn'](9) => "{$this->escape(">=")}&{$monthsCount}"],
+                    'COUNT'
+                );
+            },
+            'People - has tracked hours' => function (array $interval) {
+                return $this->aggregate('People', [$interval['getColumn'](13) => $this->escape(">0")], 'COUNT');
+            },
+            'People - has billable hours' => function (array $interval) {
+                return $this->aggregate('People', [$interval['getColumn'](17) => $this->escape(">0")], 'COUNT');
+            },
+            'Clients > 10% total' => function (array $interval) {
+                return $this->aggregate(
+                    'Clients',
+                    [
+                        $interval['getColumn'](8)
+                            => "{$this->escape('>=')}&{$interval['getLinkedCell']('billingPercentage')}"
+                    ],
+                    'COUNT'
+                );
+            },
+            'Clients > 10% total AND first billing > 2 years' => function (array $interval) {
+                return $this->aggregate(
+                    'Clients',
+                    [
+                        $interval['getColumn'](8)
+                            => "{$this->escape('>=')}&{$interval['getLinkedCell']('billingPercentage')}",
+                        'D'
+                            => "{$this->escape('<=')}&{$interval['getLinkedCell']('billingHistory')}",
+                    ],
+                    'COUNT'
+                );
+            },
+            'Billing - 1st client' => $clientBilling(1),
+            'Billing - 2nd client' => $clientBilling(2),
+            'Billing - 3rd client' => $clientBilling(3),
+            'Billing - 1st client name' => $clientColumn(1, 'A', NumberFormat::FORMAT_GENERAL),
+            'Billing - 2nd client name' => $clientColumn(2, 'A', NumberFormat::FORMAT_GENERAL),
+            'Billing - 3rd client name' => $clientColumn(3, 'A', NumberFormat::FORMAT_GENERAL),
+            'Billing % - 1st client' => $clientPercentage(1),
+            'Billing % - 2nd client' => $clientPercentage(2),
+            'Billing % - 3rd client' => $clientPercentage(3),
+            'Billing first date - 1st client' => $clientColumn(1, 'D', NumberFormat::FORMAT_DATE_YYYYMMDD2),
+            'Billing first date - 2nd client' => $clientColumn(2, 'D', NumberFormat::FORMAT_DATE_YYYYMMDD2),
+            'Billing first date - 3rd client' => $clientColumn(3, 'D', NumberFormat::FORMAT_DATE_YYYYMMDD2),
+            'Months since first billing - 1st client' => $clientMonths(1),
+            'Months since first billing - 2nd client' => $clientMonths(2),
+            'Months since first billing - 3rd client' => $clientMonths(3),
+        ];
+    }
+
+    private function addSourceData(array $report, ReportSettings $settings)
+    {
+        if (in_array('Simple_Projects', $settings->customConfig['extraTakeout'] ?? [])) {
+            $this->entitiesToWorksheet(
+                'Projects',
+                [
+                    'Project',
+                    'Client',
+                    'State',
+                    'Date start',
+                    'Date end',
+                    'Budget type',
+                    'Tags'
+                ],
+                $report['projects'],
+                function (array $project) use ($report) {
+                    return [
+                        [$project['name'], NumberFormat::FORMAT_GENERAL, [], $project['url']],
+                        $report['clients'][$project['client_id']]['name'],
+                        $project['state'],
+                        $this->dateToCell($project['dates']['start']),
+                        $this->dateToCell($project['dates']['end']),
+                        $project['budget_type'],
+                        implode(', ', $project['tags']),
+                    ];
+                }
+            );
+        }
         $this->entitiesToWorksheet(
             'Expenses',
             [
@@ -407,7 +326,7 @@ class CompanyOverviewToXls extends TransformToXls
                 ['Tracked hours', 'SUM'],
                 ['Billable hours', 'SUM'],
             ],
-            $report['timesheet']['data'],
+            $report['timesheet'],
             function (array $entry) use ($report) {
                 return [
                     $entry['project_id'] ? $report['projects'][$entry['project_id']]['name'] : '[No project]',
@@ -490,73 +409,141 @@ class CompanyOverviewToXls extends TransformToXls
             },
             true
         );
+        $dateRanges = array_map(
+            function (array $interval) {
+                return "={$interval['title']}";
+            },
+            $this->dateIntervals
+        );
         $this->entitiesToWorksheet(
             'People',
-            [
-                'Person ID',
-                'Person',
-                'Is active?',
-                'Created at',
-                'Payment type',
-                'Hourly rate',
-                'Tracked hours',
-                'Billable hours',
-                'Billable ratio',
-                'Last salary change (= deactivation for inactive)',
-            ],
+            array_merge(
+                [
+                    'Person ID',
+                    'Person',
+                    'Is active?',
+                    'Created at',
+                    'Payment type',
+                    'Hourly rate',
+                    'Salary from',
+                    'Last salary change (= deactivation for inactive)',
+                    'Months count',
+                ],
+                $dateRanges,
+                ['Tracked hours'],
+                $dateRanges,
+                ['Billable hours'],
+                $dateRanges
+            ),
             $report['people'],
             function (array $person, $rowId) {
-                return [
-                    $person['id'],
-                    [$person['name'], NumberFormat::FORMAT_GENERAL, [], $person['url']],
-                    $this->boolToCell($person['is_active']),
-                    $this->dateToCell($person['da_created']),
-                    $person['current_salary']['type'],
-                    [$person['current_salary']['hourly_rate'], NumberFormat::FORMAT_NUMBER_00],
-                    $this->aggregate('Timesheet', ['C' => "A{$rowId}"], 'SUM', 'F'),
-                    $this->aggregate('Timesheet', ['C' => "A{$rowId}"], 'SUM', 'G'),
-                    ["=H{$rowId}/G{$rowId}", NumberFormat::FORMAT_PERCENTAGE_00],
-                    $this->aggregate(
-                        'Salaries',
-                        ['A' => "A{$rowId}", 'D' => $this->escape('')],
-                        'MAX',
-                        'C',
-                        'MMMM YYYY'
+                return array_merge(
+                    [
+                        $person['id'],
+                        [$person['name'], NumberFormat::FORMAT_GENERAL, [], $person['url']],
+                        $this->boolToCell($person['is_active']),
+                        $this->dateToCell($person['da_created']),
+                        $person['current_salary']['type'],
+                        [$person['current_salary']['hourly_rate'], NumberFormat::FORMAT_NUMBER_00],
+                        $this->aggregate('Salaries', ['A' => "A{$rowId}"], 'MIN', 'C', 'MMMM YYYY'),
+                        $this->aggregate(
+                            'Salaries',
+                            ['A' => "A{$rowId}", 'D' => $this->escape('')],
+                            'MAX',
+                            'C',
+                            'MMMM YYYY'
+                        ),
+                        '',
+                    ],
+                    array_map(
+                        function (array $interval) use ($rowId) {
+                            $formula =
+                                "=IFS("
+                                // active person
+                                . "C{$rowId}={$this->escape('YES')},"
+                                . "IFERROR(DATEDIF(G{$rowId}, {$interval['max']}, {$this->escape('M')})+1, 0),"
+                                // deactivated in the past
+                                . "H{$rowId}<{$interval['min']},"
+                                . "0,"
+                                // deactivated in selected year
+                                . "AND(H{$rowId}>={$interval['min']}, H{$rowId}<={$interval['max']}),"
+                                . "DATEDIF(G{$rowId}, H{$rowId}, {$this->escape('M')})+1,"
+                                // deactivated in the future
+                                . "AND(H{$rowId}>{$interval['max']}),"
+                                . "IFERROR(DATEDIF(G{$rowId}, {$interval['max']}, {$this->escape('M')})+1, 0)"
+                                . ")";
+                            return [$formula, NumberFormat::FORMAT_NUMBER];
+                        },
+                        $this->dateIntervals
                     ),
-                ];
+                    [''],
+                    array_map(
+                        function (array $interval) use ($rowId) {
+                            return $this->aggregate(
+                                'Timesheet',
+                                ['C' => "A{$rowId}", 'E' => $interval['filter']],
+                                'SUM',
+                                'F'
+                            );
+                        },
+                        $this->dateIntervals
+                    ),
+                    [''],
+                    array_map(
+                        function (array $interval) use ($rowId) {
+                            return $this->aggregate(
+                                'Timesheet',
+                                ['C' => "A{$rowId}", 'E' => $interval['filter']],
+                                'SUM',
+                                'G'
+                            );
+                        },
+                        $this->dateIntervals
+                    )
+                );
             }
         );
         $this->entitiesToWorksheet(
             'Clients',
-            [
-                'Client',
-                'Is active?',
-                'Created at',
-                'First Billing',
-                'Last Billing',
-                ['Billing count', 'SUM'],
-                ['Billing sum', 'SUM'],
-                'Billed after:',
-                [$yearsCells[3]->highlight(), 'SUM'],
-                [$yearsCells[1]->highlight(), 'SUM'],
-                ["Billed after [%]", 'SUM'],
-            ],
+            array_merge(
+                [
+                    'Client',
+                    'Is active?',
+                    'Created at',
+                    'First Billing',
+                    'Last Billing',
+                    ['Billing count', 'SUM'],
+                    ['Billing sum', 'SUM'],
+                    'Date ranges',
+                ],
+                $dateRanges
+            ),
             $report['clients'],
             function (array $client, $rowId) {
                 $dateFormat = NumberFormat::FORMAT_DATE_YYYYMMDD2;
-                return [
-                    [$client['name'], NumberFormat::FORMAT_GENERAL, [], $client['url']],
-                    $this->boolToCell($client['is_active']),
-                    $this->dateToCell($client['da_created']),
-                    $this->aggregate('Billing', ['B' => "A{$rowId}"], 'MIN', 'C', $dateFormat),
-                    $this->aggregate('Billing', ['B' => "A{$rowId}"], 'MAX', 'C', $dateFormat),
-                    $this->aggregate('Billing', ['B' => "A{$rowId}"], 'COUNT'),
-                    $this->aggregate('Billing', ['B' => "A{$rowId}"], 'SUM', 'E'),
-                    '',
-                    $this->aggregate('Billing', ['B' => "A{$rowId}", 'C' => "{$this->escape('>=')}&I1"], 'SUM', 'E'),
-                    $this->aggregate('Billing', ['B' => "A{$rowId}", 'C' => "{$this->escape('>=')}&J1"], 'SUM', 'E'),
-                    ["=J{$rowId}/{$this->worksheets['Clients']('J', 'SUM')}", NumberFormat::FORMAT_PERCENTAGE_00],
-                ];
+                return array_merge(
+                    [
+                        [$client['name'], NumberFormat::FORMAT_GENERAL, [], $client['url']],
+                        $this->boolToCell($client['is_active']),
+                        $this->dateToCell($client['da_created']),
+                        $this->aggregate('Billing', ['B' => "A{$rowId}"], 'MIN', 'C', $dateFormat),
+                        $this->aggregate('Billing', ['B' => "A{$rowId}"], 'MAX', 'C', $dateFormat),
+                        $this->aggregate('Billing', ['B' => "A{$rowId}"], 'COUNT'),
+                        $this->aggregate('Billing', ['B' => "A{$rowId}"], 'SUM', 'E'),
+                        '',
+                    ],
+                    array_map(
+                        function (array $interval) use ($rowId) {
+                            return $this->aggregate(
+                                'Billing',
+                                ['B' => "A{$rowId}", 'C' => $interval['filter']],
+                                'SUM',
+                                'E'
+                            );
+                        },
+                        $this->dateIntervals
+                    )
+                );
             }
         );
     }
@@ -597,8 +584,6 @@ class CompanyOverviewToXls extends TransformToXls
             ->autosizeColumnsInCurrentRow();
 
         $firstRow = $xls->getRowId();
-        $this->worksheets[$title] = $this->prepareAggregation($xls, $firstRow, count($entities) + 1);
-
         $rowCount = 0;
         foreach ($entities as $entity) {
             $rowOrRows = $buildRow($entity, $xls->getRowId());
@@ -608,10 +593,7 @@ class CompanyOverviewToXls extends TransformToXls
                 $rowCount++;
             }
         }
-
-        if ($areMultipleRowsBuilt) {
-            $this->worksheets[$title] = $this->prepareAggregation($xls, $firstRow, $rowCount + 1);
-        }
+        $this->worksheets[$title] = $this->prepareAggregation($xls, $firstRow, $rowCount + 1);
 
         $xls->addRow(
             array_map(
@@ -627,11 +609,8 @@ class CompanyOverviewToXls extends TransformToXls
     private function prepareAggregation(XlsBuilder $xls, $firstRow, $lastRow)
     {
         return function ($column, $type = 'range') use ($xls, $firstRow, $lastRow) {
-            if ($type == 'SUM') {
-                $sumRow = $lastRow + 1;
-                return "\${$column}\${$sumRow}";
-            }
-            return "{$xls->getWorksheetReference()}{$column}{$firstRow}:{$column}{$lastRow}";
+            $first = $type == 'MATCH' ? 1 : $firstRow;
+            return "{$xls->getWorksheetReference()}{$column}{$first}:{$column}{$lastRow}";
         };
     }
 
@@ -667,7 +646,7 @@ class CompanyOverviewToXls extends TransformToXls
             }
         }
         $formula = "={$function}";
-        if ($conditions) {
+        if ($conditions && $function != 'LARGE') {
             $formula .= 'IFS';
         }
         $formula .= '(' . implode(', ', $args) . ')';

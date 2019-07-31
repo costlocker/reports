@@ -162,14 +162,13 @@ TXT
     public function startExtracting(array $runtimeConfig)
     {
         $dates = $runtimeConfig['dates'];
-        $interval = '-';
+        $interval = 'all-time';
         if ($dates) {
             $interval = '<' . reset($dates)->format('Y-m') . ', ' . end($dates)->format('Y-m') . '>';
         }
         $this->output->writeln([
-            "<comment>Report</comment>",
-            "<info>Months count:</info> " . count($dates),
-            "<info>Months interval:</info> {$interval}",
+            "<info>Report</info>: <comment>{$runtimeConfig['title']}</comment>",
+            "<info>Date interval:</info> {$interval}",
             "<info>Custom config:</info> " . json_encode($runtimeConfig['customConfig']),
             "<info>Exporters:</info> " . implode(', ', array_keys(array_filter($runtimeConfig['export']))),
             '',
@@ -230,6 +229,7 @@ TXT
         foreach ($this->calculateDurations() as $type => $duration) {
             $this->output->writeln("<info>{$type}:</info> {$duration}");
         }
+        $this->output->writeln('');
     }
 
     public function error($message, $detail)

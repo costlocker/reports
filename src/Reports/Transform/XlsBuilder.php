@@ -108,7 +108,12 @@ class XlsBuilder
 
     public function setCell($column, $rowIndex, $value)
     {
-        $this->worksheet->setCellValue("{$column}{$rowIndex}", $value);
+        if ($value instanceof XlsCellBuilder) {
+            $cell = $this->worksheet->getCell("{$column}{$rowIndex}");
+            $value->build($cell);
+        } else {
+            $this->worksheet->setCellValue("{$column}{$rowIndex}", $value);
+        }
         return $this;
     }
 

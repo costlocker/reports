@@ -6,14 +6,16 @@
     },
     "customConfig": [
         {
-            "key": "internalClientName",
-            "format": "text",
-            "value": "My Company"
-        },
-        {
             "key": "extraTakeout",
             "format": "text",
-            "value": ["Simple_Projects_Ce"]
+            "value": ["Simple_Projects", "Simple_Projects_Ce"]
+        },
+        {
+            "key": "dateIntervals",
+            "format": "json",
+            "value": [
+                { "title": "2018", "min": "2018-01-01", "max": "2018-12-31" }
+            ]
         },
         {
             "key": "isXlsPrecalculated",
@@ -22,6 +24,6 @@
         }
     ],
     "preview": {
-        "image": "https://assets.costlocker.com/reports/Company.Overview.png?v=20190702"
+        "image": "https://assets.costlocker.com/reports/Company.Overview.png?v=20190731"
     }
 }

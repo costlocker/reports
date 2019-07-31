@@ -62,7 +62,7 @@ class ParseConfig
             list($firstDay, $lastDay) = Dates::getWeek($day);
             return [$firstDay, $lastDay];
         } elseif ($dateRange == Enum::DATE_RANGE_YEAR) {
-            $lastMonth = new \DateTime('last month');
+            $lastMonth = new \DateTime('first day of last month');
             return $this->getDates(
                 Enum::DATE_RANGE_MONTHS,
                 [

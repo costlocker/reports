@@ -47,7 +47,10 @@ class DatesTest extends \PHPUnit\Framework\TestCase
     {
         return [
             ['previous month', 'previous month', 1],
-            ['previous month', 'this month', 2],
+            // "last month" does not always work without "first day of"
+            // https://gist.github.com/costlockerbot/725df07c37b38e47789c602175d6d65e
+            ['first day of previous month', 'first day of this month', 2],
+            ['first day of last month', 'first day of this month', 2],
             ['2016-01-01', '2016-12-31', 12],
             ['this month', 'previous month', 0],
         ];
