@@ -97,9 +97,9 @@ class ProjectsOverviewToXls extends TransformToXls
                     "=DATE({$project['dates']['start']->format('Y, m, d')})",
                     'YYYY',
                 ],
-                $this->cell("=I{$xls->getRowId()}+M{$xls->getRowId()}")
+                $this->cell("={$project['financialMetrics']['billingBilled']}")
                     ->format(NumberFormat::FORMAT_NUMBER_00),
-                $this->cell("=F{$xls->getRowId()}-{$project['financialMetrics']['billingBilled']}")
+                $this->cell("=I{$xls->getRowId()}+M{$xls->getRowId()}-F{$xls->getRowId()}")
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 $this->cell($project['financialMetrics']['expensesCosts'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
