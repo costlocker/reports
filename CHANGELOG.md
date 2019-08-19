@@ -1,7 +1,7 @@
 
 # Changelog
 
-## v3.0.0 (_2019-07-??_)
+## v3.0.0 (_2019-08-19_)
 
 Big rewrite because of https://reports.costlocker.com ([source code](https://gitlab.com/costlocker/integrations/tree/master/reports)).
 There are a lot of BC. We might not mention them all. **Let us know if have troubles with migration from v2!**
