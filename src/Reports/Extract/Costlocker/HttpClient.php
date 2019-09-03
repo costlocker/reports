@@ -32,7 +32,7 @@ class HttpClient implements CostlockerClient
 
     public function request(array $request)
     {
-        $response = $this->client->get(
+        $response = $this->client->post(
             '/api-public/v1/',
             [
                 'json' => $request,
