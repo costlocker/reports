@@ -18,7 +18,9 @@ class WeeklyTimesheetExtractor extends Extractor
 
     public function __invoke(ReportSettings $s): array
     {
-        list($monday, $sunday, $week) = Dates::getWeek($s->date);
+        $firstDay = $s->date;
+        $lastDay = clone $s->date;
+        $lastDay->modify('+ 6 days');
 
         $data = $this->client->request([
             'Simple_People' => new \stdClass(),
@@ -35,8 +37,8 @@ class WeeklyTimesheetExtractor extends Extractor
 
         $timesheet = $this->client->request([
             'Simple_Timesheet' => [
-                'datef' => $monday->format('Y-m-d'),
-                'datet' => $sunday->format('Y-m-d'),
+                'datef' => $firstDay->format('Y-m-d'),
+                'datet' => $lastDay->format('Y-m-d'),
                 'nonproject' => true,
                 'person' => array_keys($peopleAndGroups),
             ],
@@ -60,9 +62,6 @@ class WeeklyTimesheetExtractor extends Extractor
             ];
         }
         return [
-            'week' => $week,
-            'monday' => $monday,
-            'sunday' => $sunday,
             'entries' => $results,
         ];
     }

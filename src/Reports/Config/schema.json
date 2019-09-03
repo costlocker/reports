@@ -167,6 +167,7 @@
             "type": "string",
             "enum": [
                 "week",
+                "last7days",
                 "months",
                 "year",
                 "alltime"

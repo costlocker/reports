@@ -85,6 +85,25 @@ class ParseConfigTest extends \PHPUnit\Framework\TestCase
                 "2019 - week #18 (29.04.2019 - 2019-05-05)",
                 'week-2019-04-29',
             ],
+            Enum::DATE_RANGE_LAST_7_DAYS => [
+                [
+                    'title' => '{FIRST(d.m.Y)} {LAST(Y-m-d)}',
+                    'dateRange' => Enum::DATE_RANGE_LAST_7_DAYS,
+                ],
+                [date('Y-m-d', strtotime('now - 7 days'))],
+                "{$const(date('d.m.Y', strtotime('now - 7 days')))} {$const(date('Y-m-d', strtotime('now - 1 day')))}",
+                json_encode([date('Y-m-d', strtotime('now - 7 days')), date('Y-m-d', strtotime('now - 1 day'))]),
+            ],
+            Enum::DATE_RANGE_LAST_7_DAYS . ' - custom day' => [
+                [
+                    'title' => '{FIRST(d.m.Y)} {LAST(Y-m-d)}',
+                    'dateRange' => Enum::DATE_RANGE_LAST_7_DAYS,
+                    'customDates' => ['2019-08-18'],
+                ],
+                ['2019-08-12'],
+                "12.08.2019 2019-08-18",
+                json_encode(['2019-08-12', '2019-08-18']),
+            ],
             Enum::DATE_RANGE_YEAR => [
                 [
                     'title' => 'test year without future months',

@@ -43,7 +43,7 @@ class ParseConfig
         ];
         $settings = [
             'ETL' => $this->registry->getETL($config['reportType'], $config['config']['format'] ?? null, $loaders),
-            'dates' => $config['config']['dateRange'] == Enum::DATE_RANGE_WEEK
+            'dates' => in_array($config['config']['dateRange'], [Enum::DATE_RANGE_WEEK, Enum::DATE_RANGE_LAST_7_DAYS])
                 ? [$dates[0]] : $dates,
             'title' => $this->expandTitle($config['config']['title'], reset($dates) ?: null, end($dates) ?: null),
             'currency' => $config['config']['currency'] ?? Enum::CURRENCY_CZK,
@@ -60,6 +60,11 @@ class ParseConfig
         if ($dateRange == Enum::DATE_RANGE_WEEK) {
             $day = $customDates[0] ?? new \DateTime('saturday last week');
             list($firstDay, $lastDay) = Dates::getWeek($day);
+            return [$firstDay, $lastDay];
+        } elseif ($dateRange == Enum::DATE_RANGE_LAST_7_DAYS) {
+            $lastDay = $customDates[0] ?? new \DateTime('yesterday');
+            $firstDay = clone $lastDay;
+            $firstDay->modify('- 6 days');
             return [$firstDay, $lastDay];
         } elseif ($dateRange == Enum::DATE_RANGE_YEAR) {
             $lastMonth = new \DateTime('first day of last month');
@@ -90,7 +95,7 @@ class ParseConfig
         } elseif ($dateRange == Enum::DATE_RANGE_YEAR) {
             // must use same year when last month is February, March etc.
             return "{$const(Enum::DATE_RANGE_YEAR)}-{$const($dates[0]->format('Y'))}";
-        } elseif ($dateRange == Enum::DATE_RANGE_MONTHS) {
+        } elseif ($dateRange == Enum::DATE_RANGE_MONTHS || $dateRange == Enum::DATE_RANGE_LAST_7_DAYS) {
             // dates are good enough, customConfig (with filter) can't be overriden, but new report must be created
             return json_encode(array_map(
                 function (\DateTime $d) {

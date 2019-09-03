@@ -10,7 +10,7 @@ class WeeklyTimesheetToXls extends TransformToXls
 {
     public function __invoke(array $report, ReportSettings $settings)
     {
-        $xls = $this->createWorksheet($report['monday']->format('Y_W'));
+        $xls = $this->createWorksheet('Timesheet');
         $xls
             ->addRow([$this->cell($settings->title, 'bdd7ee')])
             ->addRow([$this->cell("Týmy: " . implode(', ', $settings->customConfig['groupNames']), 'fbe5d6')])

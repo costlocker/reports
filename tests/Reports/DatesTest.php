@@ -64,10 +64,9 @@ class DatesTest extends \PHPUnit\Framework\TestCase
     }
 
     /** @dataProvider provideWeek */
-    public function testGetWeek($dayInWeek, $expectedWeek, $expectedStart, $expectedEnd)
+    public function testGetWeek($dayInWeek, $expectedStart, $expectedEnd)
     {
-        list($start, $end, $week) = Dates::getWeek(new \DateTime($dayInWeek));
-        assertThat($week, is($expectedWeek));
+        list($start, $end) = Dates::getWeek(new \DateTime($dayInWeek));
         assertThat($start->format('Y-m-d'), is($expectedStart));
         assertThat($end->format('Y-m-d'), is($expectedEnd));
     }
@@ -75,10 +74,10 @@ class DatesTest extends \PHPUnit\Framework\TestCase
     public function provideWeek()
     {
         return [
-            ['2019-04-22', 17, '2019-04-22', '2019-04-28'],
-            ['2019-04-24', 17, '2019-04-22', '2019-04-28'],
-            ['2019-04-28', 17, '2019-04-22', '2019-04-28'],
-            ['2019-04-29', 18, '2019-04-29', '2019-05-05'],
+            ['2019-04-22', '2019-04-22', '2019-04-28'],
+            ['2019-04-24', '2019-04-22', '2019-04-28'],
+            ['2019-04-28', '2019-04-22', '2019-04-28'],
+            ['2019-04-29', '2019-04-29', '2019-05-05'],
         ];
     }
 }

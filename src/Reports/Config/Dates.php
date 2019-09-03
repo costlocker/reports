@@ -31,10 +31,6 @@ class Dates
         $sunday = clone $dayInWeek;
         $monday->modify('-' . ($dayNumber - 1) . ' days');
         $sunday->modify('+' . (7 - $dayNumber) . ' days');
-        return [
-            $monday,
-            $sunday,
-            $dayInWeek->format('W'),
-        ];
+        return [$monday, $sunday];
     }
 }
