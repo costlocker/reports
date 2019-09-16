@@ -91,6 +91,7 @@ class ProjectsOverviewExtractor extends Extractor
                     'estimated' => $people[$project['id']]['estimated'],
                     'tracked' => $people[$project['id']]['tracked'],
                     'billable' => $people[$project['id']]['billable'],
+                    'nonbillable' => $people[$project['id']]['nonbillable'],
                 ],
             ] + $project;
             $remainingBilling =
@@ -145,6 +146,7 @@ class ProjectsOverviewExtractor extends Extractor
                         'estimated' => $cost['hrs_budget'],
                         'tracked' => $cost['hrs_tracked'],
                         'billable' => $cost['hrs_billable'],
+                        'nonbillable' => $cost['hrs_nonbillable'],
                         // revenue loss/gain aggregated at activity level because of time_estimates.activity
                         'loss' => 0,
                         'gain' => 0,
@@ -152,7 +154,9 @@ class ProjectsOverviewExtractor extends Extractor
                 },
             ],
         ]);
-        $fields = ['costs_people', 'costs_overheads', 'estimated', 'tracked', 'billable', 'loss', 'gain'];
+        $fields = [
+            'costs_people', 'costs_overheads', 'estimated', 'tracked', 'billable', 'nonbillable', 'loss', 'gain',
+        ];
         list($projects) = $this->aggregateByProjects($projectIds, $people, $fields);
         foreach ($projectActivities as $projectId => $activities) {
             foreach ($activities as $activity) {

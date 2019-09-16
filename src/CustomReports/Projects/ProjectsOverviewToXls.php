@@ -25,7 +25,7 @@ class ProjectsOverviewToXls extends TransformToXls
                 ->mergeColumnsInRow('A', 'E')
                 ->mergeColumnsInRow('F', 'G')
                 ->mergeColumnsInRow('H', 'J')
-                ->mergeColumnsInRow('K', 'Y')
+                ->mergeColumnsInRow('K', 'Z')
                 ->addRow([
                     $this->headerCell('Projekt', '0000ff'),
                     '',
@@ -38,6 +38,7 @@ class ProjectsOverviewToXls extends TransformToXls
                     '',
                     '',
                     $this->headerCell('Lidé', '00ff00'),
+                    '',
                     '',
                     '',
                     '',
@@ -78,6 +79,7 @@ class ProjectsOverviewToXls extends TransformToXls
                 $this->headerCell('Placené hodiny (natrackované i zbývající odhad)', 'c4ffc4'),
                 $this->headerCell('Natrackované hodiny', 'c4ffc4'),
                 $this->headerCell('Natrackované / Placené', 'c4ffc4'),
+                $this->headerCell('Neplacené hodiny', 'c4ffc4'),
                 $this->headerCell('Typ rozpočtu', '4eff4e'),
                 $this->headerCell('Revenue gain ("neodpracovaný" příjem)', '4eff4e'),
                 $this->headerCell('Revenue loss (ušlý příjem)', '4eff4e'),
@@ -127,17 +129,19 @@ class ProjectsOverviewToXls extends TransformToXls
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 $this->cell("=IF(S{$xls->getRowId()} <> 0, T{$xls->getRowId()}/S{$xls->getRowId()}, \"\")")
                     ->format(NumberFormat::FORMAT_PERCENTAGE_00),
+                $this->cell($project['hours']['nonbillable'])
+                    ->format(NumberFormat::FORMAT_NUMBER_00),
                 $project['budget']['total'],
                 $this->cell($project['financialMetrics']['peopleRevenueGain'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
                 $this->cell($project['financialMetrics']['peopleRevenueLoss'])
                     ->format(NumberFormat::FORMAT_NUMBER_00),
-                ["=W{$xls->getRowId()}+X{$xls->getRowId()}", NumberFormat::FORMAT_NUMBER_00],
+                ["=X{$xls->getRowId()}+Y{$xls->getRowId()}", NumberFormat::FORMAT_NUMBER_00],
                 $settings->costlocker->projectUrl($project['id'])
             ]);
         }
 
-        $xls->removeColumnIf('Z', $isNotSimpleXls);
+        $xls->removeColumnIf('AA', $isNotSimpleXls);
     }
         
     private function addExpenses(array $expenses, array $projects)
