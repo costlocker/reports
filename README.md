@@ -101,13 +101,14 @@ ls -lAh var/exports
 | Title | Report type | Preview | 
 | ----- | ----------- | ------- |
 | [Projects Billing & Tags](https://assets.costlocker.com/reports/Projects.BillingAndTags.png) | [Projects.BillingAndTags](/src/CustomReports/Projects/BillingAndTagsExtractor.php) |
+| [Billing Changes in Projects](https://assets.costlocker.com/reports/Projects.BillingDiff.png) | [Projects.BillingDiff](/src/CustomReports/Projects/BillingDiffExtractor.php) |
 | [Projects Overview](https://assets.costlocker.com/reports/Projects.Overview.png) | [Projects.Overview](/src/CustomReports/Projects/ProjectsOverviewExtractor.php) |
 | [Company Overview](https://assets.costlocker.com/reports/Company.Overview.png) | [Company.Overview](/src/CustomReports/Company/CompanyOverviewExtractor.php) |
 | [Grouped timesheet for recurring project](https://assets.costlocker.com/reports/Timesheet.RecurringProject.png) | [Timesheet.RecurringProject](/src/CustomReports/Timesheet/GroupedRecurringTimesheetExtractor.php) |
 | [Yearly tracked hours](https://assets.costlocker.com/reports/Timesheet.TrackedHours.png) | [Timesheet.TrackedHours](/src/CustomReports/Timesheet/TrackedHoursExtractor.php) |
 | [Weekly timesheet for groups](https://assets.costlocker.com/reports/Timesheet.Week.png) | [Timesheet.Week](/src/CustomReports/Timesheet/WeeklyTimesheetExtractor.php) |
 
-![Available reports from https://reports.costlocker.com/reports/available](https://trello-attachments.s3.amazonaws.com/5cfe127e9fdd6084611ce4f4/1150x572/7258ed0a02e8fdc17ca95f0e440f06bc/available-reports-2019-07-11.png)
+![Available reports from https://reports.costlocker.com/reports/available](https://user-images.githubusercontent.com/7994022/65576719-c7088180-df72-11e9-9f21-d04b175e0948.png)
 
 ### New report
 
