@@ -29,14 +29,12 @@ jobs:
     parallelism: 1
     docker:
     - image: docker:17.05.0-ce-git
+    branches:
+      only:
+        - master
     steps:
     - checkout
     - setup_remote_docker
-    # 1) Create token for pushing docker image
-    # 2) Add DOCKER_USER, DOCKER_TOKEN env vars
-    # 3) Check that build works and docker image is published (https://circleci.com/gh/costlocker/reports/29)
-    #    $ docker run --rm -it docker.pkg.github.com/costlocker/reports/master:commit bin/console report --help
-    # 4) Update Docker help in README.md
     - run: .circleci/build-docker-image || echo "Skipped publish (Github Docker Registry not available)"
 
 workflows:

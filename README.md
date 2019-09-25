@@ -21,6 +21,17 @@ bin/console report --help
 
 ### Docker
 
+**_Github Docker Registry_**
+
+[Circle.ci](https://github.com/costlocker/reports/tree/master/.circleci) builds an image and publish it [Github Docker Registry](https://github.com/costlocker/reports/packages).
+
+```bash
+docker login --username username --password password docker.pkg.github.com/costlocker/reports
+docker run --rm -it docker.pkg.github.com/costlocker/reports/master:commit bin/console report --help
+```
+
+**_Custom build_**
+
 ```bash
 docker build --file .circleci/Dockerfile --tag reports-costlocker ./
 docker run --rm -it \
