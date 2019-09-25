@@ -3,7 +3,7 @@
 namespace Costlocker\Reports\Transform;
 
 use Costlocker\Reports\Config\Enum;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
@@ -11,12 +11,12 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 class XlsBuilder
 {
     private $worksheet;
-    private $rowId = 1;
+    private $rowId;
 
-    public function __construct(Spreadsheet $spreadsheet, $title)
+    public function __construct(Worksheet $w, $rowId = 1)
     {
-        $this->worksheet = $spreadsheet->createSheet();
-        $this->worksheet->setTitle($title);
+        $this->worksheet = $w;
+        $this->rowId = $rowId;
     }
 
     public function addHeaders(array $headers)
@@ -79,11 +79,17 @@ class XlsBuilder
 
     private function buildRowFromCells(array $cells)
     {
+        $this->setRow($this->rowId, $cells);
+        $this->rowId++;
+        return $this;
+    }
+
+    public function setRow($rowId, array $cells)
+    {
         foreach ($cells as $index => $cellBuilder) {
-            $cell = $this->worksheet->getCell("{$this->indexToLetter($index)}{$this->rowId}");
+            $cell = $this->worksheet->getCell("{$this->indexToLetter($index)}{$rowId}");
             $cellBuilder->build($cell);
         }
-        $this->rowId++;
         return $this;
     }
 

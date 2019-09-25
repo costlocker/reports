@@ -1,0 +1,22 @@
+{
+    "id": "Projects.BillingDiff",
+    "config": {
+        "title": "Billing Changes in Projects",
+        "dateRange": "alltime"
+    },
+    "customConfig": [
+        {
+            "key": "Simple_Projects_Billing-filepath",
+            "format": "text",
+            "value": null
+        },
+        {
+            "key": "isAppendMode",
+            "format": "text",
+            "value": true
+        }
+    ],
+    "preview": {
+        "image": "https://assets.costlocker.com/reports/Projects.BillingDiff.png?v=20190924"
+    }
+}

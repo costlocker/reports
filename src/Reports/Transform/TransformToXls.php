@@ -22,9 +22,20 @@ abstract class TransformToXls implements Transformer
     {
     }
 
+    protected function appendWorksheet($title)
+    {
+        $worksheet = $this->spreadsheet->getSheetByName($title);
+        if ($worksheet) {
+            return new XlsBuilder($worksheet, $worksheet->getHighestRow() + 1);
+        }
+        return $this->createWorksheet($title);
+    }
+
     protected function createWorksheet($title)
     {
-        return new XlsBuilder($this->spreadsheet, $title);
+        $worksheet = $this->spreadsheet->createSheet();
+        $worksheet->setTitle($title);
+        return new XlsBuilder($worksheet);
     }
 
     /** @return XlsCellBuilder */

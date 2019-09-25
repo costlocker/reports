@@ -101,14 +101,19 @@ class GenerateReport
         $settings->title = $jsonSettings['title'];
 
         if (is_subclass_of($transformerDefinition, Transform\TransformToXls::class)) {
-            $spreadsheet = new Spreadsheet();
-            $spreadsheet->removeSheetByIndex(0);
+            $path = "{$filenameWithoutExtension}.xlsx";
+            $isAppendMode = $settings->customConfig['isAppendMode'] ?? true;
+            if (file_exists($path) && $isAppendMode) {
+                $spreadsheet = IOFactory::createReader('Xlsx')->load(realpath($path));
+            } else {
+                $spreadsheet = new Spreadsheet();
+                $spreadsheet->removeSheetByIndex(0);
+            }
             $transformer = new $transformerDefinition($spreadsheet);
             foreach ($reports as $report) {
                 $transformer($report, $settings);
             }
             $transformer->after($settings);
-            $path = "{$filenameWithoutExtension}.xlsx";
             $isPrecalculated = $settings->customConfig['isXlsPrecalculated'] ?? true;
             if (!$isPrecalculated) {
                 foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {

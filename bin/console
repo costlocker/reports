@@ -30,6 +30,7 @@ $loaders = [
 $reportsRegistry = new Costlocker\Reports\ReportsRegistry(
     [
         Costlocker\Reports\Custom\Projects\BillingAndTagsExtractor::class,
+        Costlocker\Reports\Custom\Projects\BillingDiffExtractor::class,
         Costlocker\Reports\Custom\Projects\ProjectsOverviewExtractor::class,
         Costlocker\Reports\Custom\Company\CompanyOverviewExtractor::class,
         Costlocker\Reports\Custom\Timesheet\GroupedRecurringTimesheetExtractor::class,
