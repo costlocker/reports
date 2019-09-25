@@ -1,6 +1,14 @@
 
 # Changelog
 
+## v3.1.0 (_2019-09-25_)
+
+* **Weekly timesheet** - report for last 7 days - [#41](https://github.com/costlocker/reports/commit/1e36300)
+* **Projects overview** - non billable hours - [bee069f](https://github.com/costlocker/reports/commit/b1430c3c)
+* New report **Billing Changes in Projects** - [#44](https://github.com/costlocker/reports/commit/530c6f4)
+* Github Docker Registry - [#4](https://github.com/costlocker/reports/pull/4)
+* Internal refactoring - [f471daa](https://github.com/costlocker/reports/commit/0a4eeaa)
+
 ## v3.0.0 (_2019-08-19_)
 
 Big rewrite because of https://reports.costlocker.com ([source code](https://gitlab.com/costlocker/integrations/tree/master/reports)).

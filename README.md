@@ -27,7 +27,7 @@ bin/console report --help
 
 ```bash
 docker login --username username --password password docker.pkg.github.com/costlocker/reports
-docker run --rm -it docker.pkg.github.com/costlocker/reports/master:commit bin/console report --help
+docker run --rm -it docker.pkg.github.com/costlocker/reports/master:371dda4 bin/console report --help
 ```
 
 **_Custom build_**
