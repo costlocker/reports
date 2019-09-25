@@ -29,9 +29,6 @@ jobs:
     parallelism: 1
     docker:
     - image: docker:17.05.0-ce-git
-    branches:
-      only:
-        - master
     steps:
     - checkout
     - setup_remote_docker
@@ -43,5 +40,8 @@ workflows:
     jobs:
       - qa
       - docker:
+          filters:
+            branches:
+              only: master
           requires:
             - qa
