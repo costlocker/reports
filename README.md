@@ -98,8 +98,8 @@ ls -lAh var/exports
 
 ### Available reports
 
-| Title | Report type | Preview | 
-| ----- | ----------- | ------- |
+| Title | Report type |
+| ----- | ----------- |
 | [Projects Billing & Tags](https://assets.costlocker.com/reports/Projects.BillingAndTags.png) | [Projects.BillingAndTags](/src/CustomReports/Projects/BillingAndTagsExtractor.php) |
 | [Billing Changes in Projects](https://assets.costlocker.com/reports/Projects.BillingDiff.png) | [Projects.BillingDiff](/src/CustomReports/Projects/BillingDiffExtractor.php) |
 | [Projects Overview](https://assets.costlocker.com/reports/Projects.Overview.png) | [Projects.Overview](/src/CustomReports/Projects/ProjectsOverviewExtractor.php) |
