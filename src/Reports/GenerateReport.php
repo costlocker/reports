@@ -102,7 +102,7 @@ class GenerateReport
 
         if (is_subclass_of($transformerDefinition, Transform\TransformToXls::class)) {
             $path = "{$filenameWithoutExtension}.xlsx";
-            $isAppendMode = $settings->customConfig['isAppendMode'] ?? true;
+            $isAppendMode = $settings->customConfig['isAppendMode'] ?? false;
             if (file_exists($path) && $isAppendMode) {
                 $spreadsheet = IOFactory::createReader('Xlsx')->load(realpath($path));
             } else {
